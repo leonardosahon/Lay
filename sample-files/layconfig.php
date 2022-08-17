@@ -19,44 +19,43 @@ $layConfig = LayConfig::instance()
             "short" => "Sample Lay Project",
             "full" => "Sample Lay Project | Slogan Goes Here",
         ],
+        // PROJECT THEME COLOUR FOR MOBILE AND SUPPORTED PLATFORMS
         "color" => [
             "pry" => "#082a96",
             "sec" => "#0e72e3",
         ],
         "mail" => [
-            "info@osaitech.dev",
-            "support@osaitech.dev",
+            "EMAIL-1",
+            "EMAIL-2",
         ],
         "tel" => [
-            "07061229417",
-            "09055927390",
-            "(+234) 706 122 9417",
-            "(+234) 905 592 7390",
+            "PHONE-NUMBER-1",
+            "PHONE-NUMBER-2",
         ]
     ])
     ->others([
         "desc" => "
-            A software company that provides enterprise-level custom software, tailored to meet the specifications of our esteemed clients and businesses.
+            This is an awesome project that is about to unfold you just watch and see 😉.
         ",
     ])
     ->init();
 
-// redirect resources of the back template from Lay's default to the actual template's structure
+// set a custom location for your static assets from Lays' default to yours. Check docs for default locations 
 $root = $layConfig->get_res__client("front","root");
 $layConfig::set_res__client("front","img",      $root . "assets/images/");
 $layConfig::set_res__client("front","css",      $root . "assets/css/");
 $layConfig::set_res__client("front","js",       $root . "assets/js/");
 
-// add theme colour for texts
-$layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">Osai Technologies</a>. " . date("Y") . ". All Rights Reserved");
+// copyright for the footer and your further action 😉
+$layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">YOUR-FREELANCE-OR-COMPANY-NAME</a>. " . date("Y") . ". All Rights Reserved");
 
-// add page constant tags
+// pass constannt values that that can be read by javascript across your project
 $layConfig::set_site_data("others","page_constants", <<<CONST
-    <input type="hidden" id="api-endpoint" value="{$layConfig->get_res__client("api")}">
-    <input type="hidden" id="uploads-endpoint" value="{$layConfig->get_res__client("upload")}">
-    <input type="hidden" id="custom-img-endpoint" value="{$layConfig->get_res__client("custom","img")}">
-    <input type="hidden" id="back-img-endpoint" value="{$layConfig->get_res__client("back","img")}">
-    <input type="hidden" id="front-img-endpoint" value="{$layConfig->get_res__client("front","img")}">
+    <input type="hidden" id="API-ENDPOINT" value="{$layConfig->get_res__client("api")}">
+    <input type="hidden" id="UPLOADS-ENDPOINT" value="{$layConfig->get_res__client("upload")}">
+    <input type="hidden" id="CUSTOM-IMG-ENDPOINT" value="{$layConfig->get_res__client("custom","img")}">
+    <input type="hidden" id="BACK-IMG-ENDPOINT" value="{$layConfig->get_res__client("back","img")}">
+    <input type="hidden" id="FRONT-IMG-ENDPOINT" value="{$layConfig->get_res__client("front","img")}">
 CONST);
 
 include_once($layConfig->get_res__server('inc') . "connection.inc");

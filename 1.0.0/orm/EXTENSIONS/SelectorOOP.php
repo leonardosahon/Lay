@@ -82,6 +82,20 @@ trait SelectorOOP {
     final public function loop() : self {
         return $this->store_vars('loop','loop');
     }
+    final public function not_empty() : self {
+        $this->no_null();
+        return $this->no_false();
+    }
+    final public function loop_assoc() : ?array {
+        $this->loop();
+        $this->assoc();
+        return $this->select();
+    }
+    final public function loop_row() : ?array {
+        $this->loop();
+        $this->row();
+        return $this->select();
+    }
 
     /** @see SQL_CORE::query_insert() */
     final public function insert() : bool {

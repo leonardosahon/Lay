@@ -1,7 +1,49 @@
 #!/usr/bin/php
 <?php
-function recurseCopy(string $sourceDirectory, string $destinationDirectory, string $childFolder = '') : void {
-    $directory = opendir($sourceDirectory);
+// # Copy this script to where you can easily access or where you wish to always initialize you projects
+// # To use this script, open your terminal or command line (cmd) and type `php init-lay`
+// # Use; `php init-lay -h` for to see options available to you
+
+$s = DIRECTORY_SEPARATOR;
+$ag = $argv;
+
+$default_ver = "1.0.0"; // change this to the latest version of Lay
+$default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
+
+######           ######
+###### Functions ######
+######           ######
+
+function intro($kill = false){
+    print "----------------------------------------------------------\n";
+    print "-- Name:     \t  Lay Project Initiator                    \n";
+    print "-- Version:  \t  {$GLOBALS['default_ver']}                \n";
+    print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
+    print "-- Created:  \t  08/02/2022;                              \n";
+    print "----------------------------------------------------------\n";
+    if($kill) die;
+};
+
+function use_error($msg){
+    print "####\n";
+    print "# Error Encountered \n";
+    print "# What happened? $msg\n";
+    die;
+};
+
+function set_flag($index,&$version,&$location){
+    $ag = $GLOBALS['ag'];
+    $flag = @$ag[$index + 1];
+    switch (substr($ag[$index],0,2)) {
+        default:break;
+        case '-v': $version = $flag; break;
+        case '-l': $location = $flag; break;
+    }
+};
+
+
+function recurseCopy(string $sourceDirectory, string $destinationDirectory, string $childFolder = ''){
+    $dir = opendir($sourceDirectory);
 
     if (is_dir($destinationDirectory) === false) {
         mkdir($destinationDirectory);
@@ -12,7 +54,7 @@ function recurseCopy(string $sourceDirectory, string $destinationDirectory, stri
             mkdir("$destinationDirectory/$childFolder");
         }
 
-        while (($file = readdir($directory)) !== false) {
+        while (($file = readdir($dir)) !== false) {
             if ($file === '.' || $file === '..') {
                 continue;
             }
@@ -24,12 +66,12 @@ function recurseCopy(string $sourceDirectory, string $destinationDirectory, stri
             }
         }
 
-        closedir($directory);
+        closedir($dir);
 
         return;
     }
 
-    while (($file = readdir($directory)) !== false) {
+    while (($file = readdir($dir)) !== false) {
         if ($file === '.' || $file === '..') {
             continue;
         }
@@ -42,43 +84,40 @@ function recurseCopy(string $sourceDirectory, string $destinationDirectory, stri
         }
     }
 
-    closedir($directory);
+    closedir($dir);
 }
 
-// Start of Initializer
+######                 ######
+###### Start Execution ######
+######                 ######
 
-$intro = function() {
-    print "----------------------------------------------------------\n";
-    print "-- Name:     \t  Lay Project Initiator                    \n";
-    print "-- Version:  \t  1.0.1                                    \n";
-    print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
-    print "-- Created:  \t  08/02/2022;                              \n";
-    print "-- Dependencies:\n \t\osai\Lay-1.0.1 and dir-copy         \n";
-    print "----------------------------------------------------------\n";
-};
+$script_name = "init-lay";
 
-$args = $argv;
-$script_name = "init-lay.php";
-
-if(in_array(("--help"),$args,true) || in_array(("-h"),$args,true)){
-    $intro();
+if(in_array(("--help"),$ag,true) || in_array(("-h"),$ag,true)){
+    intro();
     print ">>> This is a quick way to initiate a project using Lay as the framework. This script should reside at the root folder \n";
     print "----------------------------------------------------------\n";
-    print "### Usage: [$script_name] {project-location} -v 1.0.0\n";
-    print "### Example: php $script_name clients/new-project -v 1.0.0\n";
+    print "### Usage: [$script_name] {PROJECT_LOCATION} -v {LAY_VERSION (optional)} -l {LAY_PACKAGE_LOCATION (optional)}\n";
+    print "### Example: php $script_name clients/a-new-project -v 1.0.0 -l library/Lay\n";
     die;
 }
 
-if($argc == 1){
-    $intro();
-    die;
+if($argc == 1)
+    intro(true);
+
+if(substr($ag[1],0,1) == "-")
+    use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");
+
+for($i = 0; $i < $argc; $i++){
+    set_flag($i,$default_ver,$default_lay_location);
 }
 
+// start process
 print "Project creation has been initiated\n";
-$project_root = $args[1];
-$version = $args[2] ?? "1.0.1";
-$s = DIRECTORY_SEPARATOR;
-$lay = "{$s}var{$s}www{$s}osai-lib{$s}php{$s}Lay{$s}";
+
+$project_root = ltrim($ag[1],"/");
+$version = $default_ver;
+$lay = rtrim($default_lay_location,$s) . $s;
 
 $mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) use ($project_root,$lay,$s) {
     $dir = $project_root . $s . $dir;

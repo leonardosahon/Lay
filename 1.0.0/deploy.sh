@@ -12,10 +12,10 @@ esac
 echo "================= Production Bundling Begins"
 
 echo "== RES FOLDER [JS]"
-php butcher.php ../res/client/dev -o ../res/client/prod -e js
+php compress ../res/client/dev -o ../res/client/prod -e js
 
 echo "== RES FOLDER [CSS]"
-php butcher.php ../res/client/dev -o ../res/client/prod -e css
+php compress ../res/client/dev -o ../res/client/prod -e css
 
 echo "================= Production Bundling Ends"
 
