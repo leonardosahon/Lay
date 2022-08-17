@@ -10,7 +10,6 @@ trait Controller{
     use Clean;
     use MultiQuery;
     use OneLiner;
-    use ResultGen;
 
     protected static function core() : SQL {
         return SQL::instance();

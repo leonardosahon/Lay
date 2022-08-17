@@ -139,11 +139,11 @@ final class ViewPainter {
         <!DOCTYPE html>
         <html lang="en" class="no-js">
         <head>
-            <title><?php echo $title ?></title>
-            <base href="<?php echo $base ?>" class="lay-app-base">
+            <title id="LAY-PAGE-TITLE-FULL"><?php echo $title ?></title>
+            <base href="<?php echo $base ?>" id="LAY-PAGE-BASE">
             <meta charset="<?php echo $charset ?>">
             <meta http-equiv="content-type" content="text/html;charset=<?php echo $charset ?>" />
-            <meta name="description" class="lay-page-description" content="<?php echo $page['page']['desc'] ?>">
+            <meta name="description" id="LAY-PAGE-DESC" content="<?php echo $page['page']['desc'] ?>">
             <meta name="author" content="<?php echo $author ?>">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, shrink-to-fit=no">
@@ -153,23 +153,31 @@ final class ViewPainter {
             <meta name="apple-mobile-web-app-capable" content="yes">
             <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
             <!-- Framework Tags-->
-            <meta property="lay:page_type" class="lay-page-type" content="<?php echo $page['page']['type'] ?>">
-            <meta property="lay:page_root" class="lay-page-root" content="<?php echo $page['page']['root'] ?>">
+            <meta property="lay:page_type" id="LAY-PAGE-TYPE" content="<?php echo $page['page']['type'] ?>">
+            <meta property="lay:page_root" id="LAY-PAGE-ROOT" content="<?php echo $page['page']['root'] ?>">
             <!-- // Framework Tags-->
-            <meta property="og:title" class="lay-page-title" content="<?php echo $title ?>">
-            <meta property="og:url" class="lay-page-url" content="<?php echo $page['page']['url'] ?>">
+            <meta property="og:title" id="LAY-PAGE-TITLE" content="<?php echo $title ?>">
+            <meta property="og:url" id="LAY-PAGE-URL" content="<?php echo $page['page']['url'] ?>">
             <meta property="og:type" content="website">
-            <meta property="og:site_name" content="<?php echo $layConfig->get_site_data('name','full') ?>">
+            <meta property="og:site_name" id="LAY-SITE-NAME" content="<?php echo $layConfig->get_site_data('name','full') ?>">
+            <meta property="og:site_name_short" id="LAY-SITE-NAME-SHORT" content="<?php echo $layConfig->get_site_data('name','short') ?>">
             <meta property="og:description" content="<?php echo $page['page']['desc'] ?>">
             <meta property="og:image" content="<?php echo $img ?>">
             <meta itemprop="name" content="<?php echo $title ?>">
             <meta itemprop="description" content="<?php echo $page['page']['desc'] ?>">
-            <meta itemprop="image" content="<?php echo $img ?>">
+            <meta itemprop="image" id="LAY-PAGE-IMG" content="<?php echo $img ?>">
             <link rel="icon" type="image/x-icon" href="<?php echo $layConfig->get_site_data('img','icon') ?>">
             <?php $this->skeleton_head($page); ?>
         </head>
-        <body class="<?php echo $page['body']['class'] ?>" <?php echo $page['body']['attr'] ?>><?php
-            $this->skeleton_body($page);
+        <body class="<?php echo $page['body']['class'] ?>" <?php echo $page['body']['attr'] ?>>
+            <!--//START LAY CONSTANTS-->
+            <input type="hidden" id="LAY-API" value="<?php $layConfig->get_res__client("api") ?>">
+            <input type="hidden" id="LAY-UPLOAD" value="<?php $layConfig->get_res__client("upload") ?>">
+            <input type="hidden" id="LAY-CUSTOM-IMG" value="<?php $layConfig->get_res__client("custom","img") ?>">
+            <input type="hidden" id="LAY-BACK-IMG" value="<?php $layConfig->get_res__client("back","img") ?>">
+            <input type="hidden" id="LAY-FRONT-IMG" value="<?php $layConfig->get_res__client("front","img") ?>">
+            <!--//END LAY CONSTANTS-->
+            <?php $this->skeleton_body($page);
             $this->skeleton_script($page); ?>
         </body></html><?php
     }
@@ -201,6 +209,8 @@ final class ViewPainter {
         $type = "inc_front";
         $section = $layConfig->get_res__client('front');
         $view = $this->view_handler('head',$page);
+        $custom_css = $layConfig->get_res__client("custom","css");
+        $plugin = $layConfig->get_res__client("custom","plugin");
 
         if($page['page']['type'] == "back") {
             $type = "inc_back";
@@ -223,9 +233,9 @@ final class ViewPainter {
         foreach ($page['src']['plugin'] as $p):
             if(!$p) continue;
             $ext = explode(".css",$p);
-            if(count($ext) > 1) : ?><link href="<?php echo $layConfig->get_res__client("custom","plugin") . $ext[0] ?>.css" type="text/css" rel="stylesheet" media="all" /><?php endif;
+            if(count($ext) > 1) : ?><link href="<?php echo $plugin . $ext[0] ?>.css" type="text/css" rel="stylesheet" media="all" /><?php endif;
         endforeach;
-        foreach ($page['src']['css'] as $css): ?> <link href="<?php echo $layConfig->get_res__client("custom","css") . explode(".css",$css)[0] ?>.css" type="text/css" rel="stylesheet" media="all" /><?php endforeach;
+        foreach ($page['src']['css'] as $css): ?> <link href="<?php echo $custom_css . explode(".css",$css)[0] ?>.css" type="text/css" rel="stylesheet" media="all" /><?php endforeach;
     }
 
     # <Body> including <Header> or Top Half of <Body>
@@ -252,17 +262,28 @@ final class ViewPainter {
     # <Script Tags go here>
     private function skeleton_script(array $page) : void {
         $layConfig = LayConfig::instance();
+        $env = strtolower($layConfig::get_env());
         $view = $this->view_handler('script',$page);
+        $root = $layConfig->get_res__server("dir");
+        $base = $layConfig->get_res__client("lay");
+        $custom_js = $layConfig->get_res__client("custom","js");
+        $plugin = $layConfig->get_res__client("custom","plugin");
+        $type = "inc_back";
+        $section = $layConfig->get_res__client("back");
+
         if($page['core']['script']):
-            if(strtolower($layConfig::get_env()) == "prod" && file_exists($layConfig->get_res__server("dir") . "Lay/omj$/index.min.js")): ?>
-                <script src="<?php echo $layConfig->get_res__client("lay") ?>omj$/index.min.js"></script>
+            if($env == "prod" && file_exists($root . "Lay/omj$/index.min.js")): ?>
+                <script src="<?php echo $base ?>omj$/index.min.js"></script>
             <?php else : ?>
-                <script src="<?php echo $layConfig->get_res__client("lay") ?>omj$/index.js"></script>
+                <script src="<?php echo $base ?>omj$/index.js"></script>
+            <?php endif;
+            if($env == "prod" && file_exists($root . "Lay/static/js/constants.min.js")): ?>
+                <script src="<?php echo $base ?>static/js/constants.min.js"></script>
+            <?php else : ?>
+                <script src="<?php echo $base ?>static/js/constants.js"></script>
             <?php endif;
         endif;
 
-        $type = "inc_back";
-        $section = $layConfig->get_res__client("back");
         if($page['page']['type'] == "front") {
             $type = "inc_front";
             $section = $layConfig->get_res__client("front");
@@ -284,9 +305,9 @@ final class ViewPainter {
         foreach ($page['src']['plugin'] as $p):
             if(!$p) continue;
             $ext = explode(".js",$p);
-            if(count($ext) > 1) : ?><script src="<?php echo $layConfig->get_res__client("custom","plugin") . $ext[0] ?>.js"></script><?php endif;
+            if(count($ext) > 1) : ?><script src="<?php echo $plugin . $ext[0] ?>.js"></script><?php endif;
         endforeach;
-        foreach ($page['src']['js'] as $script): ?> <script src="<?php echo $layConfig->get_res__client("custom","js") . explode(".js",$script)[0] ?>.js"></script> <?php endforeach;
+        foreach ($page['src']['js'] as $script): ?> <script src="<?php echo $custom_js . explode(".js",$script)[0] ?>.js"></script> <?php endforeach;
 
         if($page['core']['close_connection']) $layConfig->close_sql();
     }

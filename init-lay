@@ -9,6 +9,7 @@ $ag = $argv;
 
 $default_ver = "1.0.0"; // change this to the latest version of Lay
 $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
+$overwrite_existing_project = false;
 
 ######           ######
 ###### Functions ######
@@ -31,16 +32,16 @@ function use_error($msg){
     die;
 };
 
-function set_flag($index,&$version,&$location){
+function set_flag($index,&$version,&$location,&$overwrite){
     $ag = $GLOBALS['ag'];
     $flag = @$ag[$index + 1];
     switch (substr($ag[$index],0,2)) {
         default:break;
         case '-v': $version = $flag; break;
         case '-l': $location = $flag; break;
+        case '-w': $overwrite = (bool) $flag; break;
     }
 };
-
 
 function recurseCopy(string $sourceDirectory, string $destinationDirectory, string $childFolder = ''){
     $dir = opendir($sourceDirectory);
@@ -109,15 +110,17 @@ if(substr($ag[1],0,1) == "-")
     use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");
 
 for($i = 0; $i < $argc; $i++){
-    set_flag($i,$default_ver,$default_lay_location);
+    set_flag($i,$default_ver,$default_lay_location, $overwrite_existing_project);
 }
 
 // start process
 print "Project creation has been initiated\n";
 
 $project_root = ltrim($ag[1],"/");
-$version = $default_ver;
 $lay = rtrim($default_lay_location,$s) . $s;
+
+if(is_dir($project_root) and $overwrite_existing_project === false)
+    use_error("You are trying to create an existing project, delete the folder and try again, or change the name");
 
 $mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) use ($project_root,$lay,$s) {
     $dir = $project_root . $s . $dir;
@@ -126,7 +129,7 @@ $mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) 
 
     umask(0);
     if(!is_dir($dir) && @!mkdir($dir, 0775, true))
-        throw new Exception("Failed to create directory on location: ($dir); access denied; modify permissions and try again", 1);
+        use_error("Failed to create directory on location: ($dir); access denied; modify permissions and try again");
 };
 
 $routine = function (string $locale, ?string $source = null, ?string $target = null) use ($mkdir, $s) {
@@ -169,10 +172,11 @@ $mkdir($dir . "js");
 $mkdir($dir . "images");
 $mkdir($dir . "plugin");
 
-recurseCopy($lay . $version,$project_root . $s . "Lay");
+recurseCopy($lay . $default_ver,$project_root . $s . "Lay");
 $mkdir("", "sample-files{$s}bob_d_builder.php", "bob_d_builder.php");
 $mkdir("", "sample-files{$s}index.php", "index.php");
 $mkdir("", "sample-files{$s}layconfig.php", "layconfig.php");
 $mkdir("", "sample-files{$s}htaccess", ".htaccess");
+$mkdir("", "sample-files{$s}homepage.view", "res{$s}server{$s}view{$s}__front${s}homepage.view");
 
 print "Project creation complete\n";

@@ -49,15 +49,6 @@ $layConfig::set_res__client("front","js",       $root . "assets/js/");
 // copyright for the footer and your further action 😉
 $layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">YOUR-FREELANCE-OR-COMPANY-NAME</a>. " . date("Y") . ". All Rights Reserved");
 
-// pass constannt values that that can be read by javascript across your project
-$layConfig::set_site_data("others","page_constants", <<<CONST
-    <input type="hidden" id="API-ENDPOINT" value="{$layConfig->get_res__client("api")}">
-    <input type="hidden" id="UPLOADS-ENDPOINT" value="{$layConfig->get_res__client("upload")}">
-    <input type="hidden" id="CUSTOM-IMG-ENDPOINT" value="{$layConfig->get_res__client("custom","img")}">
-    <input type="hidden" id="BACK-IMG-ENDPOINT" value="{$layConfig->get_res__client("back","img")}">
-    <input type="hidden" id="FRONT-IMG-ENDPOINT" value="{$layConfig->get_res__client("front","img")}">
-CONST);
-
 include_once($layConfig->get_res__server('inc') . "connection.inc");
 // add ORM
 $layConfig::include_sql(!isset($SQL_EXCLUDE),[
