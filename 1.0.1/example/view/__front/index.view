@@ -1,0 +1,3 @@
+<h1><?php echo $meta->page->title ?></h1>
+<p>This is a sample page of Lay framework in action</p>
+<p>This example uses included files `.inc` and `.view` as a way to render view</p>

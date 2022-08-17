@@ -1,0 +1,76 @@
+### Security Measures
+# Disable access to htaccess
+<Files .htaccess>
+Order allow,deny
+Deny from all
+</Files>
+
+# Deny access to filenames starting with dot(.)
+<FilesMatch "^\.">
+Order allow,deny
+Deny from all
+</FilesMatch>
+
+# Disable directory browsing
+Options -Indexes
+
+# Deny access to files with extensions .ini, .psd, .log, .sh
+<FilesMatch "\.(ini|psd|log|sh|sql)$">
+Order allow,deny
+Deny from all
+
+</FilesMatch>
+
+RewriteEngine On
+RewriteCond %{SERVER_PORT} 80
+#RewriteRule ^(.*)$ https://{domain}/$1 [R,L]
+#
+#RewriteCond %{HTTP_REFERER} !^http://{domain}/.*$      [NC]
+#RewriteCond %{HTTP_REFERER} !^http://{domain}$      [NC]
+#RewriteCond %{HTTP_REFERER} !^http://{domain}.*$      [NC]
+#RewriteCond %{HTTP_REFERER} !^http://{domain}$      [NC]
+#RewriteCond %{HTTP_REFERER} !^https://{domain}/.*$      [NC]
+#RewriteCond %{HTTP_REFERER} !^https://{domain}$      [NC]
+#RewriteCond %{HTTP_REFERER} !^https://{domain}/.*$      [NC]
+#RewriteCond %{HTTP_REFERER} !^https://{domain}$      [NC]
+
+RewriteRule .*\.(inc)$ - [F,NC]
+
+# compress text, html, javascript, css, xml:
+AddOutputFilterByType DEFLATE text/plain
+AddOutputFilterByType DEFLATE text/html
+AddOutputFilterByType DEFLATE text/xml
+AddOutputFilterByType DEFLATE text/css
+AddOutputFilterByType DEFLATE application/xml
+AddOutputFilterByType DEFLATE application/xhtml+xml
+AddOutputFilterByType DEFLATE application/rss+xml
+AddOutputFilterByType DEFLATE application/javascript
+AddOutputFilterByType DEFLATE application/x-javascript
+
+# Enable parsing php codes in HTML and .VIEW
+AddHandler application/x-httpd-php .html .htm .view
+
+Options +FollowSymLinks -MultiViews
+
+# FontAwesome CORS Issues resolution
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ttf|ttc|otf|eot|woff|font.css|css)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
+</IfModule>
+
+
+# Allow any files or directories that exist to be displayed directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d [OR]
+RewriteCond %{REQUEST_FILENAME} -l
+RewriteRule ^ - [L]
+
+# [HIDE_.PHP_EXTENSION]
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^ %{REQUEST_URI}.php [L]
+
+## Copy this htaccess and uncomment this line when creating a new project
+# [REDIRECT_TRAFFIC_TO_INDEX]
+#RewriteCond %{REQUEST_URI} !^index.php
+#RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI} [L,QSA]

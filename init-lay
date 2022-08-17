@@ -1,0 +1,139 @@
+#!/usr/bin/php
+<?php
+function recurseCopy(string $sourceDirectory, string $destinationDirectory, string $childFolder = '') : void {
+    $directory = opendir($sourceDirectory);
+
+    if (is_dir($destinationDirectory) === false) {
+        mkdir($destinationDirectory);
+    }
+
+    if ($childFolder !== '') {
+        if (is_dir("$destinationDirectory/$childFolder") === false) {
+            mkdir("$destinationDirectory/$childFolder");
+        }
+
+        while (($file = readdir($directory)) !== false) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+
+            if (is_dir("$sourceDirectory/$file") === true) {
+                recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+            } else {
+                copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
+            }
+        }
+
+        closedir($directory);
+
+        return;
+    }
+
+    while (($file = readdir($directory)) !== false) {
+        if ($file === '.' || $file === '..') {
+            continue;
+        }
+
+        if (is_dir("$sourceDirectory/$file") === true) {
+            recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$file");
+        }
+        else {
+            copy("$sourceDirectory/$file", "$destinationDirectory/$file");
+        }
+    }
+
+    closedir($directory);
+}
+
+// Start of Initializer
+
+$intro = function() {
+    print "----------------------------------------------------------\n";
+    print "-- Name:     \t  Lay Project Initiator                    \n";
+    print "-- Version:  \t  1.0.1                                    \n";
+    print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
+    print "-- Created:  \t  08/02/2022;                              \n";
+    print "-- Dependencies:\n \t\osai\Lay-1.0.1 and dir-copy         \n";
+    print "----------------------------------------------------------\n";
+};
+
+$args = $argv;
+$script_name = "init-lay.php";
+
+if(in_array(("--help"),$args,true) || in_array(("-h"),$args,true)){
+    $intro();
+    print ">>> This is a quick way to initiate a project using Lay as the framework. This script should reside at the root folder \n";
+    print "----------------------------------------------------------\n";
+    print "### Usage: [$script_name] {project-location} -v 1.0.0\n";
+    print "### Example: php $script_name clients/new-project -v 1.0.0\n";
+    die;
+}
+
+if($argc == 1){
+    $intro();
+    die;
+}
+
+print "Project creation has been initiated\n";
+$project_root = $args[1];
+$version = $args[2] ?? "1.0.1";
+$s = DIRECTORY_SEPARATOR;
+$lay = "{$s}var{$s}www{$s}osai-lib{$s}php{$s}Lay{$s}";
+
+$mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) use ($project_root,$lay,$s) {
+    $dir = $project_root . $s . $dir;
+    if($s_name && $t_name)
+        return copy($lay . $s_name, $dir . $s . $t_name);
+
+    umask(0);
+    if(!is_dir($dir) && @!mkdir($dir, 0775, true))
+        throw new Exception("Failed to create directory on location: ($dir); access denied; modify permissions and try again", 1);
+};
+
+$routine = function (string $locale, ?string $source = null, ?string $target = null) use ($mkdir, $s) {
+    $mkdir($locale);
+    if($source)
+        $mkdir($locale,"sample-files" . $s . $source, $target ?? $source);
+};
+
+$routine("api","api-index.php","index.php");
+$routine("res{$s}server{$s}model{$s}__front");
+$routine("res{$s}server{$s}model{$s}__back");
+
+$dir = "res{$s}server{$s}includes$s";
+$routine($dir,"connection.inc");
+
+$section = "__front";
+$routine($dir . "$section","body.inc");
+$routine($dir . "$section","head.inc");
+$routine($dir . "$section","script.inc");
+
+
+$section = "__back";
+$routine($dir . "$section","body.inc");
+$routine($dir . "$section","head.inc");
+$routine($dir . "$section","script.inc");
+
+
+$mkdir("res{$s}server{$s}view{$s}__front");
+$mkdir("res{$s}server{$s}view{$s}__back");
+
+$mkdir("res{$s}server{$s}controller{$s}__front");
+$mkdir("res{$s}server{$s}controller{$s}__back");
+
+$mkdir("res{$s}client{$s}dev{$s}front");
+$mkdir("res{$s}client{$s}dev{$s}back");
+
+$dir = "res{$s}client{$s}dev{$s}custom{$s}";
+$mkdir($dir . "css");
+$mkdir($dir . "js");
+$mkdir($dir . "images");
+$mkdir($dir . "plugin");
+
+recurseCopy($lay . $version,$project_root . $s . "Lay");
+$mkdir("", "sample-files{$s}bob_d_builder.php", "bob_d_builder.php");
+$mkdir("", "sample-files{$s}index.php", "index.php");
+$mkdir("", "sample-files{$s}layconfig.php", "layconfig.php");
+$mkdir("", "sample-files{$s}htaccess", ".htaccess");
+
+print "Project creation complete\n";

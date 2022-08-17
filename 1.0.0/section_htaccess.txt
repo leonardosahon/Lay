@@ -1,0 +1,4 @@
+# Mod rewrite for a particular directory
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^index.php
+RewriteRule ^(.*)$ index.php?v=%{REQUEST_URI} [L,QSA]

@@ -1,0 +1,3 @@
+<h1><?php echo $meta->page->title ?></h1>
+<p>This is the default index page of Lay framework</p>
+<p>We used included files `.inc` and `.view` as a way to render view</p>
