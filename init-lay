@@ -135,7 +135,7 @@ $mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) 
 $routine = function (string $locale, ?string $source = null, ?string $target = null) use ($mkdir, $s) {
     $mkdir($locale);
     if($source)
-        $mkdir($locale,"sample-files" . $s . $source, $target ?? $source);
+        $mkdir($locale,"default-files" . $s . $source, $target ?? $source);
 };
 
 $routine("api","api-index.php","index.php");
@@ -173,13 +173,13 @@ $mkdir($dir . "images");
 $mkdir($dir . "plugin");
 
 recurseCopy($lay . $default_ver,$project_root . $s . "Lay");
-$mkdir("", "sample-files{$s}bob_d_builder.php", "bob_d_builder.php");
-$mkdir("", "sample-files{$s}index.php", "index.php");
-$mkdir("", "sample-files{$s}layconfig.php", "layconfig.php");
-$mkdir("", "sample-files{$s}htaccess", ".htaccess");
-$mkdir("", "sample-files{$s}homepage.view", "res{$s}server{$s}view{$s}__front${s}homepage.view");
-$mkdir("", "sample-files{$s}error.view", "res{$s}server{$s}view{$s}__front${s}error.view");
-$mkdir("", "sample-files{$s}homepage.view", "res{$s}server{$s}view{$s}__back${s}homepage.view");
-$mkdir("", "sample-files{$s}error.view", "res{$s}server{$s}view{$s}__back${s}error.view");
+$mkdir("", "default-files{$s}bob_d_builder.php", "bob_d_builder.php");
+$mkdir("", "default-files{$s}index.php", "index.php");
+$mkdir("", "default-files{$s}layconfig.php", "layconfig.php");
+$mkdir("", "default-files{$s}htaccess", ".htaccess");
+$mkdir("", "default-files{$s}homepage.view", "res{$s}server{$s}view{$s}__front${s}homepage.view");
+$mkdir("", "default-files{$s}error.view", "res{$s}server{$s}view{$s}__front${s}error.view");
+$mkdir("", "default-files{$s}homepage.view", "res{$s}server{$s}view{$s}__back${s}homepage.view");
+$mkdir("", "default-files{$s}error.view", "res{$s}server{$s}view{$s}__back${s}error.view");
 
 print "Project creation complete\n";
