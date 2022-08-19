@@ -178,5 +178,8 @@ $mkdir("", "sample-files{$s}index.php", "index.php");
 $mkdir("", "sample-files{$s}layconfig.php", "layconfig.php");
 $mkdir("", "sample-files{$s}htaccess", ".htaccess");
 $mkdir("", "sample-files{$s}homepage.view", "res{$s}server{$s}view{$s}__front${s}homepage.view");
+$mkdir("", "sample-files{$s}error.view", "res{$s}server{$s}view{$s}__front${s}error.view");
+$mkdir("", "sample-files{$s}homepage.view", "res{$s}server{$s}view{$s}__back${s}homepage.view");
+$mkdir("", "sample-files{$s}error.view", "res{$s}server{$s}view{$s}__back${s}error.view");
 
 print "Project creation complete\n";
