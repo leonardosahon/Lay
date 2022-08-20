@@ -15,10 +15,13 @@ $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location 
 
 require_once $default_lay_location . $s . "init-lay-res" . $s . "Core.php";
 
-$core = new Core($argv,(float) $default_lay_version,$default_lay_location);
+$core = new Core($argv,$default_lay_version,$default_lay_location);
 
 if($argc == 1)
-    $core->intro(true);
+    $core->help(true);
+
+if($ag[1] == "-h" || $ag[1] == "--help")
+    $core->help();
 
 if(substr($ag[1],0,1) == "-")
     $core->use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");

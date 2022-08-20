@@ -2,14 +2,14 @@
 class Core {
     private static string $init_lay_files = "init-lay-res" . DIRECTORY_SEPARATOR . "files";
     private static array $ag;
-    private static float $default_lay_version;
+    private static string $default_lay_version;
     private static string $default_lay_location;
     private static string $current_project_location;
     private static bool $update_lay_version_by_default;
 
     public function __construct(
         array $arguments,
-        float $version,
+        string $version,
         string $lay_location
     ){
         self::$ag = $arguments;
@@ -40,13 +40,18 @@ class Core {
         $script_name = "init-lay";
         
         $this->intro();
-        print ">>> This is a quick way to initiate a project using Lay as the framework. This script should reside at the root folder \n";
+        print "This is the quickest and easiest way to initiate a project using Lay a lite php framework\n";
         print "----------------------------------------------------------\n";
-        print "Arguments Available\n";
-        print "Arguments Available\n";
-        print "----------------------------------------------------------\n";
-        print "### Usage: [$script_name] {PROJECT_LOCATION} -v {LAY_VERSION (optional)} -l {LAY_PACKAGE_LOCATION (optional)} -w {OVERWRITE_EXISTING_PROJECT (optional)} -u {UPDATE_LAY_VERSION (optional)}\n";
-        print "### Example: php $script_name clients/a-new-project -v 1.0.0 -l library/Lay -w false -u true\n";
+        print "Usage: php $script_name [PROJECT_LOCATION] [-v <LAY_VERSION>] [-l <LAY_PACKAGE_LOCATION>] 
+        \t[-w <OVERWRITE_EXISTING_PROJECT>] [-u <UPDATE_OR_DOWNGRADE_LAY>]\n";
+        print "Example: php $script_name clients/a-new-project -v 1.0.0 -l library/Lay -w false -u true\n";
+        print"### Keywords ###\n\n".
+        "Keyword \t\t\t\t|\t Value \t\t|\t Required\n\n".
+        "-v (VERSION_OF_LAY_TO_USE)         \t|\t true||false  \t|\t    false\n".
+        "-w (OVERWRITE_EXISTING_PROJECT)    \t|\t true||false  \t|\t    false\n".
+        "-u (UPDATE_OR_DOWNGRADE_LAY)       \t|\t true||false  \t|\t    false\n".
+        "-l (LAY_PACKAGE_LOCATION)          \t|\t PATH_TO_LAY  \t|\t    false\n\n";
+        print "This script doesn't overwrite a project or update a project's Lay package by default\n";
         die;
     }
     
