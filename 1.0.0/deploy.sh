@@ -12,8 +12,8 @@ esac
 echo "================= Production Bundling Begins"
 
 echo "== Lay JS FILES"
-php terser 'omj$/index.js' -c -m -o 'omj$/index.min.js'
-php terser 'static/js/constants.js' -c -m -o 'static/js/constants.min.js'
+terser 'omj$/index.js' -c -m -o 'omj$/index.min.js'
+terser 'static/js/constants.js' -c -m -o 'static/js/constants.min.js'
 
 echo "== RES FOLDER [JS]"
 php compress ../res/client/dev -o ../res/client/prod -e js

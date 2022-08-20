@@ -8,6 +8,16 @@ $intro = function() {
     print "-- Created:  \t  21/10/2021;                              \n";
     print "-- Dependencies:\n \tTerser (JS);\n \tclean-css-cli (CSS) \n";
     print "----------------------------------------------------------\n";
+
+    // check dependencies
+    $npm = exec("npm -v");
+    $js = exec("terser --version");
+    $css = exec("cleancss --version");
+
+    if(!$npm || !$js || !$css) {
+        print "Some of the dependencies have not been installed, please install all of them to continue with this script\n";
+        die;
+    }
 };
 
 $args = $argv;
