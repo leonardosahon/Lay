@@ -1,6 +1,6 @@
-# Lay
+# ![Lay A Lite Php Framework](https://github.com/leonardosahon/Lay/blob/main/init-lay-res/files/logo.png)
 
-Lite PHP Framework to get your project up and running.
+Lay A Lite Php Framework to get your project up and running.
 
 PHP Version: `7.4 >`
 Current Version: `1.0.0`
