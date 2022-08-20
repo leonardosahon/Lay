@@ -45,20 +45,36 @@ $lay["fn"] = {
      * @param actionsObject
      * @example [...].tableAction({delete: ({id,name}) => [id,name,...]})
      */
-    rowEntryAction: (btn) => {
-        $loop(actionsObject, (value, key) => {
-            // the data-action value must be same with the key of the action being passed into the script
-            if($data(btn,"action") === key) {
-                let parentElement = btn.closest(".table-actions-parent") ?? btn.closest("td")
+    rowEntryAction: (actionsObject) => {
+        $on((actionsObject.targetElement ?? $sel("table.has-table-action") ?? $sel("table.data-table") ?? $sel("table.dt-live-dom")),"click", e =>{
+            if(actionsObject.then)
+                actionsObject.then()
 
-                value({
-                    id: $data(btn, "id"),
-                    name: decodeURIComponent($data(btn, "name")),
-                    item: btn,
-                    params: $data(btn, "params")?.split(","),
-                    info: !$sel(".entry-row-info", parentElement) ? "" : JSON.parse($html($sel(".entry-row-info", parentElement)))
-                })
-            }
+            let item = e.target;
+            let btn;
+
+            if(
+                !$class(item,"has","table-actions") && !$in(item,".table-actions","top") &&
+                !$class(item,"has","table-action") && !$in(item,".table-action","top")
+            ) return;
+
+            btn = item;
+            e.preventDefault();
+
+            $loop(actionsObject, (value, key) => {
+                // the data-action value must be same with the key of the action being passed into the script
+                if($data(btn,"action") === key) {
+                    let parentElement = btn.closest(".table-actions-parent") ?? btn.closest("td")
+
+                    value({
+                        id: $data(btn, "id"),
+                        name: decodeURIComponent($data(btn, "name")),
+                        item: btn,
+                        params: $data(btn, "params")?.split(","),
+                        info: !$sel(".entry-row-info", parentElement) ? "" : JSON.parse($html($sel(".entry-row-info", parentElement)))
+                    })
+                }
+            })
         })
     },
     currency : (num,currency = "USD",locale = "en-US") => {
