@@ -183,7 +183,8 @@ final class LayConfig{
             "name" => $options['name'],
             "img"  => [
                 "logo" => self::$client->custom->img . "logo.png",
-                "icon" => self::$client->custom->img . "favicon.png",
+                "favicon" => self::$client->custom->img . "favicon.png",
+                "icon" => self::$client->custom->img . "icon.png",
             ],
             "color" => $options['color'],
             "mail" => [

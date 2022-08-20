@@ -166,7 +166,7 @@ final class ViewPainter {
             <meta itemprop="name" content="<?php echo $title ?>">
             <meta itemprop="description" content="<?php echo $page['page']['desc'] ?>">
             <meta itemprop="image" id="LAY-PAGE-IMG" content="<?php echo $img ?>">
-            <link rel="icon" type="image/x-icon" href="<?php echo $layConfig->get_site_data('img','icon') ?>">
+            <link rel="icon" type="image/x-icon" href="<?php echo $layConfig->get_site_data('img','favicon') ?>">
             <?php $this->skeleton_head($page); ?>
         </head>
         <body class="<?php echo $page['body']['class'] ?>" <?php echo $page['body']['attr'] ?>>

@@ -1,8 +1,8 @@
 {
   "name": "osai/lay",
   "type": "project",
-  "description": "Quick Start PHP Framework",
-  "keywords": ["framework", "lay", "PHP framework"],
+  "description": "A Quick Start PHP Framework",
+  "keywords": ["framework", "lay", "lite framework", "lite php framework"],
   "license": "MIT",
   "version": "1.0.0",
   "homepage": "https://lay.osaitech.dev/",
@@ -12,13 +12,13 @@
   "authors": [
     {
       "name": "Osahenrumwen Aigbogun",
-      "email": "leonardosahon@gmail.com",
-      "homepage": "https://ceo.osaitech.dev/",
+      "email": "osahon@osaitech.dev",
+      "homepage": "https://osaitech.dev/",
       "role": "Lead Developer"
     }
   ],
   "require": {
-    "php": "^7.4|^8.0",
+    "php": "^7.4",
     "ext-mysqli": "*",
     "ext-json": "*",
     "ext-openssl": "*",

@@ -1,0 +1,4 @@
+<div style="text-align: center"><img src="<?php echo $local->logo ?>" alt="Lay Logo"></div>
+<h1><?php echo $meta->page->title ?></h1>
+<p>This is the default index page of Lay a lite php framework</p>
+<p>Modify the necessary things to start your project</p>

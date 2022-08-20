@@ -10,7 +10,6 @@ if(!isset($BOB_D_BUILDER))
 function bob_the_builder(string $view) : void {
     $layConfig = LayConfig::instance();
     $link = fn($link = "") => $layConfig->get_site_data("base") . $link;
-    $site_name = $layConfig->get_site_data('name','full');
     $layConfig::set_inc_vars([
         "LOCAL" => [
             "link" => $link,

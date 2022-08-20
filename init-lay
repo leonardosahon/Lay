@@ -4,182 +4,93 @@
 // # To use this script, open your terminal or command line (cmd) and type `php init-lay`
 // # Use; `php init-lay -h` for to see options available to you
 
-$s = DIRECTORY_SEPARATOR;
 $ag = $argv;
+$s = DIRECTORY_SEPARATOR; // this is '\' for windows and '/' for linux, mac or UNIX systems
 
-$default_ver = "1.0.0"; // change this to the latest version of Lay
+// You may modify this section if you wish
+$overwrite_existing_project_by_default = false;
+$update_lay_version_by_default = false;
+$default_lay_version = "1.0.0"; // change this to the latest version of Lay
 $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
-$overwrite_existing_project = false;
 
-######           ######
-###### Functions ######
-######           ######
+require_once $default_lay_location . $s . "init-lay-res" . $s . "Core.php";
 
-function intro($kill = false){
-    print "----------------------------------------------------------\n";
-    print "-- Name:     \t  Lay Project Initiator                    \n";
-    print "-- Version:  \t  {$GLOBALS['default_ver']}                \n";
-    print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
-    print "-- Created:  \t  08/02/2022;                              \n";
-    print "----------------------------------------------------------\n";
-    if($kill) die;
-};
-
-function use_error($msg){
-    print "####\n";
-    print "# Error Encountered \n";
-    print "# What happened? $msg\n";
-    die;
-};
-
-function set_flag($index,&$version,&$location,&$overwrite){
-    $ag = $GLOBALS['ag'];
-    $flag = @$ag[$index + 1];
-    switch (substr($ag[$index],0,2)) {
-        default:break;
-        case '-v': $version = $flag; break;
-        case '-l': $location = $flag; break;
-        case '-w': $overwrite = (bool) $flag; break;
-    }
-};
-
-function recurseCopy(string $sourceDirectory, string $destinationDirectory, string $childFolder = ''){
-    $dir = opendir($sourceDirectory);
-
-    if (is_dir($destinationDirectory) === false) {
-        mkdir($destinationDirectory);
-    }
-
-    if ($childFolder !== '') {
-        if (is_dir("$destinationDirectory/$childFolder") === false) {
-            mkdir("$destinationDirectory/$childFolder");
-        }
-
-        while (($file = readdir($dir)) !== false) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-
-            if (is_dir("$sourceDirectory/$file") === true) {
-                recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
-            } else {
-                copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
-            }
-        }
-
-        closedir($dir);
-
-        return;
-    }
-
-    while (($file = readdir($dir)) !== false) {
-        if ($file === '.' || $file === '..') {
-            continue;
-        }
-
-        if (is_dir("$sourceDirectory/$file") === true) {
-            recurseCopy("$sourceDirectory/$file", "$destinationDirectory/$file");
-        }
-        else {
-            copy("$sourceDirectory/$file", "$destinationDirectory/$file");
-        }
-    }
-
-    closedir($dir);
-}
-
-######                 ######
-###### Start Execution ######
-######                 ######
-
-$script_name = "init-lay";
-
-if(in_array(("--help"),$ag,true) || in_array(("-h"),$ag,true)){
-    intro();
-    print ">>> This is a quick way to initiate a project using Lay as the framework. This script should reside at the root folder \n";
-    print "----------------------------------------------------------\n";
-    print "### Usage: [$script_name] {PROJECT_LOCATION} -v {LAY_VERSION (optional)} -l {LAY_PACKAGE_LOCATION (optional)}\n";
-    print "### Example: php $script_name clients/a-new-project -v 1.0.0 -l library/Lay\n";
-    die;
-}
+$core = new Core($argv,(float) $default_lay_version,$default_lay_location);
 
 if($argc == 1)
-    intro(true);
+    $core->intro(true);
 
 if(substr($ag[1],0,1) == "-")
-    use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");
+    $core->use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");
 
 for($i = 0; $i < $argc; $i++){
-    set_flag($i,$default_ver,$default_lay_location, $overwrite_existing_project);
+    $core->set_flag($i,$default_lay_version,$default_lay_location, $overwrite_existing_project_by_default, $update_lay_version_by_default);
 }
 
 // start process
-print "Project creation has been initiated\n";
+print "Project Creation Initiated\n";
 
 $project_root = ltrim($ag[1],"/");
+$core->set_current_project($project_root);
+$core->set_update_lay($update_lay_version_by_default);
+
 $lay = rtrim($default_lay_location,$s) . $s;
 
-if(is_dir($project_root) and $overwrite_existing_project === false)
-    use_error("You are trying to create an existing project, delete the folder and try again, or change the name");
+if(!is_dir($default_lay_location))
+    $core->use_error("The specified `default_lay_location` '$default_lay_location' does not exist, please change the value to the place where you cloned the `Lay` package into and try again");
 
-$mkdir = function (string $dir, ?string $s_name = null, ?string $t_name = null) use ($project_root,$lay,$s) {
-    $dir = $project_root . $s . $dir;
-    if($s_name && $t_name)
-        return copy($lay . $s_name, $dir . $s . $t_name);
+if(is_dir($project_root) and $overwrite_existing_project_by_default === false and $update_lay_version_by_default === false)
+    $core->use_error("You are trying to create an existing project, delete the folder and try again, or change the name. If you really want to overwrite the project, use the argument `-w true`. If you want to just update/downgrade the Lay version pass the Lay version using the version argument `-v LAY_VERSION` and the update argument `-u true`");
 
-    umask(0);
-    if(!is_dir($dir) && @!mkdir($dir, 0775, true))
-        use_error("Failed to create directory on location: ($dir); access denied; modify permissions and try again");
-};
+$sections = ["__front","__back"];
+$sections_js = ["front","back"];
 
-$routine = function (string $locale, ?string $source = null, ?string $target = null) use ($mkdir, $s) {
-    $mkdir($locale);
-    if($source)
-        $mkdir($locale,"default-files" . $s . $source, $target ?? $source);
-};
+$core->copy_routine("api","api-index.php","index.php");
 
-$routine("api","api-index.php","index.php");
-$routine("res{$s}server{$s}model{$s}__front");
-$routine("res{$s}server{$s}model{$s}__back");
+$inc = "res{$s}server{$s}includes$s";
+$view = "res{$s}server{$s}view$s";
+$client = "res{$s}client{$s}dev$s";
 
-$dir = "res{$s}server{$s}includes$s";
-$routine($dir,"connection.inc");
+$core->copy_routine($inc,"connection.inc");
 
-$section = "__front";
-$routine($dir . "$section","body.inc");
-$routine($dir . "$section","head.inc");
-$routine($dir . "$section","script.inc");
+// server files
+for($i = 0; $i < count($sections); $i++){
+    $section = $sections[$i];
 
+    $core->copy_routine("res{$s}server{$s}model{$s}{$section}");
+    $core->copy_routine("res{$s}server{$s}view{$s}{$section}");
+    $core->copy_routine("res{$s}server{$s}controller{$s}{$section}");
 
-$section = "__back";
-$routine($dir . "$section","body.inc");
-$routine($dir . "$section","head.inc");
-$routine($dir . "$section","script.inc");
+    $core->copy_routine($inc . "$section","body.inc");
+    $core->copy_routine($inc . "$section","head.inc");
+    $core->copy_routine($inc . "$section","script.inc");
+    
+    $core->copy_routine($view . "$section","homepage.view");
+    $core->copy_routine($view . "$section","error.view");
+}
 
+// client files
+for($i = 0; $i < count($sections_js); $i++){
+    $core->copy_routine($client . $sections_js[$i]);
+}
 
-$mkdir("res{$s}server{$s}view{$s}__front");
-$mkdir("res{$s}server{$s}view{$s}__back");
+$section = $client . "custom{$s}";
+$core->copy_routine($section . "css");
+$core->copy_routine($section . "js");
+$core->copy_routine($section . "images");
+$core->copy_routine($section . "plugin");
 
-$mkdir("res{$s}server{$s}controller{$s}__front");
-$mkdir("res{$s}server{$s}controller{$s}__back");
+$core->copy_routine($section . "images","icon.png");
+$core->copy_routine($section . "images","favicon.png");
+$core->copy_routine($section . "images","logo.png");
 
-$mkdir("res{$s}client{$s}dev{$s}front");
-$mkdir("res{$s}client{$s}dev{$s}back");
+// copy specified Lay verison
+$core->folder_copy($lay . $default_lay_version, $project_root . $s . "Lay");
 
-$dir = "res{$s}client{$s}dev{$s}custom{$s}";
-$mkdir($dir . "css");
-$mkdir($dir . "js");
-$mkdir($dir . "images");
-$mkdir($dir . "plugin");
+// copy default root folder files
+$core->copy_routine("", "bob_d_builder.php");
+$core->copy_routine("", "index.php");
+$core->copy_routine("", "layconfig.php");
+$core->copy_routine("", "htaccess", ".htaccess");
 
-recurseCopy($lay . $default_ver,$project_root . $s . "Lay");
-$mkdir("", "default-files{$s}bob_d_builder.php", "bob_d_builder.php");
-$mkdir("", "default-files{$s}index.php", "index.php");
-$mkdir("", "default-files{$s}layconfig.php", "layconfig.php");
-$mkdir("", "default-files{$s}htaccess", ".htaccess");
-$mkdir("", "default-files{$s}homepage.view", "res{$s}server{$s}view{$s}__front${s}homepage.view");
-$mkdir("", "default-files{$s}error.view", "res{$s}server{$s}view{$s}__front${s}error.view");
-$mkdir("", "default-files{$s}homepage.view", "res{$s}server{$s}view{$s}__back${s}homepage.view");
-$mkdir("", "default-files{$s}error.view", "res{$s}server{$s}view{$s}__back${s}error.view");
-
-print "Project creation complete\n";
+print "Project Creation Completed\n";
