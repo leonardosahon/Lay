@@ -171,11 +171,11 @@ final class ViewPainter {
         </head>
         <body class="<?php echo $page['body']['class'] ?>" <?php echo $page['body']['attr'] ?>>
             <!--//START LAY CONSTANTS-->
-            <input type="hidden" id="LAY-API" value="<?php $layConfig->get_res__client("api") ?>">
-            <input type="hidden" id="LAY-UPLOAD" value="<?php $layConfig->get_res__client("upload") ?>">
-            <input type="hidden" id="LAY-CUSTOM-IMG" value="<?php $layConfig->get_res__client("custom","img") ?>">
-            <input type="hidden" id="LAY-BACK-IMG" value="<?php $layConfig->get_res__client("back","img") ?>">
-            <input type="hidden" id="LAY-FRONT-IMG" value="<?php $layConfig->get_res__client("front","img") ?>">
+            <input type="hidden" id="LAY-API" value="<?php echo $layConfig->get_res__client("api") ?>">
+            <input type="hidden" id="LAY-UPLOAD" value="<?php echo $layConfig->get_res__client("upload") ?>">
+            <input type="hidden" id="LAY-CUSTOM-IMG" value="<?php echo $layConfig->get_res__client("custom","img") ?>">
+            <input type="hidden" id="LAY-BACK-IMG" value="<?php echo $layConfig->get_res__client("back","img") ?>">
+            <input type="hidden" id="LAY-FRONT-IMG" value="<?php echo $layConfig->get_res__client("front","img") ?>">
             <!--//END LAY CONSTANTS-->
             <?php $this->skeleton_body($page);
             $this->skeleton_script($page); ?>
