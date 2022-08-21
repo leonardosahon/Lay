@@ -148,6 +148,10 @@ class CookieSessionStorage {
         return self::instance();
     }
 
+    public function set_session_cookie(string $cookie_name) : void {
+        self::$session_user_cookie = self::$session_user_cookie . "_" . $cookie_name;
+    }
+
     public function store_cookie(string $user_id, string $encrypted_password) : bool {
         $token = $this->update_user_token($user_id,$encrypted_password);
         return $this->set_cookie(self::$session_user_cookie, (new Crypt())->toggleCrypt($token['entity_guid']));
