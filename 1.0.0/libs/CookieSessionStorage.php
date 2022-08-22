@@ -14,8 +14,10 @@ class CookieSessionStorage {
     private static string $table_main =  "system_user_cookie_session_storage";
 
     private function __construct() {
-        $salt = str_replace([".","/"],"_",AutoLoader::get_root_dir());
-        self::$session_user_cookie = $salt . "c";
+        $d = explode(DIRECTORY_SEPARATOR,AutoLoader::get_root_dir());
+        $i = count($d);
+        $salt = trim(str_replace([".","/"],"_",$d[$i-2]));
+        self::$session_user_cookie = "_". substr($salt,0,5);
     }
     private function __clone(){}
 
@@ -102,6 +104,7 @@ class CookieSessionStorage {
         $osai = self::orm();
         $today = self::date()->date();
         if($token = $this->get_user_token($user_id)) {
+            $token = $token['entity_guid'];
             $osai->update(self::$table_main, "expire='$today',auth='$encrypted_password'", "WHERE entity_guid='$token'");
             $token['auth'] = $encrypted_password;
             return $token;
