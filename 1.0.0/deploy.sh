@@ -27,6 +27,7 @@ if [ -n "${commit_message}" ]; then
   echo "================= Deploying to github"
   git add .
   git commit -m "$commit_message"
+  git pull
   git push
 else
   echo "Did not deploy to github :("

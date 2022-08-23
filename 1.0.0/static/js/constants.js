@@ -1,11 +1,11 @@
 const $lay = {};
 
 $lay.page = {
+    html : $id("LAY-HTML"),
     title : $id("LAY-PAGE-TITLE").content,
-    title_full : $id("LAY-PAGE-TITLE").innerHTML,
+    title_full : $id("LAY-PAGE-TITLE-FULL").innerHTML,
     desc : $attr($id("LAY-PAGE-DESC"),"content"),
     type : $attr($id("LAY-PAGE-TYPE"),"content"),
-    root : $attr($id("LAY-PAGE-ROOT"),"content"),
     url : $attr($id("LAY-PAGE-URL"),"content"),
     img : $attr($id("LAY-PAGE-IMG"),"content"),
     site_name : $attr($id("LAY-SITE-NAME-SHORT"),"content"),

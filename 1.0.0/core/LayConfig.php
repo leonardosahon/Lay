@@ -24,6 +24,7 @@ final class LayConfig{
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
     private static bool $USE_OBJS;
+    private static bool $COMPRESS_HTML;
     private static bool $INITIALIZED = false;
 
     private function __construct(){}
@@ -70,6 +71,8 @@ final class LayConfig{
             # This tells config to use `dev/` folder on production server
             # instead of `prod/` folder as the source for client resources
             "use_prod" => $options['switch']['use_prod'] ?? true,
+            # as the name implies, this enables/disables html output compression
+            "compress_html" => $options['switch']['compress_html'] ?? true,
             # This forces Lay to use https:// instead of http:// for its proto; Default is true for production environment
             # A use case can be when simulating production server, but don't have access to ssl
             "use_https" => $options['switch']['use_https'] ?? true,
@@ -100,6 +103,7 @@ final class LayConfig{
         ]);
 
         self::$USE_OBJS = $options['use_objects'];
+        self::$COMPRESS_HTML = $options['compress_html'];
         self::$USE_DEFAULT_ROUTE = $options['default_inc_routes'];
         $slash          = DIRECTORY_SEPARATOR;
         $obj_handler    = ObjectHandler::instance();
@@ -207,6 +211,10 @@ final class LayConfig{
     public static function get_orm() : SQL {
         self::is_init();
         return self::$SQL_INSTANCE;
+    }
+    public static function is_page_compressed() : bool {
+        self::is_init();
+        return self::$COMPRESS_HTML;
     }
 
     ///### Database Connection
@@ -323,7 +331,7 @@ final class LayConfig{
         return self::$INC_VARS;
     }
 
-    public function inc_file_as_string(string $file_location) : string {
+    public function inc_file_as_string(string $file_location,$meta = [],$local = [],array $local_raw = []) : string {
         $layConfig = self::instance();
         ob_start(); include $file_location; return ob_get_clean();
     }
@@ -352,7 +360,7 @@ final class LayConfig{
         return $route[0];
     }
 
-    public function inc_file(?string $file, string $type = "inc", bool $once = true, bool $strict = true, ?array $vars = []) : void {
+    public function inc_file(?string $file, string $type = "inc", bool $once = true, bool $strict = true, ?array $vars = []) : ?string {
         self::is_init();
         $using_custom_route = false;
         $slash = DIRECTORY_SEPARATOR;
@@ -414,7 +422,11 @@ final class LayConfig{
         if(!file_exists($file) && $strict)
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
 
-        $once == true ? include_once $file : include $file;
+        if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
+            return $this->inc_file_as_string($file,$meta,$local,$local_raw);
+
+        $once ? include_once $file : include $file;
+        return null;
     }
 
     ///### View
