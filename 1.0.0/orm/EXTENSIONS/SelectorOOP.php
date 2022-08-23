@@ -96,7 +96,11 @@ trait SelectorOOP {
         $this->row();
         return $this->select();
     }
-
+    final public function then_update(string $clause) : bool {
+        $this->clause($clause);
+        return $this->edit();
+    }
+    
     /** @see SQL_CORE::query_insert() */
     final public function insert() : bool {
         $d = $this->get_vars();

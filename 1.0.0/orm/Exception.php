@@ -72,7 +72,7 @@ DEBUG;
         }
         else{
             $dir = AutoLoader::get_root_dir() . "Lay" . DIRECTORY_SEPARATOR . "error_logs";
-            $file_log = $dir . DIRECTORY_SEPARATOR . "log.txt";
+            $file_log = $dir . DIRECTORY_SEPARATOR . "lay_error.log";
             if(!is_dir($dir)) mkdir($dir,0755);
 
             if(!file_exists($file_log))
@@ -83,10 +83,10 @@ DEBUG;
                 $last_log = end($logs);
                 $x = explode(".",$last_log);
 
-                if(end($x) == "txt")
+                if(end($x) == "log")
                     $i = ((int) explode("g",$x[0])[1] ?? 0) + 1;
 
-                $fh = fopen($dir . DIRECTORY_SEPARATOR . "log$i.txt", "w+");
+                $fh = fopen($dir . DIRECTORY_SEPARATOR . "lay_error$i.log", "w+");
             }
             else {
                 $fh = fopen($file_log,"r+");

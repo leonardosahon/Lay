@@ -1,17 +1,17 @@
 const $lay = {};
 
-$lay['page'] = {
+$lay.page = {
+    html : $id("LAY-HTML"),
     title : $id("LAY-PAGE-TITLE").content,
-    title_full : $id("LAY-PAGE-TITLE").innerHTML,
+    title_full : $id("LAY-PAGE-TITLE-FULL").innerHTML,
     desc : $attr($id("LAY-PAGE-DESC"),"content"),
     type : $attr($id("LAY-PAGE-TYPE"),"content"),
-    root : $attr($id("LAY-PAGE-ROOT"),"content"),
     url : $attr($id("LAY-PAGE-URL"),"content"),
     img : $attr($id("LAY-PAGE-IMG"),"content"),
     site_name : $attr($id("LAY-SITE-NAME-SHORT"),"content"),
     site_name_full : $attr($id("LAY-SITE-NAME"),"content"),
 }
-$lay["src"] = {
+$lay.src = {
     base : $id("LAY-PAGE-BASE").href,
     api : $id('LAY-API').value + "?c=",
     custom_img : $id("LAY-CUSTOM-IMG").value,
@@ -19,7 +19,7 @@ $lay["src"] = {
     front_img : $id("LAY-FRONT-IMG").value,
     uploads : $id("LAY-UPLOAD").value,
 }
-$lay["fn"] = {
+$lay.fn = {
     copy: (str, successMsg = "Link copied successfully") => {
         if(navigator.clipboard) {
             navigator.clipboard.writeText(str)
@@ -71,6 +71,20 @@ $lay["fn"] = {
                         name: decodeURIComponent($data(btn, "name")),
                         item: btn,
                         params: $data(btn, "params")?.split(","),
+                        fn: () => {
+                            let fn = $data(btn, "fn")?.trim()
+                            if(!fn) return null
+
+                            let fnArgs = $data(btn, "fn-args")
+
+                            if(fnArgs)
+                                return new Function('', `return ${fn}(${fnArgs.split(",")})`).call(this)
+
+                            if(fn.substring(fn.length-1,1) === ")")
+                                return new Function('',`return ${fn}`).call(this)
+
+                            return new Function('',`return ${fn}()`).call(this)
+                        },
                         info: !$sel(".entry-row-info", parentElement) ? "" : JSON.parse($html($sel(".entry-row-info", parentElement)))
                     })
                 }

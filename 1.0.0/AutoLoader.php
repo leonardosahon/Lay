@@ -39,5 +39,5 @@ class AutoLoader {
     }
 }
 AutoLoader::load_lay_classes();
-# uncomment the line below if you're interested in this package's autoloader
+# comment the line below if you're not interested in this package's autoloader
 AutoLoader::load_other_classes();
