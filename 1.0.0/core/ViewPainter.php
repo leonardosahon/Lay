@@ -355,7 +355,7 @@ final class ViewPainter {
         $plugin = $client->custom->plugin;
         $section = $meta['page']['type'] == "back" ? $client->back : $client->front;
 
-        $add_asset = function (array &$entry, string &$view, string $res) use($validate_file) : void {
+        $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($validate_file) : void {
             foreach ($entry as $k => $f) {
                 $validate_file($f);
                 $f = trim($f);
@@ -363,6 +363,7 @@ final class ViewPainter {
                     $f = $res . $f;
                     $view .= '<script src="' . $f . '"></script>';
                     unset($entry[$k]);
+                    $using_assets = true;
                 }
             }
         };
@@ -374,8 +375,7 @@ final class ViewPainter {
                 case "back": $res = $client->back->root; break;
             };
 
-            $add_asset($f,$view,$res);
-            $using_assets = true;
+            $add_asset($f,$view,$res,$using_assets);
         }
 
         if($using_assets) {
