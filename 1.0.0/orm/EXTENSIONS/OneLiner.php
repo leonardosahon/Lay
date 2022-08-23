@@ -27,7 +27,7 @@ trait OneLiner {
      * @param string|null $clause condition for selection
      * @return int returns the last value of the column passed to the second parameter on the table passed on the first parameter
      */
-    public function last_value(string $table, string $column = "id", ?string $clause = null) : int {
+    public function last_value(string $table, string $column = "value", ?string $clause = null) : int {
         $clause = $clause ?? "ORDER BY $column DESC LIMIT 1";
         if(empty($column)) self::core()->use_exception("Query Execution Error",
             "You need to specify a column to check for last_value");
