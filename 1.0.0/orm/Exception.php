@@ -17,8 +17,8 @@ class Exception {
 
     public function get_env(): string { return self::$ENV; }
 
-    public function use_exception(string $title, string $body, bool $kill = true) : void {
-        $this->show_exception(9,["title" => $title, "body_includes" => $body, "kill" => $kill ]);
+    public function use_exception(string $title, string $body, bool $kill = true, bool $trace = true) : void {
+        $this->show_exception(9,["title" => $title, "body_includes" => $body, "kill" => $kill, "trace" => $trace ]);
     }
 
     private function container ($title,$body,$other=[]) : string {
@@ -51,8 +51,7 @@ class Exception {
                 </div>
             STACK;
             $stack_raw .= <<<STACK
-              -- {$v['function']}
-              file: {$v['file']} ({$v['line']})
+              - {$v['function']} {$v['file']}; {$v['line']}
             
             STACK;
         }
@@ -61,13 +60,13 @@ class Exception {
 
         if($display) {
             echo <<<DEBUG
-<div style='background:#1d2124;padding:5px;color:#fffffa;overflow:auto;'>
-    <h3 style='text-transform: uppercase; color: $title_color'> $title </h3>
-    <div style='color: $body_color; font-weight: bold; margin: 5px 0;'> $body </div>
-    <div><h4 style="margin-bottom: 2px; color: #0099ff; text-transform: uppercase">FOOT NOTE</h4><b>Stack:</b> $stack</div>
-    <div><b>Env:</b> <b style="color: #dea303">$env</b></div>
-</div>
-DEBUG;
+            <div style='background:#1d2124;padding:5px;color:#fffffa;overflow:auto;'>
+                <h3 style='text-transform: uppercase; color: $title_color'> $title </h3>
+                <div style='color: $body_color; font-weight: bold; margin: 5px 0;'> $body </div>
+                <div><h4 style="margin-bottom: 2px; color: #0099ff; text-transform: uppercase">FOOT NOTE</h4><b>Stack:</b> $stack</div>
+                <div><b>Env:</b> <b style="color: #dea303">$env</b></div>
+            </div>
+            DEBUG;
             return $other['act'] ?? "kill";
         }
         else{
@@ -93,13 +92,10 @@ DEBUG;
                 fseek($fh,0,SEEK_END);
             }
             $body = strip_tags($body);
-            $date = date("Y-m-d H:i:s");
+            $date = date("Y-m-d H:i:s e");
             fwrite($fh,<<<DEBUG
-            [#### -- $date -- ####]
-              $title 
-              $body
-            $stack_raw---------     ---------     ---------
-            
+            [$date] $title: $body
+            $stack_raw
             DEBUG) or die("Unable to write SQL error log in location " . $dir . " <br> Refer to " . __FILE__ . ": " . __LINE__);
             fclose($fh);
             echo "<b>Your attention is needed at the backend, check your Lay error logs for details</b>";
@@ -118,8 +114,9 @@ DEBUG;
     }
     protected function show_exception($type, $opt=[]) : void {
         $query=$opt[0] ?? ""; $query_type=$opt[1] ?? "";
-        $dbg = debug_backtrace(2);
+        $trace = $opt['trace'] ?? true;
         $query = (self::$ENV == "DEVELOPMENT" && is_string($query)) ? htmlspecialchars($query) : $query;
+        $dbg = $trace ? debug_backtrace(2) : [];
         switch ($type){
             #### SQR = Structured Query Review  &&&   SQE = Structured Query Error
             case -1:

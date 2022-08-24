@@ -159,7 +159,7 @@ final class ViewPainter {
 
         $page = <<<STR
         <!DOCTYPE html>
-        <html lang="en" id="LAY-HTML">
+        <html itemscope lang="en" id="LAY-HTML">
         <head>
             <title id="LAY-PAGE-TITLE-FULL">$title</title>
             <base href="$base" id="LAY-PAGE-BASE">
