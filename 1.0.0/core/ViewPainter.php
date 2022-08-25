@@ -333,15 +333,17 @@ final class ViewPainter {
         $using_assets = false;
 
         if($meta['core']['script']) {
+            list($omj,$const) = null;
+            
             if ($env == "prod") {
                 if (file_exists($lay_root . 'omj$' . $s . 'index.min.js'))
-                    $core_script .= '<script src="' . $lay_base . 'omj$/index.min.js"></script>';
+                    $omj = '<script src="' . $lay_base . 'omj$/index.min.js"></script>';
                 if (file_exists($lay_root . "static{$s}js{$s}constants.min.js"))
-                    $core_script .= '<script src="' . $lay_base . 'static/js/constants.min.js"></script>';
-            } else {
-                $core_script .= '<script src="' . $lay_base . 'omj$/index.js"></script>';
-                $core_script .= '<script src="' . $lay_base . 'static/js/constants.js"></script>';
+                    $const = '<script src="' . $lay_base . 'static/js/constants.min.js"></script>';
             }
+            
+            $core_script .= $omj ?? '<script src="' . $lay_base . 'omj$/index.js"></script>';
+            $core_script .= $const ?? '<script src="' . $lay_base . 'static/js/constants.js"></script>';
         }
 
         $validate_file = function ($file) : void {
