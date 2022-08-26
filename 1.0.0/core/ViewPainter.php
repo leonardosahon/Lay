@@ -270,6 +270,7 @@ final class ViewPainter {
         $add_asset = function (array &$entry, string &$view, string $res) use($check_css_args) : void {
             foreach ($entry as $k => $e) {
                 $a = $check_css_args($e);
+                if(!$a[3]) continue;
                 $f = trim($a[3]);
                 if (count(explode(".css", $f,2)) > 1) {
                     $f = $res . $f;
@@ -295,16 +296,19 @@ final class ViewPainter {
 
         foreach ($meta['dist']['root']['css'] as $f) {
             $a = $check_css_args($f);
+            if(!$a[3]) continue;
             $f = $section->root . explode(".css", $a[3])[0] . ".css";
             $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
         }
         foreach ($meta['dist']['css'] as $f) {
             $a = $check_css_args($f);
+            if(!$a[3]) continue;
             $f = $section->css . explode(".css", $a[0])[0] . ".css";
             $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
         }
         foreach ($meta['src']['plugin'] as $k => $f) {
             $a = $check_css_args($f);
+            if(!$a[3]) continue;
             $f = explode(".css", $a[3]);
             if (count($f) > 1) {
                 $f = $plugin . $f[0] . ".css";
@@ -314,6 +318,7 @@ final class ViewPainter {
         }
         foreach ($meta['src']['css'] as $f) {
             $a = $check_css_args($f);
+            if(!$a[3]) continue;
             $f = $custom_css . explode(".css", $a[3])[0] . ".css";
             $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
         }
@@ -360,6 +365,7 @@ final class ViewPainter {
         $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($validate_file) : void {
             foreach ($entry as $k => $f) {
                 $validate_file($f);
+                if(!$f) continue;
                 $f = trim($f);
                 if (count(explode(".js", $f,2)) > 1) {
                     $f = $res . $f;
@@ -387,16 +393,19 @@ final class ViewPainter {
 
         foreach ($meta['dist']['root']['js'] as $f) {
             $validate_file($f);
+            if(!$f) continue;
             $f = $section->root . explode(".js",$f)[0] . ".js";
             $view .= '<script src="' . $f . '"></script>';
         }
         foreach ($meta['dist']['js'] as $f) {
             $validate_file($f);
+            if(!$f) continue;
             $f = $section->js . explode(".js",$f)[0] . ".js";
             $view .= '<script src="' . $f . '"></script>';
         }
         foreach ($meta['src']['plugin'] as $k => $f) {
             $validate_file($f);
+            if(!$f) continue;
             $f = explode(".js", $f);
             if (count($f) > 1) {
                 $f = $plugin . $f[0] . ".js";
@@ -406,6 +415,7 @@ final class ViewPainter {
         }
         foreach ($meta['src']['js'] as $f) {
             $validate_file($f);
+            if(!$f) continue;
             $f = $custom_js . explode(".js",$f)[0] . ".js";
             $view .= '<script src="' . $f . '"></script>';
         }
