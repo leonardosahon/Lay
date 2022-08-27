@@ -179,6 +179,8 @@ final class LayConfig{
             "upload"  =>   "res"            . $slash . "uploads" . $slash,
         ]);
 
+        $options['mail'][0] = $options['mail'][0] ?? "info@" . $base_no_proto;
+
         self::$site = $obj_handler->to_object([
             "base" => $base,
             "base_no_proto" => $base_no_proto,
@@ -192,8 +194,7 @@ final class LayConfig{
             ],
             "color" => $options['color'],
             "mail" => [
-                $options['mail'][0] ?? ("info@" . $base_no_proto),
-                $options['mail'][1] ?? ("support@" . $base_no_proto)
+                ...$options['mail']
             ],
             "tel" => $options['tel'],
             "others" => $options['others']

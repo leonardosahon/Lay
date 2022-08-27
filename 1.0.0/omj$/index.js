@@ -1076,13 +1076,13 @@ const $freeze = (element, operation, attr = true) => {
                     e.preventDefault();
                     removeEntry(entry, false, true);
                 }));
+                removeEntry(entry);
                 if (!useThisHeight && $class(entry, "has", "osai-notifier__display-center")) return;
                 if (useThisHeight) return $style(entry, `top:${useThisHeight}px`);
                 oldEntryHeight = parseInt(oldEntryHeight);
                 let currentTop = oldEntryHeight + defaultTopMargin;
                 if (oldEntryHeight === 0) return $style(entry, "top:10px");
                 $style(entry, "top:" + currentTop + "px");
-                removeEntry(entry);
             };
             if (position === "center") postStyle = "osai-notifier__display-center";
             if ($sel(sideCardSelector)) previousEntryHeight = getNextEntryTop();
@@ -1142,6 +1142,7 @@ const $freeze = (element, operation, attr = true) => {
 const CusWind = $osaiBox();
 
 function aMsg(message, option = {
+    head: "Alert Box",
     showButton: true,
     closeOnBlur: null,
     size: "sm",
@@ -1149,7 +1150,7 @@ function aMsg(message, option = {
     onClose: null
 }) {
     CusWind.insert("body", message);
-    if (option.showButton === false) CusWind.flush("head").flush("foot"); else CusWind.insert("head", "Alert Box").insert("foot", `<button type="button" class="success osai-modal__btn osai-close-box"><i class='gg-check'></i></button>`);
+    if (option.showButton === false) CusWind.flush("head").flush("foot"); else CusWind.insert("head", option.head).insert("foot", `<button type="button" class="success osai-modal__btn osai-close-box"><i class='gg-check'></i></button>`);
     CusWind.render(option.closeOnBlur, option.size, option.align, option.onClose);
 }
 
