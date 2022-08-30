@@ -29,16 +29,15 @@ class CookieSessionStorage {
     }
 
     private function set_cookie(string $cookieName, string $cookieValue, string $expire="30 days", string $path="/", ...$opts) : bool {
-        $domain = $opts[0] ?? $_SERVER['REMOTE_ADDR'] ?? $_SERVER['HTTP_HOST'];
+        $domain = $_SERVER['REMOTE_ADDR'];
         $secure = $opts[1] ?? null;
         $http_only = $opts[2] ?? false;
         $same_site = $opts[3] ?? "Lax";
 
-        if ($domain == "127.0.0.1" or $domain == "localhost") {
+        if ($domain == "127.0.0.1" or $domain == "127.0.1.1")
             $secure = $secure ?? false;
-            $domain = $_SERVER['HTTP_HOST'];
-        }
-
+            
+        $domain = $opts[0] ?? $_SERVER['HTTP_HOST'];
         $secure = $secure ?? true;
 
         if($expire == 0)

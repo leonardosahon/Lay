@@ -20,6 +20,32 @@ final class ViewPainter {
         return self::$instance;
     }
 
+    public static function constants(array $meta) : void {
+        $const = self::$constant_attributes ?? [];
+        self::$constant_attributes = [
+            "core" => [
+                "close_connection" => $meta['core']['close_connection'] ?? $const['core']['close_connection'] ?? true,
+                "script" => $meta['core']['script'] ?? $const['core']['script'] ?? true,
+                "strict" => $meta['core']['strict'] ?? $const['core']['strict'] ?? true,
+                "skeleton" => $meta['core']['skeleton'] ?? $const['core']['skeleton'] ?? true,
+            ],
+            "body" =>  [
+                "class" => $meta['body']['class'] ?? $const['body']['class'] ?? "",
+                "attr" => $meta['body']['attr'] ?? $const['body']['attr'] ?? "",
+            ],
+            "page" => [
+                "charset" =>  $meta['page']['charset'] ?? $const['page']['charset'] ?? "UTF-8",
+                "base" =>  $meta['page']['base'] ?? $const['page']['base'] ?? null,
+                "title" =>  $meta['page']['title'] ?? $const['page']['title'] ?? null,
+                "desc" =>   $meta['page']['desc'] ?? $const['page']['desc'] ?? null,
+                "type" =>   $meta['page']['type'] ?? $const['page']['type'] ?? null,
+                "img" => $meta['page']['img'] ?? $const['page']['img'] ?? null,
+                "author" => $meta['page']['author'] ?? $const['page']['author'] ?? null,
+                "append_site_name" => $meta['page']['append_site_name'] ?? $const['page']['append_site_name'] ?? true,
+            ]
+        ];
+    }
+
     public function paint(array &$meta, ...$meta_args) : void {
         if(empty(self::$constant_attributes))
             self::constants([]);
@@ -38,10 +64,12 @@ final class ViewPainter {
                 "charset" =>  $meta['page']['charset'] ?? $const['page']['charset'],
                 "base" =>  $meta['page']['base'] ?? $const['page']['base'],
                 "url" => $meta['page']['url'] ?? $url,
+                "canonical" => $meta['page']['canonical'] ?? $url,
                 "title" => $meta['page']['title'] ?? $const['page']['title'],
                 "desc" => $meta['page']['desc'] ?? $const['page']['desc'],
                 "img" => $meta['page']['img'] ?? $const['page']['img'],
                 "author" => $meta['page']['author'] ?? $const['page']['author'],
+                "append_site_name" => $meta['page']['append_site_name'] ?? $const['page']['append_site_name'],
                 // This is required to split the views or templates into front (Landing page and the likes) and back (Dashboard and the likes)
                 "type" =>  $meta['page']['type'] ?? $const['page']['type'],
                 // This naturally is used to get the root directory of the current script accessing the view painter
@@ -102,9 +130,16 @@ final class ViewPainter {
         $name = $layConfig->get_site_data('name');
 
         $meta['page']['title_raw'] = $meta['page']['title'];
-        $meta['page']['title'] =
-            strtolower($meta['page']['title_raw']) == "homepage" ? $name->full :
-            $meta['page']['title_raw'] . " :: " . $name->short;
+        
+        if(strtolower($meta['page']['title_raw']) == "homepage"){
+            $meta['page']['title'] = $name->full;
+            $meta['page']['title_raw'] = $name->full;
+        }
+        else{
+            $meta['page']['title'] = !$meta['page']['append_site_name'] ? 
+                $meta['page']['title_raw'] :
+                $meta['page']['title_raw'] . " :: " . $name->short
+        }
 
         // pass the variables required by include files from this scope to their scope. This affects all files included within this same scope
         $layConfig::set_inc_vars([
@@ -115,31 +150,6 @@ final class ViewPainter {
 
         self::$VIEW_ARGS = [...$meta_args];
         $this->skeleton($meta);
-    }
-
-    public static function constants(array $meta) : void {
-        $const = self::$constant_attributes ?? [];
-        self::$constant_attributes = [
-            "core" => [
-                "close_connection" => $meta['core']['close_connection'] ?? $const['core']['close_connection'] ?? true,
-                "script" => $meta['core']['script'] ?? $const['core']['script'] ?? true,
-                "strict" => $meta['core']['strict'] ?? $const['core']['strict'] ?? true,
-                "skeleton" => $meta['core']['skeleton'] ?? $const['core']['skeleton'] ?? true,
-            ],
-            "body" =>  [
-                "class" => $meta['body']['class'] ?? $const['body']['class'] ?? "",
-                "attr" => $meta['body']['attr'] ?? $const['body']['attr'] ?? "",
-            ],
-            "page" => [
-                "charset" =>  $meta['page']['charset'] ?? $const['page']['charset'] ?? "UTF-8",
-                "base" =>  $meta['page']['base'] ?? $const['page']['base'] ?? null,
-                "title" =>  $meta['page']['title'] ?? $const['page']['title'] ?? null,
-                "desc" =>   $meta['page']['desc'] ?? $const['page']['desc'] ?? null,
-                "type" =>   $meta['page']['type'] ?? $const['page']['type'] ?? null,
-                "img" => $meta['page']['img'] ?? $const['page']['img'] ?? null,
-                "author" => $meta['page']['author'] ?? $const['page']['author'] ?? null,
-            ]
-        ];
     }
 
     private function skeleton(array $meta) : void {
@@ -156,6 +166,9 @@ final class ViewPainter {
         $charset = $page['charset'];
         $desc = $page['desc'];
         $color = $site_data->color->pry;
+        $canonical = <<<LINK
+            <link rel="canonical" href="{$page['canonical']}" />
+        LINK;
 
         $page = <<<STR
         <!DOCTYPE html>
@@ -187,6 +200,7 @@ final class ViewPainter {
             <meta itemprop="description" content="{$page['desc']}">
             <meta itemprop="image" id="LAY-PAGE-IMG" content="{$img}">
             <link rel="icon" type="image/x-icon" href="{$site_data->img->favicon}">
+            $canonical
             {$this->skeleton_head($meta)}
         </head>
         <body class="{$meta['body']['class']}" {$meta['body']['attr']}>
@@ -253,30 +267,29 @@ final class ViewPainter {
         $section = $meta['page']['type'] == "back" ? $client->back : $client->front;
         $custom_css = $client->custom->css;
         $plugin = $client->custom->plugin;
+        $css_template = fn($link,$rel,$media) => "<link href=\"$link\" rel=\"$rel\" media=\"$media\" />";
         $check_css_args = function ($file) : array{
             if(is_array($file)){
                 $media = $file['media'];
                 $rel = $file['rel'];
-                $type = $file['type'];
                 $file = $file[0];
             }
             else {
                 $media = "all";
                 $rel = "stylesheet";
-                $type = "text/css";
             }
-            return [$media,$rel,$type,$file];
+            return [$file,$rel,$media];
         };
-        $add_asset = function (array &$entry, string &$view, string $res) use($check_css_args) : void {
+        $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($check_css_args,$css_template) : void {
             foreach ($entry as $k => $e) {
                 $a = $check_css_args($e);
-                if(!$a[3]) continue;
-                $f = trim($a[3]);
+                if(!$a[0]) continue;
+                $f = trim($a[0]);
                 if (count(explode(".css", $f,2)) > 1) {
-                    $f = $res . $f;
-                    $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
+                    $view .= $css_template($res . $f,$a[1],$a[2]);
                     unset($entry[$k]);
                 }
+                $using_assets = true;
             }
         };
 
@@ -287,8 +300,7 @@ final class ViewPainter {
                 case "back": $res = $client->back->root; break;
             };
 
-            $add_asset($f,$view,$res);
-            $using_assets = true;
+            $add_asset($f,$view,$res,$using_assets);
         }
 
         if($using_assets)
@@ -296,31 +308,31 @@ final class ViewPainter {
 
         foreach ($meta['dist']['root']['css'] as $f) {
             $a = $check_css_args($f);
-            if(!$a[3]) continue;
-            $f = $section->root . explode(".css", $a[3])[0] . ".css";
-            $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
+            if(!$a[0]) continue;
+            $f = $section->root . explode(".css", $a[0])[0] . ".css";
+            $view .= $css_template($f . $f,$a[1],$a[2]);
         }
         foreach ($meta['dist']['css'] as $f) {
             $a = $check_css_args($f);
-            if(!$a[3]) continue;
+            if(!$a[0]) continue;
             $f = $section->css . explode(".css", $a[0])[0] . ".css";
-            $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
+            $view .= $css_template($f . $f,$a[1],$a[2]);
         }
         foreach ($meta['src']['plugin'] as $k => $f) {
             $a = $check_css_args($f);
             if(!$a[3]) continue;
-            $f = explode(".css", $a[3]);
+            $f = explode(".css", $a[0]);
             if (count($f) > 1) {
                 $f = $plugin . $f[0] . ".css";
-                $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
+                $view .= $css_template($f . $f,$a[1],$a[2]);
                 unset($meta['src']['plugin'][$k]);
             }
         }
         foreach ($meta['src']['css'] as $f) {
             $a = $check_css_args($f);
-            if(!$a[3]) continue;
-            $f = $custom_css . explode(".css", $a[3])[0] . ".css";
-            $view .= '<link href="' . $f . '" type="' . $a[2] . '" rel="' . $a[1] . '" media="' . $a[0] . '" />';
+            if(!$a[0]) continue;
+            $f = $custom_css . explode(".css", $a[0])[0] . ".css";
+            $view .= $css_template($f . $f,$a[1],$a[2]);
         }
         return $view;
     }
