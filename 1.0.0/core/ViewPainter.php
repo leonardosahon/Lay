@@ -138,7 +138,7 @@ final class ViewPainter {
         else{
             $meta['page']['title'] = !$meta['page']['append_site_name'] ? 
                 $meta['page']['title_raw'] :
-                $meta['page']['title_raw'] . " :: " . $name->short
+                $meta['page']['title_raw'] . " :: " . $name->short;
         }
 
         // pass the variables required by include files from this scope to their scope. This affects all files included within this same scope
