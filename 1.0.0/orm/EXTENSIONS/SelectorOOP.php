@@ -100,7 +100,13 @@ trait SelectorOOP {
         $this->clause($clause);
         return $this->edit();
     }
-    
+    final public function then_select(string $clause) : array {
+        $this->clause($clause);
+        $this->no_null();
+        $this->assoc();
+        return $this->select();
+    }
+
     /** @see SQL_CORE::query_insert() */
     final public function insert() : bool {
         $d = $this->get_vars();

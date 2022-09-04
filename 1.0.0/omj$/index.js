@@ -20,7 +20,9 @@ const $web = navigator;
 
 const $loc = $win.location;
 
-const $store = $win.localStorage;
+let $store = null;
+
+try{ $store = $win.localStorage } catch (e) {}
 
 const $isInt = str => isNaN(str) ? str : parseInt(str);
 

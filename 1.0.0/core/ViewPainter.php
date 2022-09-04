@@ -310,21 +310,21 @@ final class ViewPainter {
             $a = $check_css_args($f);
             if(!$a[0]) continue;
             $f = $section->root . explode(".css", $a[0])[0] . ".css";
-            $view .= $css_template($f . $f,$a[1],$a[2]);
+            $view .= $css_template($f,$a[1],$a[2]);
         }
         foreach ($meta['dist']['css'] as $f) {
             $a = $check_css_args($f);
             if(!$a[0]) continue;
             $f = $section->css . explode(".css", $a[0])[0] . ".css";
-            $view .= $css_template($f . $f,$a[1],$a[2]);
+            $view .= $css_template($f,$a[1],$a[2]);
         }
         foreach ($meta['src']['plugin'] as $k => $f) {
             $a = $check_css_args($f);
-            if(!$a[3]) continue;
+            if(!$a[0]) continue;
             $f = explode(".css", $a[0]);
             if (count($f) > 1) {
                 $f = $plugin . $f[0] . ".css";
-                $view .= $css_template($f . $f,$a[1],$a[2]);
+                $view .= $css_template($f,$a[1],$a[2]);
                 unset($meta['src']['plugin'][$k]);
             }
         }
@@ -332,7 +332,7 @@ final class ViewPainter {
             $a = $check_css_args($f);
             if(!$a[0]) continue;
             $f = $custom_css . explode(".css", $a[0])[0] . ".css";
-            $view .= $css_template($f . $f,$a[1],$a[2]);
+            $view .= $css_template($f,$a[1],$a[2]);
         }
         return $view;
     }
@@ -373,15 +373,16 @@ final class ViewPainter {
         $custom_js = $client->custom->js;
         $plugin = $client->custom->plugin;
         $section = $meta['page']['type'] == "back" ? $client->back : $client->front;
+        $js_template = fn($f,$attr=null) => '<script '.$attr.' src="' . $f . '"></script>';
 
-        $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($validate_file) : void {
+        $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($validate_file,$js_template) : void {
             foreach ($entry as $k => $f) {
                 $validate_file($f);
                 if(!$f) continue;
                 $f = trim($f);
                 if (count(explode(".js", $f,2)) > 1) {
                     $f = $res . $f;
-                    $view .= '<script src="' . $f . '"></script>';
+                    $view .= $js_template($f);
                     unset($entry[$k]);
                     $using_assets = true;
                 }
@@ -407,13 +408,13 @@ final class ViewPainter {
             $validate_file($f);
             if(!$f) continue;
             $f = $section->root . explode(".js",$f)[0] . ".js";
-            $view .= '<script src="' . $f . '"></script>';
+            $view .= $js_template($f);
         }
         foreach ($meta['dist']['js'] as $f) {
             $validate_file($f);
             if(!$f) continue;
             $f = $section->js . explode(".js",$f)[0] . ".js";
-            $view .= '<script src="' . $f . '"></script>';
+            $view .= $js_template($f);
         }
         foreach ($meta['src']['plugin'] as $k => $f) {
             $validate_file($f);
@@ -421,7 +422,7 @@ final class ViewPainter {
             $f = explode(".js", $f);
             if (count($f) > 1) {
                 $f = $plugin . $f[0] . ".js";
-                $view .= '<script src="' . $f . '"></script>';
+                $view .= $js_template($f);
                 unset($meta['src']['plugin'][$k]);
             }
         }
@@ -429,7 +430,7 @@ final class ViewPainter {
             $validate_file($f);
             if(!$f) continue;
             $f = $custom_js . explode(".js",$f)[0] . ".js";
-            $view .= '<script src="' . $f . '"></script>';
+            $view .= $js_template($f);
         }
 
         if($meta['core']['close_connection']) $layConfig->close_sql();
