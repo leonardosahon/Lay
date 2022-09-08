@@ -52,7 +52,7 @@ trait Config{
                 if (isset($cnn_arg['silent']))
                     return null;
                 
-                else $this->show_exception(6);
+                else $this->show_exception(2);
             }
         }
         return $this->get_link();
@@ -78,7 +78,7 @@ trait Config{
     # close connection
     public function close(?mysqli $link = null, bool $silent_error = false) : bool {
         if(@mysqli_close($link ?? $this->get_link())) return true;
-        if($silent_error == false) $this->show_exception(7);
+        if($silent_error == false) $this->show_exception(3);
         return false;
     }
 
@@ -99,9 +99,9 @@ trait Config{
                     $db = $x['db'];
                     $usr = $x['users'];
                     $host = $x['host_short'];
-                    if ($ignore_msg == false) $this->show_exception(5, [$db, $usr, $host]);
+                    if ($ignore_msg == false) $this->show_exception(1, [$db, $usr, $host]);
                 }
-                else if ($ignore_no_conn == false) $this->show_exception(4);
+                else if ($ignore_no_conn == false) $this->show_exception(0);
             }
         } return ["host" => $host, "user" => $usr, "db" => $db];
     }

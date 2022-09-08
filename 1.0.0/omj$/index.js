@@ -20,9 +20,7 @@ const $web = navigator;
 
 const $loc = $win.location;
 
-let $store = null;
-
-try{ $store = $win.localStorage } catch (e) {}
+const $store = $win.localStorage;
 
 const $isInt = str => isNaN(str) ? str : parseInt(str);
 
@@ -251,7 +249,7 @@ const $loop = (obj, operation = (() => null)) => {
             if (x === "break") break;
             prop.output = x ?? null;
             previousOutput = prop.output;
-            let outputType = $type(prop.output);
+            prop.outputType = $type(prop.output);
         }
     }
     return prop;
@@ -480,7 +478,7 @@ const $cookie = (name = "*", value = null, expire = null, path = "", domain = ""
                 formField.style.background = "#f40204 none padding-box";
                 formField.focus();
             }), 100);
-            $on(formField, "input,change", (() => formField.style.background = $data(formField, "osai-error")));
+            $on(formField, "input,change", (() => formField.style.background = $data(formField, "osai-error")), "addEvent");
         } else if (errorDisplay === "create") {
             let errBx = $id("osai-err-msg");
             $in(errBx) && errBx.remove();
@@ -489,7 +487,7 @@ const $cookie = (name = "*", value = null, expire = null, path = "", domain = ""
                 $style($id("osai-err-msg"), "font-size: 14px; background-color: #e25656; color: #fff; padding: 5px; margin: 5px auto; border-radius: 4px"), 
                 formField.focus();
             }), 700);
-            $on(formField, "input", xErrMsg);
+            $on(formField, "input", xErrMsg, "addEvent");
         } else {
             try {
                 errorDisplay();

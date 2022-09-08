@@ -7,9 +7,9 @@ trait Clean {
         "%22","%3C", "%3E","%3F","%2F","%5C","%7C","%60","%2C","_","-","–","%0A","%E2","%80","%99","%E2%80%98","%E2%80%99"];
     protected static array $escape_string = [];
     /**
-     * Clean variables for SQL or generally
+     * # Clean variables for SQL or generally
      * @param string|int|float $value string value to be cleansed
-     * @param int $level__combo <table><tr><th>BASE FUNCTIONS</th></tr>
+     * @param float $level__combo <table><tr><th>BASE FUNCTIONS</th></tr>
      * <tr><td>0</td><td>real_escape_string[<b>default</b>]</td></tr><tr><td>1</td><td>strip_tags</td></tr>
      * <tr><td>2</td><td>trim</td></tr><tr><td>3</td><td>htmlspecialchars</td></tr>
      * <tr><td>4</td><td>rawurlencode</td></tr><tr><td>5</td><td>str_replace</td></tr>
@@ -28,7 +28,7 @@ trait Clean {
      * pass an int value of 1 to the function to debug it
      * @return mixed
      */
-    public function clean($value, int $level__combo = 0, ...$options) {
+    public function clean($value, float $level__combo = 0, ...$options) {
         // perquisite
         $core = self::core();
         $link = $core->get_link();
@@ -64,11 +64,11 @@ trait Clean {
         if(in_array("combo",$options,true)) $mode = "combo";
         if(in_array("strict",$options,true) || in_array("!",$options,true)) $difficulty = "strict";
         // debug
-        if(in_array(1,$options,true)) $core->show_exception(3,[$value,$level__combo,$options]);
+        if(in_array(1,$options,true)) $this->exceptions(1,["value" => $value,"combo" => $level__combo, "opts" => $options]);
         // check mate
-        if (($value === "" || $value === null) && !is_numeric($value) && $difficulty == "strict") $core->show_exception(1);
+        if (($value === "" || $value === null) && !is_numeric($value) && $difficulty == "strict") $this->exceptions(2);
         elseif (empty($value) && $difficulty == "loose") return $value;
-        if(!is_string($value) && !is_numeric($value)) $core->show_exception(2, [$value]);
+        if(!is_string($value) && !is_numeric($value)) $this->exceptions(3, ["value" => $value]);
         if(is_numeric($value)) return $value;
         // function
         $func = [
@@ -93,24 +93,25 @@ trait Clean {
                 $combine = mb_str_split("$level__combo");
             else
                 $combine = str_split("$level__combo");
-            if (count($combine) !== count(array_unique($combine))) $core->show_exception(1.5, [1 => $level__combo]);
+            if (count($combine) !== count(array_unique($combine))) $this->exceptions(0,["combo" => $level__combo]);
             $value = $permute($combine,$value);
         }
         else{
-            if(($level__combo + 1) > count($func)) {
+
+            if((($level__combo + 1) > count($func)) && is_float($level__combo)) {
                 switch ($level__combo){
-                    case 10: $combine = [1,0]; break;
-                    case 11: $combine = [2,0]; break;
-                    case 12: $combine = [0,3]; break;
-                    case 13: $combine = [3,1]; break;
-                    case 14: $combine = [1,2]; break;
-                    case 15: $combine = [3,2]; break;
-                    case 16: $combine = [1,2,0]; break;
-                    case 17: $combine = [3,2,0]; break;
-                    case 18: $combine = [1,3,0]; break;
-                    case 19: $combine = [1,3,2]; break;
-                    case 20: $combine = [1,3,2,0]; break;
-                    default: $core->show_exception(1.5, [1 => $level__combo]); break;}
+                    case 0.1:case 10: $combine = [1,0]; break;
+                    case 0.2:case 11: $combine = [2,0]; break;
+                    case 0.3:case 12: $combine = [0,3]; break;
+                    case 1.3:case 13: $combine = [3,1]; break;
+                    case 1.2:case 14: $combine = [1,2]; break;
+                    case 2.3:case 15: $combine = [3,2]; break;
+                    case 0.12:case 16: $combine = [1,2,0]; break;
+                    case 0.23:case 17: $combine = [3,2,0]; break;
+                    case 0.13:case 18: $combine = [1,3,0]; break;
+                    case 1.23:case 19: $combine = [1,3,2]; break;
+                    case 0.123:case 20: $combine = [1,3,2,0]; break;
+                    default: $this->exceptions(0, ["combo" => $level__combo]); break;}
                 $value = $permute($combine,$value);
             }
             else $value = $func[$level__combo]();
@@ -131,4 +132,43 @@ trait Clean {
     public function get_escape_string() : array { return self::$escape_string; }
     public function reset_escape_string() : void { self::$escape_string = self::$stock_escape_string;}
 
+    private function exceptions(int $level, array $args = []) : void {
+        $option = [];
+        switch ($level){
+            default:
+                $title = "Clean::Err";
+                $body = "No Valid Cleanse Combo or Level passed!<br> <b>COMBO_RANGE = 0 - 6</b> <br><br>
+                    <b>DEFAULT_COMBO_VALUES = [10-20]</b> <br>  EXPECTED: <br>
+                    <b>[COMBO MODE]</b> single value from COMBO_RANGE or unique comma (,) separated combination of COMBO_RANGE; <br>  
+                    <b>[LEVEL MODE]</b> DEFAULT_COMBO_VALUES or unique float combination of COMBO_RANGE; <br> 
+                    Got <b>__RAW_VALUE_TYPE__</b> as Level or Combo";
+                $option = [
+                    "__RAW_VALUE_TYPE__" => $args['combo']
+                ];
+            break;
+            case 1 :
+                $title = "Clean::Dbg";
+                $body = "<b>Value:</b> __RAW_VALUE__<br> <b>Level/Combo:</b> __RAW_VALUE_TYPE__<br> <b>Extra:</b> __THIRD_OPT__";
+                $option = [
+                    "__RAW_VALUE__" => $args['value'],
+                    "__RAW_VALUE_TYPE__" => $args['combo'],
+                    "__THIRD_OPT__" => $args['opts'],
+                ];
+            break;
+            case 2 :
+                $title = "Clean::Err";
+                $body = "No value passed!<br> <em>An empty string cannot be cleaned</em>";
+            break;
+            case 3:
+                $title = "Clean::Err";
+                $body = "A Non-String Value was encountered! __RAW_VALUE__";
+                $option = [
+                    "__RAW_VALUE__" => $args['value'],
+                ];
+            break;
+
+        }
+
+        $this->use_exception($title,$body,true, true, $option);
+    }
 }

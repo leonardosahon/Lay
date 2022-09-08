@@ -8,7 +8,6 @@ trait Controller{
     use SelectorOOP;
     use SelectorProcedure;
     use Clean;
-    use MultiQuery;
     use OneLiner;
 
     protected static function core() : SQL {

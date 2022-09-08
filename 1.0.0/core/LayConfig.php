@@ -5,8 +5,11 @@ use Lay\libs\ObjectHandler;
 use Lay\orm\SQL;
 use Lay\AutoLoader;
 use stdClass;
-if(!@$EXPOSE_PHP)
+
+if(isset($DONT_EXPOSE_PHP))
     header_remove('X-Powered-By');
+if(!isset($DISABLE_TIMEZONE))
+    date_default_timezone_set('Africa/Lagos');
 /**
  * Core Config File
  */

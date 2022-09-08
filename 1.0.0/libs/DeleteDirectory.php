@@ -11,7 +11,7 @@ class DeleteDirectory {
      */
     public function __construct(string $dir, ?string $break_directory = null){
         if (!is_dir($dir)) {
-            self::$result = rmdir($dir);
+            self::$result = false;
             return;
         }
 
@@ -29,5 +29,7 @@ class DeleteDirectory {
 
             unlink($dir."/".$object);
         }
+
+        self::$result = rmdir($dir);
     }
 }
