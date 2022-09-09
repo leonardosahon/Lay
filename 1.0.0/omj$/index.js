@@ -671,9 +671,14 @@ const $preloader = (act = "show") => {
     let abort = option.abort ?? (() => osNote("Request aborted!", "warn"));
     let errRoutine = (msg, xhr) => {
         if (error(xhr.status, xhr) === "error") {
-            if (strict) alert_error ? alert(msg) : osNote(msg, "fail", {
-                duration: "pin"
-            });
+            if (strict) {
+                if(alert_error)
+                    alert(msg)
+                else
+                    osNote(msg, "fail", {
+                        duration: -1
+                    });
+            }
             $omjsError("$curl", xhr.e ?? xhr.statusText);
             reject(Error(xhr.e ?? xhr.statusText), xhr);
         }

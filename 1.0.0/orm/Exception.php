@@ -6,7 +6,6 @@ use Lay\AutoLoader;
 /**
  * Trait Exception
  * @package osai\SQL_MODEL
- * @modified 14/12/2021
  */
 class Exception {
     private static string $ENV = "DEVELOPMENT";
@@ -42,8 +41,8 @@ class Exception {
             $k++;
             $stack .= <<<STACK
                 <div style="color: #fff; padding-left: 20px">
-                    <div>#$k: {$v['function']}(...) <b>{$v['line']}</b></div>
-                    <span>{$v['file']}</span>
+                    <div>#$k: {$v['function']}(...)</div>
+                    <span style="white-space: nowrap; word-break: keep-all">{$v['file']}; <b>{$v['line']}</b></span>
                     <hr>
                 </div>
             STACK;
