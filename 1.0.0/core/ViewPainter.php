@@ -50,7 +50,10 @@ final class ViewPainter {
         if(empty(self::$constant_attributes))
             self::constants([]);
 
-        $url = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] : $_SERVER['REQUEST_URI'];
+        $layConfig = LayConfig::instance();
+        $data = $layConfig->get_site_data();
+
+        $url = str_replace($data->base_no_proto . "/",$_SERVER['REQUEST_URI'],$data->base);
         $const = self::$constant_attributes;
 
         $meta = [
@@ -126,19 +129,16 @@ final class ViewPainter {
             "local_raw" => $meta['local_raw'] ?? [],
         ];
 
-        $layConfig = LayConfig::instance();
-        $name = $layConfig->get_site_data('name');
-
         $meta['page']['title_raw'] = $meta['page']['title'];
         
         if(strtolower($meta['page']['title_raw']) == "homepage"){
-            $meta['page']['title'] = $name->full;
-            $meta['page']['title_raw'] = $name->full;
+            $meta['page']['title'] = $data->name->full;
+            $meta['page']['title_raw'] = $data->name->full;
         }
         else{
             $meta['page']['title'] = !$meta['page']['append_site_name'] ? 
                 $meta['page']['title_raw'] :
-                $meta['page']['title_raw'] . " :: " . $name->short;
+                $meta['page']['title_raw'] . " :: " . $data->name->short;
         }
 
         // pass the variables required by include files from this scope to their scope. This affects all files included within this same scope

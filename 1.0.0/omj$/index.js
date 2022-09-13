@@ -20,7 +20,7 @@ const $web = navigator;
 
 const $loc = $win.location;
 
-const $store = $win.localStorage;
+let $store; try{ $store = $win.localStorage } catch (e) {}
 
 const $isInt = str => isNaN(str) ? str : parseInt(str);
 
@@ -657,7 +657,7 @@ const $preloader = (act = "show") => {
     let progress = option.progress ?? (() => "progress");
     let error = option.error ?? (() => "error");
     option.timeout = option.timeout ?? {
-        value: 6e4
+        value: 0
     };
     let timeout = {
         value: option.timeout.value ?? option.timeout,
@@ -972,6 +972,7 @@ const $freeze = (element, operation, attr = true) => {
                 return dialog;
             },
             get: {
+                box: BOX,
                 head: BOX_HEAD,
                 foot: BOX_FOOT,
                 wrapper: BOX_INNER_WRAPPER,
