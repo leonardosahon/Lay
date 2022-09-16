@@ -14,6 +14,7 @@ $default_lay_version = "1.0.0"; // change this to the latest version of Lay
 $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
 
 require_once $default_lay_location . $s . "init-lay-res" . $s . "Core.php";
+require_once $default_lay_location . $s . "init-lay-res" . $s . "CopyDirectory.php";
 
 $core = new Core($argv,$default_lay_version,$default_lay_location);
 
@@ -88,7 +89,7 @@ $core->copy_routine($section . "images","favicon.png");
 $core->copy_routine($section . "images","logo.png");
 
 // copy specified Lay verison
-$core->folder_copy($lay . $default_lay_version, $project_root . $s . "Lay");
+new CopyDirectory($lay . $default_lay_version, $project_root . $s . "Lay");
 
 // copy default root folder files
 $core->copy_routine("", "bob_d_builder.php");

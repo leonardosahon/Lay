@@ -1,34 +1,60 @@
 #!/bin/bash
-read -n1 -p "Do you want to also push to your repo? [Y/n]: " push_repo
-commit_message=""
 
-echo "" 
+git_origin=$(git config --get remote.origin.url)
+push_repo="n"
+commit_message=""
+git_proj_dir=""
+
+lay_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+current_dir=""
+
+IFS='/' read -ra ADDR <<< "$lay_dir"
+for i in "${ADDR[@]}"; do
+  current_dir=$i
+done
+
+lay_dir=$lay_dir"/"
+
+echo "----------  LAY DEPLOY INIT    ----------"
+
+# Detect working directory
+if [ $current_dir != "Lay" ]; then
+  echo "  Not working on [Lay] directory"
+  echo '  Enter relative path to [Lay] directory, e.g `/Lay`'
+  read -p "[Lay] directory $PWD/" lay_dir
+  lay_dir=$PWD"/${lay_dir}/"
+fi
+
+res_dir=$lay_dir"../"
+
+# Git Push Condition
+if [ -n "${git_origin}" ]; then
+  echo "You have git on your project with remote origin: $git_origin"
+  read -n1 -p "Do you want to also push? [Y/n]: " push_repo
+  git_proj_dir=$(git rev-parse --show-toplevel)
+  echo ""
+fi
 case $push_repo in
   n|N) echo "Ignoring git..." ;;
-
-  *) read -p "Type commit message: " commit_message ;;
+  *) read -p "Commit message: " commit_message;;
 esac
 
-echo "================= Production Bundling Begins"
+echo "**************** Production Bundling Begins"
 
 echo "== Lay JS FILES"
-terser 'omj$/index.js' -c -m -o 'omj$/index.min.js'
-terser 'static/js/constants.js' -c -m -o 'static/js/constants.min.js'
+terser $lay_dir'omj$/index.js' -c -m -o $lay_dir'omj$/index.min.js'
+terser $lay_dir'static/js/constants.js' -c -m -o $lay_dir'static/js/constants.min.js'
 
-echo "== RES FOLDER [JS]"
-php compress ../res/client/dev -o ../res/client/prod -e js
+echo "== RES FOLDER"
+php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod'
 
-echo "== RES FOLDER [CSS]"
-php compress ../res/client/dev -o ../res/client/prod -e css
-
-echo "================= Production Bundling Ends"
+echo "**************** Production Bundling Ends"
 
 if [ -n "${commit_message}" ]; then
-  echo "================= Deploying to github"
-  git add .
+  echo "************** Deploying to github"
+  cd $git_proj_dir && git add .
   git commit -m "$commit_message"
-  git pull
-  git push
+  git pull && git push
 else
   echo "Did not deploy to github :("
 fi
