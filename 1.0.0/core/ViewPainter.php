@@ -53,7 +53,13 @@ final class ViewPainter {
         $layConfig = LayConfig::instance();
         $data = $layConfig->get_site_data();
 
-        $url = str_replace($data->base_no_proto . "/",$_SERVER['REQUEST_URI'],$data->base);
+        $ser = $data->base_no_proto . "/";
+        $repl = $_SERVER['REQUEST_URI'];
+        $url = str_replace($ser,$repl,$data->base);
+
+        if($ser == "/")
+            $url = rtrim($data->base, "/") . $repl;
+
         $const = self::$constant_attributes;
 
         $meta = [
