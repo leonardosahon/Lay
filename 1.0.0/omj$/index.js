@@ -20,7 +20,7 @@ const $web = navigator;
 
 const $loc = $win.location;
 
-const $store = $win.localStorage;
+let $store; try{ $store = $win.localStorage } catch (e) {}
 
 const $isInt = str => isNaN(str) ? str : parseInt(str);
 
@@ -211,9 +211,7 @@ const $loop = (obj, operation = (() => null)) => {
         }
     };
     if (!isNaN(obj)) {
-        if($type(obj) === "Array" && obj.length === 0)
-            return prop
-
+        if ($type(obj) === "Array" && obj.length === 0) return prop;
         if ($type(operation) === "Function") operation = {};
         let i = obj;
         let run = 10;
@@ -251,7 +249,7 @@ const $loop = (obj, operation = (() => null)) => {
             if (x === "break") break;
             prop.output = x ?? null;
             previousOutput = prop.output;
-            let outputType = $type(prop.output);
+            prop.outputType = $type(prop.output);
         }
     }
     return prop;
@@ -480,7 +478,7 @@ const $cookie = (name = "*", value = null, expire = null, path = "", domain = ""
                 formField.style.background = "#f40204 none padding-box";
                 formField.focus();
             }), 100);
-            $on(formField, "input,change", (() => formField.style.background = $data(formField, "osai-error")));
+            $on(formField, "input,change", (() => formField.style.background = $data(formField, "osai-error")), "addEvent");
         } else if (errorDisplay === "create") {
             let errBx = $id("osai-err-msg");
             $in(errBx) && errBx.remove();
@@ -489,7 +487,7 @@ const $cookie = (name = "*", value = null, expire = null, path = "", domain = ""
                 $style($id("osai-err-msg"), "font-size: 14px; background-color: #e25656; color: #fff; padding: 5px; margin: 5px auto; border-radius: 4px"), 
                 formField.focus();
             }), 700);
-            $on(formField, "input", xErrMsg);
+            $on(formField, "input", xErrMsg, "addEvent");
         } else {
             try {
                 errorDisplay();
@@ -659,7 +657,7 @@ const $preloader = (act = "show") => {
     let progress = option.progress ?? (() => "progress");
     let error = option.error ?? (() => "error");
     option.timeout = option.timeout ?? {
-        value: 6e4
+        value: 0
     };
     let timeout = {
         value: option.timeout.value ?? option.timeout,
@@ -673,9 +671,14 @@ const $preloader = (act = "show") => {
     let abort = option.abort ?? (() => osNote("Request aborted!", "warn"));
     let errRoutine = (msg, xhr) => {
         if (error(xhr.status, xhr) === "error") {
-            if (strict) alert_error ? alert(msg) : osNote(msg, "fail", {
-                duration: "pin"
-            });
+            if (strict) {
+                if(alert_error)
+                    alert(msg)
+                else
+                    osNote(msg, "fail", {
+                        duration: -1
+                    });
+            }
             $omjsError("$curl", xhr.e ?? xhr.statusText);
             reject(Error(xhr.e ?? xhr.statusText), xhr);
         }
@@ -780,7 +783,7 @@ const $freeze = (element, operation, attr = true) => {
  * @author Osahenrumwen Aigbogun
  * @version 1.0.3
  * @copyright (c) 2019 Osai LLC | loshq.net/about.
- * @modified 13/12/2021
+ * @modified 26/08/2022
  */ const $osaiBox = (boxToDraw = "all") => {
     const dialogZindex = 9990;
     const colorVariant = `\n\t\t/*normal variant*/\n\t\t--text: #fffffa;\n\t\t--bg: #1d2124;\n\t\t--link: #009edc;\n\t\t--info: #445ede;\n\t\t--warn: #ffde5c;\n\t\t--fail: #f40204;\n\t\t--fade: #e2e2e2;\n\t\t--success: #0ead69;\n\t\t/*dark variant*/\n\t\t--dark-text: #f5f7fb;\n\t\t--dark-link: #00506e;\n\t\t--dark-info: #3247ac;\n\t\t--dark-warn: #626200;\n\t\t--dark-fail: #a20002;\n\t\t--dark-success: #104e00;\n\t`;
@@ -789,7 +792,7 @@ const $freeze = (element, operation, attr = true) => {
     let dialog = {}, notifier = {};
     if (boxToDraw === "all" || boxToDraw === "dialog" || boxToDraw === "modal") {
         if (!$in($sel(".osai-dialogbox__present"))) $html($sel("body"), "beforeend", `\n\t\t\t\t<div class="osai-dialogbox">\n\t\t\t\t\t<span style="display: none" class="osai-dialogbox__present"></span>\n\t\t\t\t\t<div class="osai-dialogbox__overlay"></div>\n\t\t\t\t\t<div class="osai-dialogbox__wrapper">\n\t\t\t\t\t\t<div class="osai-dialogbox__header">\n\t\t\t\t\t\t\t<div class="osai-dialogbox__head"></div>\n\t\t\t\t\t\t\t<button class="osai-dialogbox__close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">\n\t\t\t\t\t\t\t\t<rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect>\n\t\t\t\t\t\t\t\t<rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect>\n\t\t\t\t\t\t\t</svg></button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="osai-dialogbox__inner-wrapper">\n\t\t\t\t\t\t\t<div class="osai-dialogbox__body"></div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="osai-dialogbox__foot"></div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`);
-        if (!$in($sel(".osai-dialogbox__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-dialogbox__stylesheet" rel="stylesheet" media="all">\n.osai-dialogbox{\nposition: fixed;\nright: 0; left: 0; top: 0; bottom: 0;\ndisplay: block;\nvisibility: hidden;\nopacity: 0;\nz-index: -${dialogZindex};\n}\n.osai-dialogbox__appear{\n\tvisibility: visible;\n\tz-index: ${dialogZindex};\n\topacity: 1;\n}\n.osai-dialogbox__overlay{\n\topacity: .5;\n\tposition: fixed;\n\ttop: 0;bottom: 0;left: 0;right: 0;\n\tbackground: var(--bg);\n\tz-index: 1;\n}\n.osai-dialogbox__wrapper{\n\tdisplay: flex;\n\topacity: 0;\n\tjustify-content: center;\n\talign-items: center;\n\tmax-width: 97vw;\n\tmax-height: 97vh;\n\ttransform: translate(-50%,0);\n\ttop: 50%; left: 50%;\n\tposition: absolute;\n\tz-index: 2;\n\tmargin: auto;\n\tbackground: var(--dark-text);\n\tborder-radius: 5px;\n\tflex-flow: column;\n\ttransition: ease-in-out .8s all;\n\tpadding: 0;\n\toverflow: hidden;\n}\n.osai-dialogbox__header{\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: space-between;\n\twidth: 100%;\n\tpadding: 1.75rem;\n\tborder-bottom: 1px solid #EFF2F5;\n}\n.osai-dialogbox__close-btn{\n\tbackground: transparent;\n\tborder: none;\n\tcolor: var(--dark-info);\n\tfont-weight: 500;\n\tcursor: pointer;\n\toutline: none;\n}\n.osai-dialogbox__close-btn:hover{\n\tcolor: var(--fail);\n}\n.osai-dialogbox__head{\n\tfont-size: 1.15rem;\n\tline-height: 1.15rem;\n\tpadding: 0;\n\tcolor: var(--bg);\n\tmargin: 0;\n\tfont-weight: 600;\n}\n.osai-dialogbox__inner-wrapper{\n\toverflow: auto;\n\tmax-width: 100vw;\n}\n.osai-dialogbox__body{\n\tfont-size: 1rem;\n\tpadding: 1.75rem;\n\tcolor: var(--bg);\n}\n.osai-dialogbox__foot{\n\tdisplay: flex;\n    flex-wrap: wrap;\n    flex-shrink: 0;\n    align-items: center;\n    justify-content: flex-end;\n    padding: 1.5rem;\n    border-top: 1px solid #EFF2F5;\n}\n.osai-dialogbox__foot button.success,.osai-dialogbox__foot button.success i{\n\tbackground: var(--success);\n\tcolor: var(--bg);\n} .osai-dialogbox__foot button.success:hover,.osai-dialogbox__foot button.success i:hover{\n\tbackground: var(--dark-success);\n\tcolor: var(--dark-text);}\n.osai-dialogbox__foot button.fail,.osai-dialogbox__foot button.fail i{\n\tbackground: var(--fail);\n\tcolor: var(--text);\n}.osai-dialogbox__foot button.fail:hover, .osai-dialogbox__foot button.fail i:hover{\n\tbackground: var(--dark-fail);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.warn, .osai-dialogbox__foot button.warn i{\n\tbackground: var(--warn);\n\tcolor: var(--text);\n} .osai-dialogbox__foot button.warn:hover, .osai-dialogbox__foot button.warn i:hover{\n\tbackground: var(--dark-warn);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.info, .osai-dialogbox__foot button.info i{\n\tbackground: var(--info);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.info:hover, .osai-dialogbox__foot button.info i:hover{\n\tbackground: var(--dark-info);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.link, .osai-dialogbox__foot button.link i{.8\n\tbackground: var(--link);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.link:hover, .osai-dialogbox__foot button.link i:hover{\n\tbackground: var(--dark-link);\n\tcolor: var(--text);}\n/* disable scrolling when modal is opened */\n.osai-modal__open{\n\toverflow-y: hidden;\n\tscroll-behavior: smooth;\n}\n.osai-modal__appear{\n\topacity: 1;\n\ttransform: translate(-50%,-50%);\n}\n.osai-modal__btn{\n\tborder-radius: .475rem;\n\tborder: solid 1px transparent;\n\tpadding: calc(0.75rem + 1px) calc(1.5rem + 1px);\n\tcursor: pointer;\n\toutline: none;\n\ttransition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;\n\tbackground-color: var(--bg);\n\tcolor: var(--text);\n\tfont-size: 1.1rem;\n\tdisplay: inline-block;\n\tvertical-align: middle;\n\ttext-align: center;\n\tline-height: 1.5;\n}\n@media screen and (max-width: 600px){\n\t.osai-dialogbox__wrapper{\n\t\tmin-width: 90vw;\n\t\tmax-width: 95vw;\n\t\tmax-height: 90vh;\n\t}\n}\n</style>`);
+        if (!$in($sel(".osai-dialogbox__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-dialogbox__stylesheet" rel="stylesheet" media="all">\n.osai-dialogbox{\nposition: fixed;\nright: 0; left: 0; top: 0; bottom: 0;\ndisplay: block;\nvisibility: hidden;\nopacity: 0;\nz-index: -${dialogZindex};\n}\n.osai-dialogbox__appear{\n\tvisibility: visible;\n\tz-index: ${dialogZindex};\n\topacity: 1;\n}\n.osai-dialogbox__overlay{\n\topacity: .5;\n\tposition: fixed;\n\ttop: 0;bottom: 0;left: 0;right: 0;\n\tbackground: var(--bg);\n\tz-index: 1;\n}\n.osai-dialogbox__wrapper{\n\tdisplay: flex;\n\topacity: 0;\n\tjustify-content: center;\n\talign-items: center;\n\tmax-width: 97vw;\n\tmax-height: 97vh;\n\ttransform: translate(-50%,0);\n\ttop: 50%; left: 50%;\n\tposition: absolute;\n\tz-index: 2;\n\tmargin: auto;\n\tbackground: var(--dark-text);\n\tborder-radius: 5px;\n\tflex-flow: column;\n\ttransition: ease-in-out .8s all;\n\tpadding: 0;\n\toverflow: hidden;\n}\n.osai-dialogbox__header{\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: space-between;\n\twidth: 100%;\n\tpadding: 1.75rem;\n\tborder-bottom: 1px solid #EFF2F5;\n}\n.osai-dialogbox__close-btn{\n\tbackground: transparent;\n\tborder: none;\n\tcolor: var(--dark-info);\n\tfont-weight: 500;\n\tcursor: pointer;\n\toutline: none;\n}\n.osai-dialogbox__close-btn:hover{\n\tcolor: var(--fail);\n}\n.osai-dialogbox__head{\n\tfont-size: 1.15rem;\n\tline-height: 1.15rem;\n\tpadding: 0;\n\tcolor: var(--bg);\n\tmargin: 0;\n\tfont-weight: 600;\n}\n.osai-dialogbox__inner-wrapper{\n\toverflow: auto;\n\tmax-width: 100vw;\n}\n.osai-dialogbox__body{\n\tfont-size: 1rem;\n\tpadding: 1.75rem;\n\tcolor: var(--bg);\n}\n.osai-dialogbox__foot{\n    padding: 1.5rem;\n    border-top: 1px solid #EFF2F5;\n}\n.osai-dialogbox__foot button.success{\n\tbackground: var(--success);\n\tcolor: var(--bg);\n} .osai-dialogbox__foot button.success:hover{\n\tbackground: var(--dark-success);\n\tcolor: var(--dark-text);}\n.osai-dialogbox__foot button.fail{\n\tbackground: var(--fail);\n\tcolor: var(--text);\n}.osai-dialogbox__foot button.fail:hover{\n\tbackground: var(--dark-fail);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.warn{\n\tbackground: var(--warn);\n\tcolor: var(--text);\n} .osai-dialogbox__foot button.warn:hover{\n\tbackground: var(--dark-warn);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.info{\n\tbackground: var(--info);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.info:hover{\n\tbackground: var(--dark-info);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.link{\n\tbackground: var(--link);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.link:hover{\n\tbackground: var(--dark-link);\n\tcolor: var(--text);}\n\t.osai-dialogbox__foot button.success i,.osai-dialogbox__foot button.fail i, .osai-dialogbox__foot button.warn i, .osai-dialogbox__foot button.info i,.osai-dialogbox__foot button.link i{\n    color: var(--dark-text)\n}\n/* disable scrolling when modal is opened */\n.osai-modal__open{\n\toverflow-y: hidden;\n\tscroll-behavior: smooth;\n}\n.osai-modal__appear{\n\topacity: 1;\n\ttransform: translate(-50%,-50%);\n}\n.osai-modal__btn{\n\tborder-radius: .755rem;\n\tborder: solid 1px transparent;\n\tpadding: 0.65rem 1.73rem;\n\tcursor: pointer;\n\toutline: none;\n\ttransition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;\n\tbackground-color: var(--bg);\n\tcolor: var(--text);\n\tdisplay: inline-flex;\n\tjustify-content: center;\n\talign-items: center;\n}\n@media screen and (max-width: 600px){\n\t.osai-dialogbox__wrapper{\n\t\tmin-width: 90vw;\n\t\tmax-width: 95vw;\n\t\tmax-height: 90vh;\n\t}\n}\n</style>`);
         const BOX = $sel(".osai-dialogbox");
         const BOX_OVERLAY = $sel(".osai-dialogbox__overlay");
         const BOX_WRAPPER = $sel(".osai-dialogbox__wrapper");
@@ -969,6 +972,7 @@ const $freeze = (element, operation, attr = true) => {
                 return dialog;
             },
             get: {
+                box: BOX,
                 head: BOX_HEAD,
                 foot: BOX_FOOT,
                 wrapper: BOX_INNER_WRAPPER,
@@ -1002,96 +1006,137 @@ const $freeze = (element, operation, attr = true) => {
         };
     }
     if (boxToDraw === "all" || boxToDraw === "notifier" || boxToDraw === "notify") {
-        if (!$in($sel(".osai-notifier__present"))) $html($sel("body"), "beforeend", `\n\t\t\t <span style="display: none" class="osai-notifier__present"></span>`);
-        if (!$in($sel(".osai-notifier__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-notifier__stylesheet" type="text/css" rel="stylesheet" media="all">\n\t\t\t.osai-notifier{\n\t\t\t\tscroll-behavior: smooth;\n\t\t\t\tposition: fixed;\n\t\t\t\ttop: 10px;\n\t\t\t\tright: 10px;\n\t\t\t\tborder-radius: 5px;\n\t\t\t\tpadding: 10px;\n\t\t\t\tfont-weight: 500;\n\t\t\t\tcolor: var(--dark-text);\n\t\t\t\tbackground-color: var(--dark-info);\n\t\t\t\tbox-shadow: 1px 2px 4px 0 var(--bg);\n\t\t\t\tdisplay:flex;\n\t\t\t\topacity: 0;\n\t\t\t\ttransform: translate(0,-50%);\n\t\t\t\tz-index: 9993;\n\t\t\t\tmin-height: 50px;\n\t\t\t\tmin-width: 150px;\n\t\t\t\tjustify-content: space-between;\n\t\t\t\talign-items: flex-start;\n                transition: ease-in-out all .8s;\n\t\t\t}\n\t\t\t.osai-notifier__display{\n\t\t\t\topacity: 1;\n\t\t\t\ttransform: translate(0,0);\n\t\t\t\tmax-width: 50vw;\n\t\t\t}\n\t\t\t.osai-notifier__display-center{\n\t\t\t\ttop: 50%; \n\t\t\t\tleft: 50%;\n                right: auto;\n\t\t\t\ttransform: translate(-50%,-50%);\n\t\t\t} @media (max-width: 767px){\n                .osai-notifier__display-center{\n                    max-width: 60vw;\n                }\n            }\n            @media (max-width: 426px){\n            \t.osai-notifier__display-center{\n                    max-width: 93vw;\n                }\n                .osai-notifier__display{\n\t\t\t\t\tmax-width: 93vw;\n\t\t\t\t}\n            }\n            .osai-notifier__icon{\n            \tposition: absolute;\n            \ttop: 10px;\n            \tpadding-left: 10px;\n            \tdisplay: none;\n            }\n            .osai-notifier__icon i{\n            \ttransform: scale(var(--ggs,.8));\n            }\n\t\t\t.osai-notifier__close{\n\t\t\t\tposition: absolute;\n\t\t\t\tright: 10px;\n\t\t\t\ttop: 10px;\n\t\t\t\tcursor: pointer;\n\t\t\t\topacity: .8;\n\t\t\t}\n\t\t\t.osai-notifier__close:hover{\n\t\t\t\topacity: 1;\n\t\t\t\tcolor: var(--fail);\n\t\t\t}\n\t\t\t.osai-notifier.success,.osai-notifier.fail,.osai-notifier.warn,.osai-notifier.info{\n\t\t\t\tcolor: var(--dark-text);\n\t\t\t}\n\t\t\t.osai-notifier.success{\n\t\t\t\tbackground-color: var(--success);\n\t\t\t}\n\t\t\t.osai-notifier.fail{\n\t\t\t\tbackground-color: var(--fail);\n\t\t\t}\n\t\t\t.osai-notifier.warn{\n\t\t\t\tbackground-color: var(--warn);\n\t\t\t\tcolor: var(--bg);\n\t\t\t}\n\t\t\t.osai-notifier.info{\n\t\t\t\tbackground-color: var(--info);\n\t\t\t}\n\t\t\t.osai-notifier__body{\n\t\t\t\tpadding: 5px 26px 5px 36px;\n\t\t\t\tpadding-left: 0;\n\t\t\t\ttext-align: center;\n\t\t\t\twidth: 100%;\n\t\t\t}\n\t\t</style>`);
+        if (!$in($sel(".osai-simple-notifier"))) $html($sel("body"), "beforeend", `<div class="osai-simple-notifier"><div style="display: none" class="osai-notifier__config_wrapper"></div></div>`);
+        if (!$in($sel(".osai-notifier__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-notifier__stylesheet" rel="stylesheet" media="all">\n\t\t\t.osai-notifier{\n\t\t\t\tscroll-behavior: smooth;\n\t\t\t\tposition: fixed;\n\t\t\t\ttop: 10px;\n\t\t\t\tright: 10px;\n\t\t\t\tborder-radius: 5px;\n\t\t\t\tpadding: 10px;\n\t\t\t\tfont-weight: 500;\n\t\t\t\tcolor: var(--dark-text);\n\t\t\t\tbackground-color: var(--dark-info);\n\t\t\t\tbox-shadow: 1px 2px 4px 0 var(--bg);\n\t\t\t\tdisplay:flex;\n\t\t\t\topacity: 0;\n\t\t\t\ttransform: translate(0,-50%);\n\t\t\t\tz-index: 9993;\n\t\t\t\tmin-height: 50px;\n\t\t\t\tmin-width: 150px;\n\t\t\t\tjustify-content: space-between;\n\t\t\t\talign-items: flex-start;\n                transition: ease-in-out all .8s;\n\t\t\t}\n\t\t\t.osai-notifier__display{\n\t\t\t\topacity: 1;\n\t\t\t\ttransform: translate(0,0);\n\t\t\t\tmax-width: 50vw;\n\t\t\t}\n\t\t\t.osai-notifier__display-center{\n\t\t\t\ttop: 50%; \n\t\t\t\tleft: 50%;\n                right: auto;\n\t\t\t\ttransform: translate(-50%,-50%);\n\t\t\t} @media (max-width: 767px){\n                .osai-notifier__display-center{\n                    max-width: 60vw;\n                }\n            }\n            @media (max-width: 426px){\n            \t.osai-notifier__display-center{\n                    max-width: 93vw;\n                }\n                .osai-notifier__display{\n\t\t\t\t\tmax-width: 93vw;\n\t\t\t\t}\n            }\n\t\t\t.osai-notifier__close{\n\t\t\t\tposition: absolute;\n\t\t\t\tright: 10px;\n\t\t\t\ttop: 10px;\n\t\t\t\tcursor: pointer;\n\t\t\t\topacity: .8;\n\t\t\t}\n\t\t\t.osai-notifier__close:hover{\n\t\t\t\topacity: 1;\n\t\t\t\tcolor: var(--fail);\n\t\t\t}\n\t\t\t.osai-notifier.success,.osai-notifier.fail,.osai-notifier.warn,.osai-notifier.info{\n\t\t\t\tcolor: var(--dark-text);\n\t\t\t}\n\t\t\t.osai-notifier.success{\n\t\t\t\tbackground-color: var(--success);\n\t\t\t}\n\t\t\t.osai-notifier.fail{\n\t\t\t\tbackground-color: var(--fail);\n\t\t\t}\n\t\t\t.osai-notifier.warn{\n\t\t\t\tbackground-color: var(--warn);\n\t\t\t\tcolor: var(--bg);\n\t\t\t}\n\t\t\t.osai-notifier.info{\n\t\t\t\tbackground-color: var(--info);\n\t\t\t}\n\t\t\t.osai-notifier__body{\n\t\t\t\tpadding: 5px 26px 5px 36px;\n\t\t\t\tpadding-left: 0;\n\t\t\t\ttext-align: center;\n\t\t\t\twidth: 100%;\n\t\t\t}\n\t\t</style>`);
+        let presenceSelector = ".osai-simple-notifier";
+        let sideCardSelector = ".osai-notifier-entry:not(.osai-notifier__display-center)";
         const NOTIFY = (dialog, theme, options) => {
-            if ($in($sel(".osai-notifier__present"))) {
-                let position = options.position, styleClass = "", iconImg = "bell", postStyle = "";
-                let uniqueId = options.id ? `id="${options.id}"` : "";
-                if (position === "center") postStyle = " osai-notifier__display-center";
-                switch (theme) {
-                  case "success":
-                  case "good":
-                    styleClass = "success";
-                    iconImg = "check-o";
-                    break;
-
-                  case "fail":
-                  case "danger":
-                  case "error":
-                    styleClass = "fail";
-                    iconImg = "close-o";
-                    break;
-
-                  case "info":
-                    styleClass = "info";
-                    iconImg = "bulb";
-                    break;
-
-                  case "warn":
-                  case "warning":
-                    styleClass = "warn";
-                    iconImg = "danger";
-                    break;
-
-                  default:
-                    styleClass = "";
-                    break;
-                }
-                $html($sel("body"), "beforeend", `\n\t            <div class="osai-notifier osai-notifier-entry${postStyle} ${styleClass}" ${uniqueId}>\n\t\t\t\t\t<div class="osai-notifier__icon"><i class="gg-${iconImg}"></i></div>\n\t\t\t\t\t<div class="osai-notifier__body">${dialog}</div>\n\t\t\t\t\t<div class="osai-notifier__close"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect></svg></div>\n\t\t\t\t</div>`);
-                let notifyEntry = $sela(".osai-notifier-entry");
-                notifyEntry.forEach(((box, boxIndex) => {
-                    let duration = options.duration || 5e3, topMargin = 0;
-                    if (boxIndex > 0) topMargin = getTop(notifyEntry[boxIndex - 1], topMargin);
-                    setTimeout((() => {
-                        $class(box, "add", "osai-notifier__display");
-                        if (!$class(box, "has", "osai-notifier__display-center")) addTop(topMargin, box);
-                    }), 200);
-                    if (!$class(box, "has", "osai-notifier__display")) removeNotifier();
-                    $on($sel(".osai-notifier__close", box), "click", (e => {
-                        e.preventDefault();
-                        removeNotifier(false);
-                    }));
-                    function getTop(theElement, theTop) {
-                        if (!$class(theElement, "has", "osai-notifier__display-center")) theTop += theElement.offsetHeight + parseInt($style(theElement, "css").top.replace("px", "")); else if ($class(theElement.previousElementSibling, "has", "osai-notifier__display") && !$class(theElement.previousElementSibling, "has", "osai-notifier__display-center")) theTop += getTop(theElement.previousElementSibling, theTop);
-                        return theTop;
-                    }
-                    function addTop(margin, to, plus = 10) {
-                        if (margin + plus === 0) $style(to, "top:10px"); else $style(to, "top:" + (margin + plus) + "px");
-                    }
-                    function adjustBox(presentBox, boxNextSibling, newTop = null) {
-                        let presentTop;
-                        if (boxNextSibling) {
-                            presentTop = $style(boxNextSibling, "css").top.replace("px", "");
-                            newTop = newTop || $style(presentBox, "css").top.replace("px", "");
-                            if ($class(boxNextSibling, "has", "osai-notifier__display") && !$class(boxNextSibling, "has", "osai-notifier__display-center") && !$class(presentBox, "has", "osai-notifier__display-center")) {
-                                addTop(parseInt(newTop), boxNextSibling, 0);
-                                if (boxNextSibling.nextElementSibling) adjustBox(boxNextSibling, boxNextSibling.nextElementSibling, parseInt(presentTop));
-                            }
-                        }
-                        return null;
-                    }
-                    function removeNotifier(useDuration = true) {
-                        duration = useDuration ? duration : 0;
-                        if (duration !== "pin" && duration !== "fixed" && duration !== -1) {
-                            if (useDuration) {
-                                setTimeout((() => $class(box, "del", "osai-notifier__display")), duration);
-                                duration = duration + 50;
-                            } else duration = 0;
-                            setTimeout((() => {
-                                adjustBox(box, box.nextElementSibling);
-                                box.remove();
-                            }), duration);
-                        }
-                    }
-                }));
-                return $sel("body").lastChild;
+            if (!$in($sel(presenceSelector))) {
+                console.error("Omj$ Notifier could not be found, you probably didn't draw it's box");
+                return false;
             }
-            console.error("Omj$ Notifier could not be found, you probably didn't draw it's box");
-            return false;
+            let configSelector = config => {
+                let x = $sel("input.osai-notifier__config[data-config='" + config + "']", $sel(presenceSelector));
+                if (x) return $data(x, "value");
+                return null;
+            };
+            dialog = dialog ?? configSelector("message") ?? "Simple notifier by Lay's Omj$";
+            theme = theme ?? configSelector("type");
+            options = options ?? {};
+            let styleClass = "";
+            let postStyle = "";
+            let position = options.position ?? configSelector("position") ?? "side";
+            let uniqueId = options.id ? `id="${options.id}"` : "";
+            let duration = parseInt(options.duration ?? configSelector("duration") ?? 5e3);
+            let defaultTopMargin = configSelector("margin") ?? 10;
+            let previousEntryHeight = 0;
+            let getNextEntryTop = () => {
+                let nextTop = 0;
+                $loop($sela(sideCardSelector), (entry => nextTop += Math.floor(entry.offsetHeight + defaultTopMargin)));
+                return nextTop;
+            };
+            let getMyLastSideEntryTopSide = currentEntry => {
+                let mySibling = currentEntry.previousElementSibling;
+                if (mySibling === $sel(".osai-notifier__config_wrapper", $sel(presenceSelector))) return null;
+                if ($class(mySibling, "has", "osai-notifier__display-center")) return getMyLastSideEntryTopSide(mySibling);
+                if ($class(mySibling, "has", "osai-notifier-entry")) return mySibling;
+                return null;
+            };
+            let getMyLastSideEntryDownSide = currentEntry => {
+                try {
+                    let mySibling = currentEntry.nextElementSibling;
+                    if ($class(mySibling, "has", "osai-notifier__display-center")) return getMyLastSideEntryDownSide(mySibling);
+                    if ($class(mySibling, "has", "osai-notifier-entry")) return mySibling;
+                } catch (e) {}
+                return null;
+            };
+            let adjustEntries = (currentEntry, entrySibling, closed = false) => {
+                if (!currentEntry || !entrySibling || currentEntry === entrySibling || !$class(entrySibling, "has", "osai-notifier__display")) return;
+                let x = getMyLastSideEntryTopSide(currentEntry);
+                if (!x && $class(entrySibling, "has", "osai-notifier__display-center")) entrySibling = getMyLastSideEntryDownSide(entrySibling);
+                if (closed && x) {
+                    currentEntry = x;
+                    closed = false;
+                }
+                let newTop = closed ? 0 : parseInt($style(currentEntry).top.replace("px", "")) + currentEntry.offsetHeight;
+                placeNewEntry(entrySibling, null, newTop + defaultTopMargin);
+                adjustEntries(entrySibling, entrySibling.nextElementSibling);
+            };
+            let removeEntry = (entry, useDuration = true, closeEntry = false) => {
+                if (closeEntry) {
+                    adjustEntries(entry, entry.nextElementSibling, true);
+                    setTimeout((() => entry.remove()), 100);
+                }
+                if (duration === "pin" || duration === "fixed" || duration === -1) return;
+                if (useDuration) {
+                    setTimeout((() => $class(entry, "del", "osai-notifier__display")), duration);
+                    duration = duration + 50;
+                }
+                setTimeout((() => {
+                    adjustEntries(entry, entry.nextElementSibling, true);
+                    setTimeout((() => entry.remove()), 100);
+                }), duration);
+            };
+            let placeNewEntry = (entry, oldEntryHeight, useThisHeight = null) => {
+                $on($sel(".osai-notifier__close", entry), "click", (e => {
+                    e.preventDefault();
+                    removeEntry(entry, false, true);
+                }));
+                removeEntry(entry);
+                if (!useThisHeight && $class(entry, "has", "osai-notifier__display-center")) return;
+                if (useThisHeight) return $style(entry, `top:${useThisHeight}px`);
+                oldEntryHeight = parseInt(oldEntryHeight);
+                let currentTop = oldEntryHeight + defaultTopMargin;
+                if (oldEntryHeight === 0) return $style(entry, "top:10px");
+                $style(entry, "top:" + currentTop + "px");
+            };
+            if (position === "center") postStyle = "osai-notifier__display-center";
+            if ($sel(sideCardSelector)) previousEntryHeight = getNextEntryTop();
+            switch (theme) {
+              case "success":
+              case "good":
+                styleClass = "success";
+                break;
+
+              case "fail":
+              case "danger":
+              case "error":
+                styleClass = "fail";
+                break;
+
+              case "info":
+                styleClass = "info";
+                break;
+
+              case "warn":
+              case "warning":
+                styleClass = "warn";
+                break;
+            }
+            $html($sel(presenceSelector), "beforeend", `<div class="osai-notifier osai-notifier-entry ${postStyle} ${styleClass}" ${uniqueId}><div class="osai-notifier__body">${dialog}</div><div class="osai-notifier__close"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect></svg></div></div>`);
+            let notifyEntry = $sela(".osai-notifier-entry");
+            let currentEntry = $end(notifyEntry);
+            setTimeout((() => {
+                $class(currentEntry, "add", "osai-notifier__display");
+                placeNewEntry(currentEntry, previousEntryHeight);
+            }), 200);
+            return currentEntry;
         };
+        const CONFIG = $sel(".osai-notifier__config_wrapper");
         notifier = {
-            notify: (dialog, theme, option) => NOTIFY(dialog, theme, option)
+            notify: (dialog, theme, option) => NOTIFY(dialog, theme, option),
+            notifyConfig: ({duration: duration, type: type, position: position, message: message, margin: margin}) => {
+                let addConfig = (config, value) => {
+                    if (!value) return;
+                    let element = config => $sel("input[data-config='" + config + "'].osai-notifier__config_wrapper");
+                    if (!element(config)) $html(CONFIG, "beforeend", `<input type="hidden" class="osai-notifier__config" data-config="${config}" data-value="${value}">`); else $data(element(config), "value", value);
+                };
+                addConfig("duration", duration);
+                addConfig("type", type);
+                addConfig("position", position);
+                addConfig("margin", margin);
+                addConfig("message", message?.replaceAll('"', "'"));
+            }
         };
     }
     return {
@@ -1103,6 +1148,7 @@ const $freeze = (element, operation, attr = true) => {
 const CusWind = $osaiBox();
 
 function aMsg(message, option = {
+    head: "Alert Box",
     showButton: true,
     closeOnBlur: null,
     size: "sm",
@@ -1110,7 +1156,7 @@ function aMsg(message, option = {
     onClose: null
 }) {
     CusWind.insert("body", message);
-    if (option.showButton === false) CusWind.flush("head").flush("foot"); else CusWind.insert("head", "Alert Box").insert("foot", `<button type="button" class="success osai-modal__btn osai-close-box"><i class='gg-check'></i></button>`);
+    if (option.showButton === false) CusWind.flush("head").flush("foot"); else CusWind.insert("head", option.head).insert("foot", `<button type="button" class="success osai-modal__btn osai-close-box"><i class='gg-check'></i></button>`);
     CusWind.render(option.closeOnBlur, option.size, option.align, option.onClose);
 }
 
@@ -1163,9 +1209,6 @@ function osModal(option = {}) {
     return option.operation() ?? option.then();
 }
 
-function osNote(message = "Hello, this is osNote", type = "", option = {
-    duration: 5e3,
-    position: "side"
-}) {
+function osNote(message, type, option) {
     CusWind.notify(message, type, option);
 }

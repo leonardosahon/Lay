@@ -124,7 +124,7 @@ final class ImgHandler{
      * This function fetches you image file, manipulates it and moves it to the specified path passed
      * @param string $post_name name used to send the image file ove the $_FILES array
      * @param string $directory full path to image's new location without image new name
-     * @param string $img_name image's new name
+     * @param string $img_name image's new name without file extension
      * @param int|null $index if multiple image files, pass the current image index
      * @param int $permission default = 0755
      * @param array|null $dimension optional max width and height of the image

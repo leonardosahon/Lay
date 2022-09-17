@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace Lay\orm\EXTENSIONS;
 
 use Closure;
+use Lay\orm\Exception;
+
 trait SelectorOOP {
     private static int $current_index = 0;
     private array $cached_options = [];
@@ -86,12 +88,14 @@ trait SelectorOOP {
         $this->no_null();
         return $this->no_false();
     }
-    final public function loop_assoc() : ?array {
+    final public function loop_assoc(?string $clause = null) : ?array {
+        if($clause) $this->clause($clause);
         $this->loop();
         $this->assoc();
         return $this->select();
     }
-    final public function loop_row() : ?array {
+    final public function loop_row(?string $clause = null) : ?array {
+        if($clause) $this->clause($clause);
         $this->loop();
         $this->row();
         return $this->select();
@@ -100,7 +104,13 @@ trait SelectorOOP {
         $this->clause($clause);
         return $this->edit();
     }
-    
+    final public function then_select(string $clause) : array {
+        $this->clause($clause);
+        $this->no_null();
+        $this->assoc();
+        return $this->select();
+    }
+
     /** @see SQL_CORE::query_insert() */
     final public function insert() : bool {
         $d = $this->get_vars();
@@ -142,13 +152,21 @@ trait SelectorOOP {
     /** @see SQL_CORE::query_count() */
     final public function count_row() : int {
         $d = $this->get_vars();
-        $col = $d['values'] ?? $d['columns'];
+        $col = $d['values'] ?? $d['columns'] ?? "NOTHING";
+
+        if($col === "NOTHING")
+            $this->oop_exception();
+
         return $this->query_count($col,$d['table'],@$d['clause'],@$d['debug']);
     }
     /** @see SQL_CORE::query_update() */
     final public function edit() : bool {
         $d = $this->get_vars();
-        $values = $d['values'] ?? $d['columns'];
+        $values = $d['values'] ?? $d['columns'] ?? "NOTHING";
+
+        if($values === "NOTHING")
+            $this->oop_exception();
+
         if(!empty(@$d['switch'])){
             $switch = [];
             foreach ($d['switch'] as $k => $match){
@@ -169,5 +187,9 @@ trait SelectorOOP {
     final public function delete() : bool {
         $d = $this->get_vars();
         return $this->query_delete($d['table'],$d['clause'],(int) @$d['debug']);
+    }
+
+    private function oop_exception() : void {
+        $this->use_exception("SQL_OOP::ERR", "No columns to update was passed, please use the `column` or `value` method to rectify this");
     }
 }

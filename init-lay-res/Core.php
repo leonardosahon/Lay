@@ -105,46 +105,4 @@ class Core {
             $this->mkdir_or_cp_file($locale,self::$init_lay_files . DIRECTORY_SEPARATOR . $source, $target ?? $source);
     }
 
-    public function folder_copy(string $sourceDirectory, string $destinationDirectory, string $childFolder = '') {
-        $dir = opendir($sourceDirectory);
-    
-        if (is_dir($destinationDirectory) === false) {
-            mkdir($destinationDirectory);
-        }
-    
-        if ($childFolder !== '') {
-            if (is_dir("$destinationDirectory/$childFolder") === false) {
-                mkdir("$destinationDirectory/$childFolder");
-            }
-    
-            while (($file = readdir($dir)) !== false) {
-                if ($file === '.' || $file === '..') {
-                    continue;
-                }
-    
-                if (is_dir("$sourceDirectory/$file") === true) {
-                    $this->folder_copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
-                } else {
-                    copy("$sourceDirectory/$file", "$destinationDirectory/$childFolder/$file");
-                }
-            }
-    
-            closedir($dir);
-    
-            return;
-        }
-    
-        while (($file = readdir($dir)) !== false) {
-            if ($file === '.' || $file === '..')
-                continue;
-    
-            if (is_dir("$sourceDirectory/$file") === true)
-                $this->folder_copy("$sourceDirectory/$file", "$destinationDirectory/$file");
-            else
-                copy("$sourceDirectory/$file", "$destinationDirectory/$file");
-        }
-    
-        closedir($dir);
-    }
-
 }

@@ -4,6 +4,15 @@ namespace Lay;
 class AutoLoader {
     private static string $slash = DIRECTORY_SEPARATOR;
     private static string $autoloader_dir = "Lay";
+    private static self $instance;
+    private function __construct(){}
+    private function __clone(){}
+
+    public static function instance() : self {
+        if(!isset(self::$instance))
+            self::$instance = new self();
+        return self::$instance;
+    }
     public static function get_root_dir(){
         return str_replace(self::$autoloader_dir, "",__DIR__);
     }
