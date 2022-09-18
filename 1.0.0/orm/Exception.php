@@ -39,9 +39,12 @@ class Exception {
             if(!isset($v['file']) && !isset($v['line']))
                 continue;
             $k++;
+            $last_file = explode("/",$v['file']);
+            $last_file = end($last_file);
             $stack .= <<<STACK
                 <div style="color: #fff; padding-left: 20px">
                     <div>#$k: {$v['function']}(...)</div>
+                    <div><b>$last_file ({$v['line']})</b></div>
                     <span style="white-space: nowrap; word-break: keep-all">{$v['file']}; <b>{$v['line']}</b></span>
                     <hr>
                 </div>

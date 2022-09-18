@@ -100,6 +100,10 @@ trait SelectorOOP {
         $this->row();
         return $this->select();
     }
+    final public function then_insert(string $columns) : bool {
+        $this->column($columns);
+        return $this->insert();
+    }
     final public function then_update(string $clause) : bool {
         $this->clause($clause);
         return $this->edit();
