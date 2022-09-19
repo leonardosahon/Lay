@@ -14,8 +14,6 @@ $default_lay_version = "1.0.0"; // change this to the latest version of Lay
 $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
 
 require_once $default_lay_location . $s . "init-lay-res" . $s . "Core.php";
-require_once $default_lay_location . $s . "init-lay-res" . $s . "CopyDirectory.php";
-
 $core = new Core($argv,$default_lay_version,$default_lay_location);
 
 if($argc == 1)
@@ -46,55 +44,6 @@ if(!is_dir($default_lay_location))
 if(is_dir($project_root) and $overwrite_existing_project_by_default === false and $update_lay_version_by_default === false)
     $core->use_error("You are trying to create an existing project, delete the folder and try again, or change the name. If you really want to overwrite the project, use the argument `-w true`. If you want to just update/downgrade the Lay version pass the Lay version using the version argument `-v LAY_VERSION` and the update argument `-u true`");
 
-$sections = ["__front","__back"];
-$sections_js = ["front","back"];
-
-$core->copy_routine("api","api-index.php","index.php");
-
-$inc = "res{$s}server{$s}includes$s";
-$view = "res{$s}server{$s}view$s";
-$client = "res{$s}client{$s}dev$s";
-
-$core->copy_routine($inc,"connection.inc");
-
-// server files
-for($i = 0; $i < count($sections); $i++){
-    $section = $sections[$i];
-
-    $core->copy_routine("res{$s}server{$s}model{$s}{$section}");
-    $core->copy_routine("res{$s}server{$s}view{$s}{$section}");
-    $core->copy_routine("res{$s}server{$s}controller{$s}{$section}");
-
-    $core->copy_routine($inc . "$section","body.inc");
-    $core->copy_routine($inc . "$section","head.inc");
-    $core->copy_routine($inc . "$section","script.inc");
-    
-    $core->copy_routine($view . "$section","homepage.view");
-    $core->copy_routine($view . "$section","error.view");
-}
-
-// client files
-for($i = 0; $i < count($sections_js); $i++){
-    $core->copy_routine($client . $sections_js[$i]);
-}
-
-$section = $client . "custom{$s}";
-$core->copy_routine($section . "css");
-$core->copy_routine($section . "js");
-$core->copy_routine($section . "images");
-$core->copy_routine($section . "plugin");
-
-$core->copy_routine($section . "images","icon.png");
-$core->copy_routine($section . "images","favicon.png");
-$core->copy_routine($section . "images","logo.png");
-
-// copy specified Lay verison
-new CopyDirectory($lay . $default_lay_version, $project_root . $s . "Lay");
-
-// copy default root folder files
-$core->copy_routine("", "bob_d_builder.php");
-$core->copy_routine("", "index.php");
-$core->copy_routine("", "layconfig.php");
-$core->copy_routine("", "htaccess", ".htaccess");
+$core->create_project($lay . $default_lay_version, $project_root);
 
 print "Project Creation Completed\n";

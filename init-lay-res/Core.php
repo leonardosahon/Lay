@@ -1,4 +1,6 @@
 <?php
+require_once "CopyDirectory.php";
+
 class Core {
     private static string $init_lay_files = "init-lay-res" . DIRECTORY_SEPARATOR . "files";
     private static array $ag;
@@ -58,7 +60,8 @@ class Core {
     public function use_error($msg) {
         print "####\n";
         print "# Error Encountered \n";
-        print "# What happened? $msg\n";
+        print "- What happened? $msg\n";
+        print "####\n";
         die;
     }
 
@@ -96,7 +99,7 @@ class Core {
     }
 
     public function copy_routine(string $locale, ?string $source = null, ?string $target = null) {
-        if (self::$update_lay_version_by_default == true) 
+        if (self::$update_lay_version_by_default)
             return null;
 
         $this->mkdir_or_cp_file($locale);
@@ -105,4 +108,58 @@ class Core {
             $this->mkdir_or_cp_file($locale,self::$init_lay_files . DIRECTORY_SEPARATOR . $source, $target ?? $source);
     }
 
+    public function create_project($lay,$project_root) : void {
+        $sections = ["__front","__back"];
+        $sections_js = ["front","back"];
+        $s = DIRECTORY_SEPARATOR;
+
+        $this->copy_routine("api","api-index.php","index.php");
+
+        $inc = "res{$s}server{$s}includes$s";
+        $view = "res{$s}server{$s}view$s";
+        $client = "res{$s}client{$s}dev$s";
+
+        $this->copy_routine($inc,"connection.inc");
+
+        // server files
+        for($i = 0; $i < count($sections); $i++){
+            $section = $sections[$i];
+
+            $this->copy_routine("res{$s}server{$s}model{$s}{$section}");
+            $this->copy_routine("res{$s}server{$s}view{$s}{$section}");
+            $this->copy_routine("res{$s}server{$s}controller{$s}{$section}");
+
+            $this->copy_routine($inc . "$section","body.inc");
+            $this->copy_routine($inc . "$section","head.inc");
+            $this->copy_routine($inc . "$section","script.inc");
+            
+            $this->copy_routine($view . "$section","homepage.view");
+            $this->copy_routine($view . "$section","error.view");
+        }
+
+        // client files
+        for($i = 0; $i < count($sections_js); $i++){
+            $this->copy_routine($client . $sections_js[$i]);
+        }
+
+        $section = $client . "custom{$s}";
+        $this->copy_routine($section . "css");
+        $this->copy_routine($section . "js");
+        $this->copy_routine($section . "images");
+        $this->copy_routine($section . "plugin");
+
+        $this->copy_routine($section . "images","icon.png");
+        $this->copy_routine($section . "images","favicon.png");
+        $this->copy_routine($section . "images","logo.png");
+
+        // copy specified Lay version
+        new CopyDirectory($lay, $project_root . $s . "Lay");
+
+        // copy default root folder files
+        $this->copy_routine("", "bob_d_builder.php");
+        $this->copy_routine("", "index.php");
+        $this->copy_routine("", "layconfig.php");
+        $this->copy_routine("", "htaccess", ".htaccess");
+        $this->copy_routine("", "robots.txt");
+    }
 }

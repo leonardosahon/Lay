@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /res/
+Disallow: /vendor/
+Disallow: /Lay/
+Allow: /res/uploads/
+Allow: /res/client/dev/custom/images/
+Allow: /res/client/prod/custom/images/
+
+Sitemap: {PROJECT_DOMAIN}/sitemap.xml
