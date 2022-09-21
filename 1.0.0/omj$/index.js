@@ -20,7 +20,11 @@ const $web = navigator;
 
 const $loc = $win.location;
 
-let $store; try{ $store = $win.localStorage } catch (e) {}
+let $store;
+
+try {
+    $store = $win.localStorage;
+} catch (e) {}
 
 const $isInt = str => isNaN(str) ? str : parseInt(str);
 
@@ -574,21 +578,30 @@ const $drag = (element, elementAnchor) => {
     let pos2 = 0;
     let pos3 = 0;
     let pos4 = 0;
-    if (elementAnchor) elementAnchor.onmousedown = dragMouseDown; else element.onmousedown = dragMouseDown;
+    if (elementAnchor) {
+        elementAnchor.onmousedown = dragMouseDown;
+        elementAnchor.ontouchstart = dragMouseDown;
+    } else {
+        element.onmousedown = dragMouseDown;
+        element.ontouchstart = dragMouseDown;
+    }
     function dragMouseDown(e) {
         e.preventDefault();
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        $on($doc, "mouseup", (() => {
+        let touchType = e.touches ? e.touches[0] : e;
+        pos3 = touchType.clientX;
+        pos4 = touchType.clientY;
+        $on($doc, "mouseup,touchend", (() => {
             $doc.onmouseup = null;
             $doc.onmousemove = null;
+            $doc.ontouchend = null;
+            $doc.ontouchmove = null;
         }));
-        $on($doc, "mousemove", (e => {
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
+        $on($doc, "mousemove,touchmove", (e => {
+            touchType = e.touches ? e.touches[0] : e;
+            pos1 = pos3 - touchType.clientX;
+            pos2 = pos4 - touchType.clientY;
+            pos3 = touchType.clientX;
+            pos4 = touchType.clientY;
             element.style.top = element.offsetTop - pos2 + "px";
             element.style.left = element.offsetLeft - pos1 + "px";
         }));
@@ -672,12 +685,9 @@ const $preloader = (act = "show") => {
     let errRoutine = (msg, xhr) => {
         if (error(xhr.status, xhr) === "error") {
             if (strict) {
-                if(alert_error)
-                    alert(msg)
-                else
-                    osNote(msg, "fail", {
-                        duration: -1
-                    });
+                if (alert_error) alert(msg); else osNote(msg, "fail", {
+                    duration: -1
+                });
             }
             $omjsError("$curl", xhr.e ?? xhr.statusText);
             reject(Error(xhr.e ?? xhr.statusText), xhr);
@@ -781,9 +791,9 @@ const $freeze = (element, operation, attr = true) => {
 /**!
  * Osai Custom Box buils with OMJ$
  * @author Osahenrumwen Aigbogun
- * @version 1.0.3
- * @copyright (c) 2019 Osai LLC | loshq.net/about.
- * @modified 26/08/2022
+ * @version 1.4
+ * @copyright (c) 2019 Osai Technologies LLC.
+ * @modified 18/09/2022
  */ const $osaiBox = (boxToDraw = "all") => {
     const dialogZindex = 9990;
     const colorVariant = `\n\t\t/*normal variant*/\n\t\t--text: #fffffa;\n\t\t--bg: #1d2124;\n\t\t--link: #009edc;\n\t\t--info: #445ede;\n\t\t--warn: #ffde5c;\n\t\t--fail: #f40204;\n\t\t--fade: #e2e2e2;\n\t\t--success: #0ead69;\n\t\t/*dark variant*/\n\t\t--dark-text: #f5f7fb;\n\t\t--dark-link: #00506e;\n\t\t--dark-info: #3247ac;\n\t\t--dark-warn: #626200;\n\t\t--dark-fail: #a20002;\n\t\t--dark-success: #104e00;\n\t`;
@@ -791,8 +801,8 @@ const $freeze = (element, operation, attr = true) => {
     if (!$in($sel(".osai-gg-icon-abstract"))) $html($sel("head"), "beforeend", `<style class="osai-gg-icon-abstract">.osai-dialogbox,.osai-notifier {${colorVariant} -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; box-sizing: border-box; scroll-behavior: smooth;} ${ggIcon}</style>`);
     let dialog = {}, notifier = {};
     if (boxToDraw === "all" || boxToDraw === "dialog" || boxToDraw === "modal") {
-        if (!$in($sel(".osai-dialogbox__present"))) $html($sel("body"), "beforeend", `\n\t\t\t\t<div class="osai-dialogbox">\n\t\t\t\t\t<span style="display: none" class="osai-dialogbox__present"></span>\n\t\t\t\t\t<div class="osai-dialogbox__overlay"></div>\n\t\t\t\t\t<div class="osai-dialogbox__wrapper">\n\t\t\t\t\t\t<div class="osai-dialogbox__header">\n\t\t\t\t\t\t\t<div class="osai-dialogbox__head"></div>\n\t\t\t\t\t\t\t<button class="osai-dialogbox__close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">\n\t\t\t\t\t\t\t\t<rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect>\n\t\t\t\t\t\t\t\t<rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect>\n\t\t\t\t\t\t\t</svg></button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="osai-dialogbox__inner-wrapper">\n\t\t\t\t\t\t\t<div class="osai-dialogbox__body"></div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="osai-dialogbox__foot"></div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`);
-        if (!$in($sel(".osai-dialogbox__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-dialogbox__stylesheet" rel="stylesheet" media="all">\n.osai-dialogbox{\nposition: fixed;\nright: 0; left: 0; top: 0; bottom: 0;\ndisplay: block;\nvisibility: hidden;\nopacity: 0;\nz-index: -${dialogZindex};\n}\n.osai-dialogbox__appear{\n\tvisibility: visible;\n\tz-index: ${dialogZindex};\n\topacity: 1;\n}\n.osai-dialogbox__overlay{\n\topacity: .5;\n\tposition: fixed;\n\ttop: 0;bottom: 0;left: 0;right: 0;\n\tbackground: var(--bg);\n\tz-index: 1;\n}\n.osai-dialogbox__wrapper{\n\tdisplay: flex;\n\topacity: 0;\n\tjustify-content: center;\n\talign-items: center;\n\tmax-width: 97vw;\n\tmax-height: 97vh;\n\ttransform: translate(-50%,0);\n\ttop: 50%; left: 50%;\n\tposition: absolute;\n\tz-index: 2;\n\tmargin: auto;\n\tbackground: var(--dark-text);\n\tborder-radius: 5px;\n\tflex-flow: column;\n\ttransition: ease-in-out .8s all;\n\tpadding: 0;\n\toverflow: hidden;\n}\n.osai-dialogbox__header{\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: space-between;\n\twidth: 100%;\n\tpadding: 1.75rem;\n\tborder-bottom: 1px solid #EFF2F5;\n}\n.osai-dialogbox__close-btn{\n\tbackground: transparent;\n\tborder: none;\n\tcolor: var(--dark-info);\n\tfont-weight: 500;\n\tcursor: pointer;\n\toutline: none;\n}\n.osai-dialogbox__close-btn:hover{\n\tcolor: var(--fail);\n}\n.osai-dialogbox__head{\n\tfont-size: 1.15rem;\n\tline-height: 1.15rem;\n\tpadding: 0;\n\tcolor: var(--bg);\n\tmargin: 0;\n\tfont-weight: 600;\n}\n.osai-dialogbox__inner-wrapper{\n\toverflow: auto;\n\tmax-width: 100vw;\n}\n.osai-dialogbox__body{\n\tfont-size: 1rem;\n\tpadding: 1.75rem;\n\tcolor: var(--bg);\n}\n.osai-dialogbox__foot{\n    padding: 1.5rem;\n    border-top: 1px solid #EFF2F5;\n}\n.osai-dialogbox__foot button.success{\n\tbackground: var(--success);\n\tcolor: var(--bg);\n} .osai-dialogbox__foot button.success:hover{\n\tbackground: var(--dark-success);\n\tcolor: var(--dark-text);}\n.osai-dialogbox__foot button.fail{\n\tbackground: var(--fail);\n\tcolor: var(--text);\n}.osai-dialogbox__foot button.fail:hover{\n\tbackground: var(--dark-fail);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.warn{\n\tbackground: var(--warn);\n\tcolor: var(--text);\n} .osai-dialogbox__foot button.warn:hover{\n\tbackground: var(--dark-warn);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.info{\n\tbackground: var(--info);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.info:hover{\n\tbackground: var(--dark-info);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.link{\n\tbackground: var(--link);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.link:hover{\n\tbackground: var(--dark-link);\n\tcolor: var(--text);}\n\t.osai-dialogbox__foot button.success i,.osai-dialogbox__foot button.fail i, .osai-dialogbox__foot button.warn i, .osai-dialogbox__foot button.info i,.osai-dialogbox__foot button.link i{\n    color: var(--dark-text)\n}\n/* disable scrolling when modal is opened */\n.osai-modal__open{\n\toverflow-y: hidden;\n\tscroll-behavior: smooth;\n}\n.osai-modal__appear{\n\topacity: 1;\n\ttransform: translate(-50%,-50%);\n}\n.osai-modal__btn{\n\tborder-radius: .755rem;\n\tborder: solid 1px transparent;\n\tpadding: 0.65rem 1.73rem;\n\tcursor: pointer;\n\toutline: none;\n\ttransition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;\n\tbackground-color: var(--bg);\n\tcolor: var(--text);\n\tdisplay: inline-flex;\n\tjustify-content: center;\n\talign-items: center;\n}\n@media screen and (max-width: 600px){\n\t.osai-dialogbox__wrapper{\n\t\tmin-width: 90vw;\n\t\tmax-width: 95vw;\n\t\tmax-height: 90vh;\n\t}\n}\n</style>`);
+        if (!$in($sel(".osai-dialogbox__present"))) $html($sel("body"), "beforeend", `\n\t\t\t\t<div class="osai-dialogbox"><span style="display: none" class="osai-dialogbox__present"></span><div class="osai-dialogbox__overlay"></div><div class="osai-dialogbox__wrapper">\n                    <div class="osai-dialogbox__header"><button class="osai-dialogbox__close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"></rect><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"></rect></svg></button></div>\n                    <div class="osai-dialogbox__head"></div>\n                    <div class="osai-dialogbox__inner-wrapper"><div class="osai-dialogbox__body"></div></div>\n                    <div class="osai-dialogbox__foot"></div>\n                </div></div>`);
+        if (!$in($sel(".osai-dialogbox__stylesheet"))) $html($sel("head"), "beforeend", `<style class="osai-dialogbox__stylesheet" rel="stylesheet" media="all">\n.osai-dialogbox{\nposition: fixed;\nright: 0; left: 0; top: 0; bottom: 0;\ndisplay: block;\nvisibility: hidden;\nopacity: 0;\nz-index: -${dialogZindex};\n}\n.osai-dialogbox__appear{\n\tvisibility: visible;\n\tz-index: ${dialogZindex};\n\topacity: 1;\n}\n.osai-dialogbox__overlay{\n\topacity: .5;\n\tposition: fixed;\n\ttop: 0;bottom: 0;left: 0;right: 0;\n\tbackground: var(--bg);\n\tz-index: 1;\n}\n.osai-dialogbox__wrapper{\n\tdisplay: flex;\n\topacity: 0;\n\tjustify-content: center;\n\talign-items: center;\n\tmax-width: 97vw;\n\tmax-height: 97vh;\n\ttransform: translate(-50%,0);\n\ttop: 50%; left: 50%;\n\tposition: absolute;\n\tz-index: 2;\n\tmargin: auto;\n\tbackground: var(--dark-text);\n\tborder-radius: 10px;\n\tflex-flow: column;\n\ttransition: ease-in-out .8s all;\n\tpadding: 1.5rem;\n\tpadding-top: 0;\n\toverflow: hidden;\n}\n.osai-dialogbox__header{\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: space-between;\n\twidth: 100%;\n\tpadding: 0;\n\tpadding-top: 1.5rem;\n\tborder-bottom: 1px solid #EFF2F5;\n}\n.osai-dialogbox__close-btn{\n\tbackground: transparent;\n\tborder: none;\n\tcolor: var(--dark-info);\n\tfont-weight: 500;\n\tcursor: pointer;\n\toutline: none;\n\tmargin-left: auto;\n}\n.osai-dialogbox__close-btn:hover{\n\tcolor: var(--fail);\n}\n.osai-dialogbox__head{\n\tfont-size: 1.15rem;\n\tline-height: 1.15rem;\n\tpadding: 0;\n\tcolor: var(--bg);\n\tmargin-bottom: 1rem;\n\tfont-weight: 600;\n\twidth: 100%;\n}\n.osai-dialogbox__inner-wrapper{\n\toverflow: auto;\n\tmax-width: 100vw;\n\tpadding: 1.75rem 0;\n}\n.osai-dialogbox__body{\n\tfont-size: 1rem;\n\tcolor: var(--bg);\n}\n.osai-dialogbox__foot{\n    padding: 0;\n    border-top: 1px solid #EFF2F5;\n}\n.osai-dialogbox__foot button.success{\n\tbackground: var(--success);\n\tcolor: var(--bg);\n} .osai-dialogbox__foot button.success:hover{\n\tbackground: var(--dark-success);\n\tcolor: var(--dark-text);}\n.osai-dialogbox__foot button.fail{\n\tbackground: var(--fail);\n\tcolor: var(--text);\n}.osai-dialogbox__foot button.fail:hover{\n\tbackground: var(--dark-fail);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.warn{\n\tbackground: var(--warn);\n\tcolor: var(--text);\n} .osai-dialogbox__foot button.warn:hover{\n\tbackground: var(--dark-warn);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.info{\n\tbackground: var(--info);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.info:hover{\n\tbackground: var(--dark-info);\n\tcolor: var(--text);}\n.osai-dialogbox__foot button.link{\n\tbackground: var(--link);\n\tcolor: var(--dark-text);\n} .osai-dialogbox__foot button.link:hover{\n\tbackground: var(--dark-link);\n\tcolor: var(--text);}\n\t.osai-dialogbox__foot button.success i,.osai-dialogbox__foot button.fail i, .osai-dialogbox__foot button.warn i, .osai-dialogbox__foot button.info i,.osai-dialogbox__foot button.link i{\n    color: var(--dark-text)\n}\n/* disable scrolling when modal is opened */\n.osai-modal__open{\n\toverflow-y: hidden;\n\tscroll-behavior: smooth;\n}\n.osai-modal__appear{\n\topacity: 1;\n\ttransform: translate(-50%,-50%);\n}\n.osai-modal__btn{\n\tborder-radius: .755rem;\n\tborder: solid 1px transparent;\n\tpadding: 0.65rem 1.73rem;\n\tcursor: pointer;\n\toutline: none;\n\ttransition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;\n\tbackground-color: var(--bg);\n\tcolor: var(--text);\n\tdisplay: inline-flex;\n\tjustify-content: center;\n\talign-items: center;\n}\n@media screen and (max-width: 600px){\n\t.osai-dialogbox__wrapper{\n\t\tmin-width: 90vw;\n\t\tmax-width: 95vw;\n\t\tmax-height: 90vh;\n\t}\n}\n</style>`);
         const BOX = $sel(".osai-dialogbox");
         const BOX_OVERLAY = $sel(".osai-dialogbox__overlay");
         const BOX_WRAPPER = $sel(".osai-dialogbox__wrapper");
@@ -866,9 +876,7 @@ const $freeze = (element, operation, attr = true) => {
             }
             let closeHandler = () => BOX_CLOSE(onClose);
             if ($html(BOX_FOOT).trim() === "") $style(BOX_FOOT, "display:none");
-            if ($html(BOX_HEAD).trim() === "") {
-                $style(BOX_HEADER, "display:none");
-            }
+            if ($html(BOX_HEAD).trim() === "") $style(BOX_HEAD, "display:none");
             if (closeOnBlur === false) $on(BOX_OVERLAY, "click", closeHandler, "del"); else $on(BOX_OVERLAY, "click", closeHandler);
             $on(BOX_CLOSE_BTN, "click", closeHandler, "on");
             $on(BOX_WRAPPER, "click", (e => {

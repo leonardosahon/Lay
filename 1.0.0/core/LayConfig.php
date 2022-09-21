@@ -269,8 +269,8 @@ final class LayConfig{
      */
     private static function set_res(object &$resource, array $accepted_index = [], ...$index) : void {
         if(!empty($accepted_index) && !in_array($index[0],$accepted_index,true))
-            Exception::throw_exception("The index [$index[0] being accessed may not exist or is forbidden.
-                You can only access these index: " . implode(",",$accepted_index),"Invalid Index");
+            Exception::throw_exception("The index [$index[0]] being accessed may not exist or is forbidden.
+                You can only access these index: " . implode(", ",$accepted_index),"Invalid Index");
 
         $value = end($index);
         array_pop($index);
@@ -300,7 +300,7 @@ final class LayConfig{
     # Client Side
     public static function set_res__client(...$index__and__value) : void {
         self::is_init();
-        self::set_res(self::$client,["back","front",],...$index__and__value);
+        self::set_res(self::$client,["back","front","upload"],...$index__and__value);
     }
     public function get_res__client(string ...$index_chain) {
         self::is_init();
@@ -452,8 +452,11 @@ final class LayConfig{
             $x = explode(".",$view);
             $ext = strtolower(end($x));
 
-            if(count($x) > 1 && in_array($ext,$ext_array,true))
+            if(count($x) > 1 && in_array($ext,$ext_array,true)) {
                 http_response_code(404);
+                echo "{error: 404, response: 'resource not found'}";
+                die;
+            }
 
             return $view;
         };
@@ -464,7 +467,7 @@ final class LayConfig{
 
         if($root != "/") $view = str_replace(["/$root/","/$root","$root/"],"", $view);
 
-        $view = ltrim($view,"/");
+        $view = trim($view,"/");
         return $handle_assets_like_js($view);
     }
 }
