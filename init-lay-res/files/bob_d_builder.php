@@ -1,13 +1,12 @@
 <?php
 declare(strict_types=1);
-include_once "layconfig.php";
 
 use Lay\core\LayConfig;
 
 if(!isset($BOB_D_BUILDER))
     \Lay\core\Exception::throw_exception("BAD REQUEST", "This script cannot be accessed this way, please return home");
 
-function bob_the_builder(string $view) : void {
+function bob_d_builder(string $view) : void {
     $layConfig = LayConfig::instance();
     $link = fn($link = "") => $layConfig->get_site_data("base") . $link;
     $layConfig::set_inc_vars([
