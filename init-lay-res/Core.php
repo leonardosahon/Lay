@@ -98,14 +98,14 @@ class Core {
             $this->use_error("Failed to create directory on location: ($dir); access denied; modify permissions and try again");
     }
 
-    public function copy_routine(string $locale, ?string $source = null, ?string $target = null) {
+    public function copy_routine(string $target_dir, ?string $source = null, ?string $target_name = null) {
         if (self::$update_lay_version_by_default)
             return null;
 
-        $this->mkdir_or_cp_file($locale);
+        $this->mkdir_or_cp_file($target_dir);
 
         if($source)
-            $this->mkdir_or_cp_file($locale,self::$init_lay_files . DIRECTORY_SEPARATOR . $source, $target ?? $source);
+            $this->mkdir_or_cp_file($target_dir,self::$init_lay_files . DIRECTORY_SEPARATOR . $source, $target_name ?? $source);
     }
 
     public function create_project($lay,$project_root) : void {
@@ -156,6 +156,7 @@ class Core {
         new CopyDirectory($lay, $project_root . $s . "Lay");
 
         // copy default root folder files
+        $this->copy_routine("", "favicon.png","favicon.ico");
         $this->copy_routine("", "bob_d_builder.php");
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");
