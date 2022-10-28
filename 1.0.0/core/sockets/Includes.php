@@ -101,13 +101,13 @@ trait Includes{
             $local = $obj->to_object($local);
         }
 
-        $layConfig = $this;
-
         if(!file_exists($file) && $strict)
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
 
         if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
             return $this->inc_file_as_string($file,$meta,$local,$local_raw);
+
+        $layConfig = $this;
 
         $once ? include_once $file : include $file;
         return null;

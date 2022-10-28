@@ -60,7 +60,7 @@ trait View{
             $view = "index";
 
         if($default_fn)
-            $default_fn($view);
+            $default_fn($view,explode("/",$view));
 
         return $view;
     }

@@ -32,8 +32,6 @@ function bob_d_builder(string $view) : void {
         default: $layConfig->view([
             "page" => [
                 "title" => "$view - Page not Found",
-                "type" => "front",
-                "root" => $layConfig->get_site_data('base')
             ],
             "body" => [
                 "class" => "defult-home",
@@ -43,11 +41,6 @@ function bob_d_builder(string $view) : void {
             ],
             "view" => [
                 "body" => "error",
-            ],
-            "dist" => [
-                "css" => [
-                    "",
-                ],
             ],
         ]); break;
         case "index":
