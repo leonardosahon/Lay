@@ -120,11 +120,11 @@ final class ViewPainter {
              * `assets` searches for assets based on the `ARRAY_KEY`/`DIRECTORY_NAME`
              * When using `assets`, it is required that you add the file extension of each asset, unlike its predecessor
              * @example
-                 "assets" => [
-                    "custom" => [
-                        "js/front/contact-us.js"
-                    ],
-                ],
+            "assets" => [
+            "custom" => [
+            "js/front/contact-us.js"
+            ],
+            ],
              */
             "assets" => [
                 "custom" => $meta['assets']['custom'] ?? [],
@@ -136,13 +136,13 @@ final class ViewPainter {
         ];
 
         $meta['page']['title_raw'] = $meta['page']['title'];
-        
+
         if(strtolower($meta['page']['title_raw']) == "homepage"){
             $meta['page']['title'] = $data->name->full;
             $meta['page']['title_raw'] = $data->name->full;
         }
         else{
-            $meta['page']['title'] = !$meta['page']['append_site_name'] ? 
+            $meta['page']['title'] = !$meta['page']['append_site_name'] ?
                 $meta['page']['title_raw'] :
                 $meta['page']['title_raw'] . " :: " . $data->name->short;
         }
@@ -220,7 +220,7 @@ final class ViewPainter {
             {$this->skeleton_body($meta)}{$this->skeleton_script($meta)}
         </body></html>
         STR;
-        
+
         if($layConfig::is_page_compressed())
             $page = preg_replace("/>(\s)+</m","><",preg_replace("[<!--(?!<!)[^\[>].*?-->]","",$page));
 
@@ -239,10 +239,10 @@ final class ViewPainter {
             $type = "back";
 
         ob_start();
-            if($meta_view instanceof Closure)
-                $meta_view($meta, ...self::$VIEW_ARGS);
-            elseif($meta_view)
-                $layConfig->inc_file($meta_view, $section_prefix . "_" . $type, true, $meta['core']['strict']);
+        if($meta_view instanceof Closure)
+            $meta_view($meta, ...self::$VIEW_ARGS);
+        elseif($meta_view)
+            $layConfig->inc_file($meta_view, $section_prefix . "_" . $type, true, $meta['core']['strict']);
         $meta_view = ob_get_clean();
 
         if($meta['core']['skeleton'] === true)
@@ -354,46 +354,71 @@ final class ViewPainter {
         $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
         $lay_base = $client->lay;
         $using_assets = false;
+        $js_template = function($f, ?string $attr=null) {
+            $attr = trim($attr);
+            $attr = $attr === 'false' ? null : "defer='true'";
+            return "<script src=\"$f\" $attr></script>";
+        };
 
         if($meta['core']['script']) {
             list($omj,$const) = null;
-            
+
             if ($env == "prod") {
                 if (file_exists($lay_root . 'omj$' . $s . 'index.min.js'))
-                    $omj = '<script src="' . $lay_base . 'omj$/index.min.js"></script>';
+                    $omj = $js_template($lay_base . 'omj$/index.min.js','false');
                 if (file_exists($lay_root . "static{$s}js{$s}constants.min.js"))
-                    $const = '<script src="' . $lay_base . 'static/js/constants.min.js"></script>';
+                    $const = $js_template($lay_base . 'static/js/constants.min.js','false');
             }
-            
-            $core_script .= $omj ?? '<script src="' . $lay_base . 'omj$/index.js"></script>';
-            $core_script .= $const ?? '<script src="' . $lay_base . 'static/js/constants.js"></script>';
+
+            $core_script .= $omj ?? $js_template($lay_base . 'omj$/index.js','false');
+            $core_script .= $const ?? $js_template($lay_base . 'static/js/constants.js','false');
         }
 
-        $validate_file = function ($file) : void {
-            if(is_array($file))
-                Exception::throw_exception(
-                "You are trying to use an array to include a script and it's not allowed",
-                "SCRIPT::INC::ERR");
-        };
-        $view = $this->view_handler('script',$meta);
-        $custom_js = $client->custom->js;
-        $plugin = $client->custom->plugin;
-        $section = $meta['page']['type'] == "back" ? $client->back : $client->front;
-        $js_template = fn($f,$attr=null) => '<script '.$attr.' src="' . $f . '"></script>';
 
+        $validate_file = function ($file) : ?array {
+            $attr = "";
+            if(is_array($file)) {
+                $attr = " " . $file[1];
+                $file = $file[0];
+            }
+
+            return $file ? [$file,$attr] : null;
+        };
+        $routine = function ($f,$section, $type = 0) use ($validate_file,$js_template){
+            $x = $validate_file($f);
+            if(!$x) return "continue";
+
+            if($type == 0) {
+                $f = $section . explode(".js", $x[0])[0] . ".js";
+                return $js_template($f, $x[1]);
+            }
+
+            $f = explode(".js", $x[0]);
+            if (count($f) > 1) {
+                $f = $section . $f[0] . ".js";
+                return $js_template($f, $x[1]);
+            }
+
+            return "continue";
+        };
         $add_asset = function (array &$entry, string &$view, string $res, &$using_assets) use($validate_file,$js_template) : void {
             foreach ($entry as $k => $f) {
-                $validate_file($f);
-                if(!$f) continue;
-                $f = trim($f);
+                $x = $validate_file($f);
+                if(!$x) continue;
+                $f = trim($x[0]);
                 if (count(explode(".js", $f,2)) > 1) {
                     $f = $res . $f;
-                    $view .= $js_template($f);
+                    $view .= $js_template($f,$x[1]);
                     unset($entry[$k]);
                     $using_assets = true;
                 }
             }
         };
+
+        $view = $this->view_handler('script',$meta);
+        $custom_js = $client->custom->js;
+        $plugin = $client->custom->plugin;
+        $section = $meta['page']['type'] == "back" ? $client->back : $client->front;
 
         foreach ($meta['assets'] as $k => $f) {
             switch ($k){
@@ -411,32 +436,24 @@ final class ViewPainter {
         }
 
         foreach ($meta['dist']['root']['js'] as $f) {
-            $validate_file($f);
-            if(!$f) continue;
-            $f = $section->root . explode(".js",$f)[0] . ".js";
-            $view .= $js_template($f);
+            $z = $routine($f,$section->root);
+            if($z == "continue") continue;
+            $view .= $z;
         }
         foreach ($meta['dist']['js'] as $f) {
-            $validate_file($f);
-            if(!$f) continue;
-            $f = $section->js . explode(".js",$f)[0] . ".js";
-            $view .= $js_template($f);
+            $z = $routine($f,$section->js);
+            if($z == "continue") continue;
+            $view .= $z;
         }
-        foreach ($meta['src']['plugin'] as $k => $f) {
-            $validate_file($f);
-            if(!$f) continue;
-            $f = explode(".js", $f);
-            if (count($f) > 1) {
-                $f = $plugin . $f[0] . ".js";
-                $view .= $js_template($f);
-                unset($meta['src']['plugin'][$k]);
-            }
+        foreach ($meta['src']['plugin'] as $f) {
+            $z = $routine($f,$plugin,1);
+            if($z == "continue") continue;
+            $view .= $z;
         }
         foreach ($meta['src']['js'] as $f) {
-            $validate_file($f);
-            if(!$f) continue;
-            $f = $custom_js . explode(".js",$f)[0] . ".js";
-            $view .= $js_template($f);
+            $z = $routine($f,$custom_js);
+            if($z == "continue") continue;
+            $view .= $z;
         }
 
         if($meta['core']['close_connection']) $layConfig->close_sql();

@@ -52,12 +52,12 @@ Order allow,deny
 Deny from all
 </FilesMatch>
 
-# Redirect traffic on production server to https://www
+# Force website to redirect to www.domain.tld
+# Make condition active on production server
 RewriteCond %{REMOTE_HOST} !127.0.0.1
 RewriteCond %{REMOTE_HOST} !::1
-#uncomment this line for a subdomain rule
-# RewriteCond %{HTTP_HOST} !^admin\.
-RewriteCond %{HTTP_HOST} !^www\.
+# Make condition active if not a subdomain already
+RewriteCond %{HTTP_HOST} !^([^.]+)\.([^.]+)\.([^.]+)
 RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
 
 # Allow any files or directories that exist to be displayed directly

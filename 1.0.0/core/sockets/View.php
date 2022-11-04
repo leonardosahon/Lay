@@ -56,8 +56,11 @@ trait View{
         if(!empty($domains))
             $view = $domains[$domain_key]($view,$domain);
 
+        if(empty($view))
+            $view = "index";
+
         if($default_fn)
-            $default_fn($view);
+            $default_fn($view,explode("/",$view));
 
         return $view;
     }

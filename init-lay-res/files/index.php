@@ -1,5 +1,5 @@
 <?php
-$SQL_EXCLUDE = true; // Exclude DB Connection be default
+$SQL_EXCLUDE = true; // Exclude DB Connection by default
 $BOB_D_BUILDER = true; // Used to ensure the `layconfig.php` and `bob_d_builder.php` files are accessed correctly
 
 include_once "layconfig.php";
