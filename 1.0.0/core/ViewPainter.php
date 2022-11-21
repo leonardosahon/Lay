@@ -184,7 +184,7 @@ final class ViewPainter {
             <base href="$base" id="LAY-PAGE-BASE">
             <meta http-equiv="content-type" content="text/html;charset=$charset" />
             <meta name="description" id="LAY-PAGE-DESC" content="$desc">
-            <meta name="author" content="<?php echo $author ?>">
+            <meta name="author" content="$author">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, shrink-to-fit=no">
             <meta name="theme-color" content="$color">
