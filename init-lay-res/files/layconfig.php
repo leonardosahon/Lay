@@ -37,8 +37,7 @@ $layConfig = LayConfig::instance()
         "desc" => "
             This is an awesome project that is about to unfold you just watch and see 😉.
         ",
-    ])
-    ->init();
+    ]);
 
 // set a custom location for your static assets from Lays' default to yours. Check docs for default locations 
 $root = $layConfig->get_res__client("front","root");

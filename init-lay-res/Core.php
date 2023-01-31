@@ -161,6 +161,7 @@ class Core {
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");
         $this->copy_routine("", "htaccess", ".htaccess");
+        $this->copy_routine("", "gitignore", ".gitignore");
         $this->copy_routine("", "robots.txt");
     }
 }
