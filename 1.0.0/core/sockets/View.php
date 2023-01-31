@@ -10,12 +10,15 @@ trait View{
      * @see ViewPainter
      */
     public function view(array $page_data, ...$options) : void {
+        self::is_init();
         ViewPainter::instance()->paint($page_data,...$options);
     }
     public function view_const(array $page_data) : void {
+        self::is_init();
         ViewPainter::constants($page_data);
     }
     public function add_domain(array $domains, ?string $custom_view = null, ?\Closure $default_fn = null) : string {
+        self::is_init();
         $layConfig = self::instance();
         $base = $layConfig->get_site_data('base');
         $proto = $layConfig->get_site_data('proto') . "://";
@@ -65,6 +68,7 @@ trait View{
         return $view;
     }
     public function inject_view(string $root = "/", string $get_name = "brick") : string {
+        self::is_init();
         $handle_assets_like_js = function ($view){
             $ext_array = ["js","css","map","jpeg","jpg","png","gif","jiff","svg"];
             $x = explode(".",$view);

@@ -80,6 +80,7 @@ trait Resources {
     }
 
     public function send_to_client(array $values) : string {
+        self::is_init();
         foreach ($values as $v){
             self::$CLIENT_VALUES .= $v;
         }
@@ -87,7 +88,8 @@ trait Resources {
         return self::$CLIENT_VALUES;
     }
 
-    public function get_client_values() : string{
+    public function get_client_values() : string {
+        self::is_init();
         return self::$CLIENT_VALUES;
     }
 }

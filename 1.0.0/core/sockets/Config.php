@@ -11,10 +11,6 @@ trait Config{
     private static SQL $SQL_INSTANCE;
     private static array $CONNECTION_ARRAY;
     private static array $layConfigOptions;
-    private static string $ENV;
-    private static object $client;
-    private static object $server;
-    private static object $site;
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
     private static bool $USE_OBJS;

@@ -20,13 +20,7 @@ trait Init{
     private static bool $INITIALIZED = false;
     private static function is_init() : void {
         if(!self::$INITIALIZED)
-            Exception::throw_exception(
-                "Lay has not been initialized properly, ensure to use the `->init()` function after getting `LayConfig::instance()`.<br><br>
-                    <u>Example</u>
-                    LayConfig::instance()<br>->project('CURRENT_PROJECT_FOLDER_NAME')<br>->init();<br>
-                    // If nothing is passed to the `->project()` function, Lay will assume the project resides at the root folder 
-                    ",
-                "Wrong-Init-Procedure");
+            self::instance()->init();
     }
 
     public function init() : self {

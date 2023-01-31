@@ -9,18 +9,22 @@ trait Includes{
     private static array $INC_CUSTOM_ROUTE = [];
 
     public static function set_inc_vars(array $vars) : void {
+        self::is_init();
         self::$INC_VARS = array_replace_recursive(self::$INC_VARS, array_replace_recursive(self::$INC_VARS, $vars));
     }
     public static function get_inc_vars() : array{
+        self::is_init();
         return self::$INC_VARS;
     }
 
     public function inc_file_as_string(string $file_location,$meta = [],$local = [],array $local_raw = []) : string {
+        self::is_init();
         $layConfig = self::instance();
         ob_start(); include $file_location; return ob_get_clean();
     }
 
     public function inc_file_as_fun(\Closure $callback,...$args) : string {
+        self::is_init();
         ob_start(); $callback(...$args); return ob_get_clean();
     }
 
@@ -33,11 +37,13 @@ trait Includes{
      * @return void
      */
     public function inc_file_add_route(array $route_list) : void {
+        self::is_init();
         foreach ($route_list as $k => $v){
             self::$INC_CUSTOM_ROUTE[$k] = $v;
         }
     }
     public function inc_file_get_route(string $route_key) : string {
+        self::is_init();
         $route = @self::$INC_CUSTOM_ROUTE[$route_key];
 
         if(empty($route))
