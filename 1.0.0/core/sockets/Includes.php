@@ -25,9 +25,11 @@ trait Includes{
     }
 
     /**
-     * @param array $route_list [key <String> => value <Array>]
-     * value = [route location, file extension]
-     * E.G = ["res/server/controller/__back/members/", ".php"]
+     * @param $route_list array
+     * <tr><td>key (string)</td> <td>string key to access the route;</td></tr>
+     * <tr><td>value (array)</td> <td>[route location, file extension];</td></tr>
+     * <tr><td>Example:</td> <td>'member_ctrl' => ["res/server/controller/__back/members/", ".php"]</td></tr>
+     * <tr><td>Use case</td><td>LayConfig::instance()->inc_file("members_session_controller","member_ctrl")</td></tr>
      * @return void
      */
     public function inc_file_add_route(array $route_list) : void {

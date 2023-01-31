@@ -26,6 +26,7 @@ final class LayConfig{
         return self::$instance;
     }
 
+    use \Lay\core\sockets\Init;
     use \Lay\core\sockets\Config;
     use \Lay\core\sockets\Resources;
     use \Lay\core\sockets\Includes;

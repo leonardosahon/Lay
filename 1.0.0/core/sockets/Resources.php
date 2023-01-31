@@ -4,6 +4,7 @@ namespace Lay\core\sockets;
 use Lay\core\Exception;
 
 trait Resources {
+    private static string $CLIENT_VALUES = "";
     ///### Assets Resource and Page Metadata
     private static function get_res($resource, string ...$index_chain) {
         foreach ($index_chain as $v){
@@ -76,5 +77,17 @@ trait Resources {
     public function get_site_data(string ...$index_chain) {
         self::is_init();
         return self::get_res(self::$site,...$index_chain);
+    }
+
+    public function send_to_client(array $values) : string {
+        foreach ($values as $v){
+            self::$CLIENT_VALUES .= $v;
+        }
+
+        return self::$CLIENT_VALUES;
+    }
+
+    public function get_client_values() : string{
+        return self::$CLIENT_VALUES;
     }
 }
