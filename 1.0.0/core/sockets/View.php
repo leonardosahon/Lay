@@ -83,9 +83,11 @@ trait View{
             return $view;
         };
 
-        $project_root = self::get_site_data('base_no_proto');
+        $root_url = self::get_site_data('base_no_proto');
+        $root_file_system = ltrim(explode("index.php",$_SERVER['SCRIPT_NAME'])[0],"/");
+
         $view = $_GET[$get_name] ?? "";
-        $view = str_replace($project_root,"",$view);
+        $view = str_replace([$root_url,$root_file_system],"",$view);
 
         if($root != "/") $view = str_replace(["/$root/","/$root","$root/"],"", $view);
 
