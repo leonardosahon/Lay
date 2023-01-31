@@ -13,5 +13,8 @@ Current Version: `1.0.0`
 4. To create a new project, open your command line app and type `php init-lay sample-project` or use `php init-lay -h` for help on how to use the script.
 5. When the script is done, you can open the project like a regular webserver project. Example: `localhost/sample-project`
 
-## For More Info
-Visit: https://lay.osaitech.dev
+## Documentation
+
+We wil begin creating officials documentations soon, pleas bear with us for the moment.
+
+Meanwhile, visit: https://lay.osaitech.dev to check the status of things
