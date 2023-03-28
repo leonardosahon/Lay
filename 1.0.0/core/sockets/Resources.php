@@ -79,9 +79,13 @@ trait Resources {
         self::$site = ObjectHandler::instance()->to_object($obj);
     }
 
-    private static function get_res($resource, string ...$index_chain) {
-        foreach ($index_chain as $v){
-            $resource = $resource->{$v};
+    private static function get_res(string $obj_type, $resource, string ...$index_chain) {
+
+        foreach ($index_chain as $v) {
+            $resource = @$resource->{$v};
+
+            if($resource === null)
+                Exception::throw_exception("[$v] doesn't exist in the [res_$obj_type] chain",$obj_type);
         }
         return $resource;
     }
@@ -130,7 +134,7 @@ trait Resources {
     }
     public function get_res__client(string ...$index_chain) {
         self::is_init();
-        return self::get_res(self::$client,...$index_chain);
+        return self::get_res("client", self::$client,...$index_chain);
     }
 
     # Server Side
@@ -140,7 +144,7 @@ trait Resources {
     }
     public function get_res__server(string ...$index_chain) {
         self::is_init();
-        return self::get_res(self::$server,...$index_chain);
+        return self::get_res("server", self::$server,...$index_chain);
     }
 
     # Site Metadata
@@ -150,7 +154,7 @@ trait Resources {
     }
     public function get_site_data(string ...$index_chain) {
         self::is_init();
-        return self::get_res(self::$site,...$index_chain);
+        return self::get_res("site_data", self::$site,...$index_chain);
     }
 
     public function send_to_client(array $values) : string {
