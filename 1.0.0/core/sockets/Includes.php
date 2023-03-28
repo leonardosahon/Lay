@@ -62,9 +62,9 @@ trait Includes{
         $view_root = $this->get_res__server('view');
 
         $default_routes = fn($side) => [
-            "inc_$side" => [$inc_root . "__$side" . $slash,".inc"],
-            "ctrl_$side" => [$ctrl_root . "__$side" . $slash,".php"],
-            "view_$side" => [$view_root . "__$side" . $slash,".view"],
+            "inc_$side" => [$inc_root . "__$side" . $slash, ".inc"],
+            "ctrl_$side" => [$ctrl_root . "__$side" . $slash, ".php"],
+            "view_$side" => [$view_root . "__$side" . $slash, ".view"],
         ];
 
         if(self::$DEFAULT_ROUTE_SET === false && self::$USE_DEFAULT_ROUTE) {
@@ -104,6 +104,7 @@ trait Includes{
         $meta = $var['META'] ?? [];
         $local = $var['LOCAL'] ?? [];
         $local_raw = $var['LOCAL_RAW'] ?? [];
+
         if(self::$USE_OBJS){
             $meta = $obj->to_object($meta);
             $local = $obj->to_object($local);
@@ -113,7 +114,7 @@ trait Includes{
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
 
         if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
-            return $this->inc_file_as_string($file,$meta,$local,$local_raw);
+            return $this->inc_file_as_string($file, $meta, $local, $local_raw);
 
         $layConfig = $this;
 
