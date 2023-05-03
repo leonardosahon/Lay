@@ -21,12 +21,12 @@ trait View{
     /**
      * @param array $domains
         [
-            {domain}|{domain alias 1}|{domain alias 2}|..." => function ($view, $key) {
+            {domain}|{domain alias}|{domain alias}|..." => function ($view, $key) {
                 return $view;
             },
          ]
-     * @param string|null $custom_view
-     * @param \Closure|null $default_fn
+     * @param string|null $custom_view url to another view not captured by the default query strung `$_GET['f']`
+     * @param \Closure|null $default_fn default function to execute on domains not listed in the domain array parameter
      * @return string
      */
     public function add_domain(array $domains, ?string $custom_view = null, ?\Closure $default_fn = null) : string {
