@@ -19,9 +19,12 @@ trait View{
     }
 
     /**
-     * @param array $domains
+     * @param array $domains a function that accepts ($view, $current_domain) as args
+     * $view: This is the current view url; e.g A Homepage view can be "index"; About Us Page can be "about"
+     * $current_domain: This variable holds each individual domain alias, so you can use it for further processing   
+     <br>
         [
-            {domain}|{domain alias}|{domain alias}|..." => function ($view, $key) {
+            {domain}|{domain alias}|{domain alias}|..." => function ($view, $current_domain) {
                 return $view;
             },
          ]
