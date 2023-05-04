@@ -17,6 +17,21 @@ trait View{
         self::is_init();
         ViewPainter::constants($page_data);
     }
+
+    /**
+     * @param array $domains a function that accepts ($view, $current_domain) as args
+     * $view: This is the current view url; e.g A Homepage view can be "index"; About Us Page can be "about"
+     * $current_domain: This variable holds each individual domain alias, so you can use it for further processing
+     <br>
+        [
+            {domain}|{domain alias}|{domain alias}|..." => function ($view, $current_domain) {
+                return $view;
+            },
+         ]
+     * @param string|null $custom_view url to another view not captured by the default query strung `$_GET['f']`
+     * @param \Closure|null $default_fn default function to execute on domains not listed in the domain array parameter
+     * @return string
+     */
     public function add_domain(array $domains, ?string $custom_view = null, ?\Closure $default_fn = null) : string {
         self::is_init();
         $layConfig = self::instance();
