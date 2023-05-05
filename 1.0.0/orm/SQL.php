@@ -285,11 +285,20 @@ class SQL extends \Lay\orm\Exception {
         if(in_array("loop" ?? "LOOP",$option,true)) $loop = 1;
         if(in_array("row" ?? "ROW",$option,true)) $as = "row";
         if(in_array("assoc" ?? "ROW",$option,true)) $as = "assoc";
+
         // Debug
         $option['debug'][0] = $query;  $option['debug'][1] = $query_type;
         if($debug) $this->show_exception(-9, $option['debug']);
-        // Execute query
-        $exec = mysqli_query(self::$link,$query) or $this->show_exception(-10,$option['debug']);
+
+        $exec = false;
+
+        try{
+            $exec = mysqli_query(self::$link,$query);
+        }catch (\Exception $e){}
+
+        if($exec === false)
+            $this->show_exception(-10,$option['debug']);
+
         // Sort out result
 
         if ($query_type == "COUNT") return (int) mysqli_fetch_row($exec)[0];

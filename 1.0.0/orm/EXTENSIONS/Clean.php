@@ -66,10 +66,11 @@ trait Clean {
         // debug
         if(in_array(1,$options,true)) $this->exceptions(1,["value" => $value,"combo" => $level__combo, "opts" => $options]);
         // check mate
-        if (($value === "" || $value === null) && !is_numeric($value) && $difficulty == "strict") $this->exceptions(2);
+        if (($value === "" || $value === null) && !is_numeric($value) && !is_object($value) && $difficulty == "strict") $this->exceptions(2);
         elseif (empty($value) && $difficulty == "loose") return $value;
-        if(!is_string($value) && !is_numeric($value)) $this->exceptions(3, ["value" => $value]);
+        if(!is_string($value) && !is_numeric($value) && !is_object($value)) $this->exceptions(3, ["value" => $value]);
         if(is_numeric($value)) return $value;
+        if(is_object($value)) $value = json_encode($value);
         // function
         $func = [
             /*0*/ fn ($val=null) => $esc_str($difficulty,$val ?? $value),
