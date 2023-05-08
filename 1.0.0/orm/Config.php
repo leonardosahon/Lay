@@ -43,16 +43,36 @@ trait Config{
         $this->set_env($cnn_arg['env'] ?? $this->get_env());
         $cxn = $this->ping(true,null, true);
         if(!($cxn['host'] == $host and $cxn['user'] == $usr and $cxn['db'] == $dbname)) {
-            if ($x = @mysqli_connect($host, $usr, $pass, $dbname, $port, $socket)){
-                $x->set_charset($charset);
-                $this->set_link($x);
-            }
+            $mysqli = null;
 
-            if(!$x){
+            try {
+                if(isset($cnn_arg['ssl'])){
+                    $mysqli = mysqli_init();
+                    mysqli_ssl_set(
+                        $mysqli,
+                        $cnn_arg['ssl']['key'] ?? "",
+                        $cnn_arg['ssl']['certificate'] ?? "",
+                        $cnn_arg['ssl']['ca_certificate'] ?? "",
+                        $cnn_arg['ssl']['ca_path'] ?? "",
+                        $cnn_arg['ssl']['cipher_algos'] ?? "",
+                    );
+                    mysqli_real_connect($mysqli, $host, $usr, $pass, $dbname, $port, $socket, $cnn_arg['ssl']['flag'] ?? 0);
+                }
+
+                if (!$mysqli){
+                    $mysqli = mysqli_connect($host, $usr, $pass, $dbname, $port, $socket);
+                    $mysqli->set_charset($charset);
+                }
+
+                $this->set_link($mysqli);
+            }catch (\Exception $e){}
+
+            if(!$mysqli){
                 if (isset($cnn_arg['silent']))
                     return null;
                 
-                else $this->show_exception(2);
+                else
+                    $this->show_exception(2);
             }
         }
         return $this->get_link();
@@ -77,8 +97,13 @@ trait Config{
 
     # close connection
     public function close(?mysqli $link = null, bool $silent_error = false) : bool {
-        if(@mysqli_close($link ?? $this->get_link())) return true;
-        if($silent_error == false) $this->show_exception(3);
+        try {
+            return mysqli_close($link ?? $this->get_link());
+        }catch (\Exception $e){
+            if(!$silent_error)
+                $this->show_exception(3);
+        }
+
         return false;
     }
 

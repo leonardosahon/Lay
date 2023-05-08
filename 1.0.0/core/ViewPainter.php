@@ -186,7 +186,7 @@ final class ViewPainter {
             <meta name="description" id="LAY-PAGE-DESC" content="$desc">
             <meta name="author" content="$author">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
-            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, shrink-to-fit=no">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
             <meta name="theme-color" content="$color">
             <meta name="msapplication-navbutton-color" content="$color">
             <meta name="msapplication-tap-highlight" content="no">

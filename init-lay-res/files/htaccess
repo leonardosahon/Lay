@@ -55,6 +55,7 @@ Deny from all
 ## Force website to redirect to www.domain.tld
 # Make condition active on production server
 RewriteCond %{REMOTE_HOST} !127.0.0.1
+RewriteCond %{REMOTE_HOST} !^192.168
 RewriteCond %{REMOTE_HOST} !::1
 # Make condition active if not a subdomain already
 RewriteCond %{HTTP_HOST} !^([^.]+)\.([^.]+)\.([^.]+)
@@ -62,6 +63,7 @@ RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
 
 # Force open with HTTPS on production server
 RewriteCond %{REMOTE_HOST} !127.0.0.1
+RewriteCond %{REMOTE_HOST} !^192.168
 RewriteCond %{REMOTE_HOST} !::1
 RewriteCond %{SERVER_PORT} 80
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
