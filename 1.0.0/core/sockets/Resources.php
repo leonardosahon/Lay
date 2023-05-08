@@ -58,11 +58,11 @@ trait Resources {
         self::$server = ObjectHandler::instance()->to_object($obj);
     }
     protected static function set_internal_site_data(array $options) : void {
-        $obj = [
-            "author"  => $options['author'],
+        $obj = array_merge([
+            "author" => $options['author'],
             "copy" => $options['copy'],
             "name" => $options['name'],
-            "img"  => [
+            "img" => [
                 "logo" => self::$client->custom->img . "logo.png",
                 "favicon" => self::$client->custom->img . "favicon.png",
                 "icon" => self::$client->custom->img . "icon.png",
@@ -73,8 +73,7 @@ trait Resources {
             ],
             "tel" => $options['tel'],
             "others" => $options['others'],
-            ...$options
-        ];
+        ], $options );
 
         self::$site = ObjectHandler::instance()->to_object($obj);
     }
@@ -123,6 +122,9 @@ trait Resources {
                 break;
             case 5:
                 $object_push($resource->{$index[0]}->{$index[1]}->{$index[2]}->{$index[3]}->{$index[4]});
+                break;
+            case 6:
+                $object_push($resource->{$index[0]}->{$index[1]}->{$index[2]}->{$index[3]}->{$index[4]}->{$index[5]});
                 break;
         }
     }
