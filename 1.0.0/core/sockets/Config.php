@@ -16,6 +16,9 @@ trait Config{
     private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
+    public function is_mobile() : bool {
+        return (bool) strpos(strtolower($_SERVER['HTTP_USER_AGENT']),"mobile");
+    }
     public function switch(array $bool_valued_array) : self {
         self::$layConfigOptions['switch'] = $bool_valued_array;
         return self::$instance;
@@ -67,7 +70,7 @@ trait Config{
             return;
 
         $orm = self::$SQL_INSTANCE;
-        if($orm) $orm->close($orm->get_link() ?? $link);
+        if($orm) $orm->close($orm->get_link() ?? $link, true);
     }
     public static function include_sql(bool $include = true, array $connection_param = []) : ?SQL {
         self::is_init();
