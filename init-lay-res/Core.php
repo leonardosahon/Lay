@@ -156,7 +156,7 @@ class Core {
         new CopyDirectory($lay, $project_root . $s . "Lay");
 
         // copy default root folder files
-        $this->copy_routine("", "favicon.png","favicon.ico");
+        $this->copy_routine("", "favicon.ico");
         $this->copy_routine("", "bob_d_builder.php");
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");

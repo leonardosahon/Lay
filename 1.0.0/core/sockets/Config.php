@@ -50,7 +50,13 @@ trait Config{
     public static function connect(?array $connection_params = null): SQL {
         self::is_init();
         $env = self::$ENV;
-        $opt = self::$CONNECTION_ARRAY[$env] ?? $connection_params[$env];
+
+        if(isset($connection_params['host']) || isset(self::$CONNECTION_ARRAY['host'])){
+            $opt = self::$CONNECTION_ARRAY ?? $connection_params;
+        }
+        else {
+            $opt = self::$CONNECTION_ARRAY[$env] ?? $connection_params[$env];
+        }
 
         if(empty($opt))
             Exception::throw_exception("Invalid Connection Parameter Passed");
