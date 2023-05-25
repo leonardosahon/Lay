@@ -216,6 +216,8 @@ final class ViewPainter {
             <input type="hidden" id="LAY-CUSTOM-IMG" value="{$client->custom->img}">
             <input type="hidden" id="LAY-BACK-IMG" value="{$client->back->img}">
             <input type="hidden" id="LAY-FRONT-IMG" value="{$client->front->img}">
+            <input type="hidden" id="LAY-BACK-ROOT" value="{$client->back->root}">
+            <input type="hidden" id="LAY-FRONT-ROOT" value="{$client->front->root}">
             <!--//END LAY CONSTANTS-->
             {$this->skeleton_body($meta)}{$this->skeleton_script($meta)}
         </body></html>

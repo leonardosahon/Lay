@@ -119,7 +119,8 @@ class Core {
         $view = "res{$s}server{$s}view$s";
         $client = "res{$s}client{$s}dev$s";
 
-        $this->copy_routine($inc,"connection.inc");
+        $this->copy_routine($inc,"connection.inc", "dev_connection.inc");
+        $this->copy_routine($inc,"connection.inc", "prod_connection.inc");
 
         // server files
         for($i = 0; $i < count($sections); $i++){
@@ -156,7 +157,7 @@ class Core {
         new CopyDirectory($lay, $project_root . $s . "Lay");
 
         // copy default root folder files
-        $this->copy_routine("", "favicon.png","favicon.ico");
+        $this->copy_routine("", "favicon.ico");
         $this->copy_routine("", "bob_d_builder.php");
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");

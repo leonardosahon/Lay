@@ -17,6 +17,8 @@ $lay.src = {
     custom_img : $id("LAY-CUSTOM-IMG").value,
     back_img : $id("LAY-BACK-IMG").value,
     front_img : $id("LAY-FRONT-IMG").value,
+    front_root : $id("LAY-FRONT-ROOT").value,
+    back_root : $id("LAY-BACK-ROOT").value,
     uploads : $id("LAY-UPLOAD").value,
 }
 $lay.fn = {

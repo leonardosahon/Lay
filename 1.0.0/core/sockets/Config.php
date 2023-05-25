@@ -16,6 +16,9 @@ trait Config{
     private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
+    public function is_mobile() : bool {
+        return (bool) strpos(strtolower($_SERVER['HTTP_USER_AGENT']),"mobile");
+    }
     public function switch(array $bool_valued_array) : self {
         self::$layConfigOptions['switch'] = $bool_valued_array;
         return self::$instance;
@@ -47,7 +50,13 @@ trait Config{
     public static function connect(?array $connection_params = null): SQL {
         self::is_init();
         $env = self::$ENV;
-        $opt = self::$CONNECTION_ARRAY[$env] ?? $connection_params[$env];
+
+        if(isset($connection_params['host']) || isset(self::$CONNECTION_ARRAY['host'])){
+            $opt = self::$CONNECTION_ARRAY ?? $connection_params;
+        }
+        else {
+            $opt = self::$CONNECTION_ARRAY[$env] ?? $connection_params[$env];
+        }
 
         if(empty($opt))
             Exception::throw_exception("Invalid Connection Parameter Passed");
@@ -67,7 +76,7 @@ trait Config{
             return;
 
         $orm = self::$SQL_INSTANCE;
-        if($orm) $orm->close($orm->get_link() ?? $link);
+        if($orm) $orm->close($orm->get_link() ?? $link, true);
     }
     public static function include_sql(bool $include = true, array $connection_param = []) : ?SQL {
         self::is_init();
