@@ -119,7 +119,8 @@ class Core {
         $view = "res{$s}server{$s}view$s";
         $client = "res{$s}client{$s}dev$s";
 
-        $this->copy_routine($inc,"connection.inc");
+        $this->copy_routine($inc,"connection.inc", "dev_connection.inc");
+        $this->copy_routine($inc,"connection.inc", "prod_connection.inc");
 
         // server files
         for($i = 0; $i < count($sections); $i++){

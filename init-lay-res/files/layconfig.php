@@ -9,6 +9,8 @@ require_once "Lay" . $slash . "AutoLoader.php";
 if(!isset($BOB_D_BUILDER))
     \Lay\core\Exception::throw_exception("BAD REQUEST", "This script cannot be accessed this way, please return home");
 
+$site_name = "Sample Lay Project";
+
 ///// Project Configuration
 $layConfig = LayConfig::instance()
     ->switch([
@@ -16,8 +18,8 @@ $layConfig = LayConfig::instance()
     ])
     ->meta([
         "name" => [
-            "short" => "Sample Lay Project",
-            "full" => "Sample Lay Project | Slogan Goes Here",
+            "short" => $site_name,
+            "full" => "$site_name | Slogan Goes Here",
         ],
         // PROJECT THEME COLOUR FOR MOBILE AND SUPPORTED PLATFORMS
         "color" => [
@@ -46,17 +48,14 @@ $layConfig::set_res__client("front","css",      $root . "assets/css/");
 $layConfig::set_res__client("front","js",       $root . "assets/js/");
 
 // copyright for the footer and your further action 😉
-$layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">YOUR-FREELANCE-OR-COMPANY-NAME</a>. " . date("Y") . ". All Rights Reserved");
+$layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">$site_name</a>. " . date("Y") . ". All Rights Reserved");
 
-include_once($layConfig->get_res__server('inc') . "connection.inc");
+$includes_dir = $layConfig->get_res__server('inc');
+
+if($layConfig::get_env() == "DEV")
+    include_once($includes_dir . "dev_connection.inc");
+else
+    include_once($includes_dir . "prod_connection.inc");
+
 // add ORM
-$layConfig::include_sql(!isset($SQL_EXCLUDE),[
-    "prod" => $db_connection,
-    "dev" => [
-        "host" => "127.0.0.1",
-        "user" => "leonard",
-        "password" => "root",
-        "db" => "",
-        "env" => "dev"
-    ],
-]);
+$layConfig::include_sql(!isset($SQL_EXCLUDE), $db_connection);
