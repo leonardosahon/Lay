@@ -86,10 +86,12 @@ trait Init{
         self::$server   = new stdClass();
         $env_src        = $env_src ?? $env;
         $base           = $proto . $http_host . $base_no_proto . "/";
+        $base_no_proto  = $http_host . $base_no_proto;
 
         // containerize vital attributes inside the options array for internal_site_data
         $options['base'] = $base;
         $options['base_no_proto'] = $base_no_proto;
+        $options['base_no_proto_no_www'] = str_replace("www.","", $base_no_proto);
         $options['proto'] = $proto_plain;
         $options['mail'][0] = $options['mail'][0] ?? "info@" . $base_no_proto;
 
