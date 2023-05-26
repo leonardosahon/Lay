@@ -1,3 +1,6 @@
+# hide apache info from the server response
+ServerSignature Off
+
 # Disable directory browsing
 Options -Indexes
 
@@ -14,11 +17,15 @@ Options -Indexes
   AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-# Font Packages CORS Issues resolution
 <IfModule mod_headers.c>
+  # Font Packages CORS Issues resolution
   <FilesMatch "\.(ttf|ttc|otf|eot|woff|font.css|css)$">
     Header set Access-Control-Allow-Origin "*"
   </FilesMatch>
+
+  # Hide PHP X-powered header
+  Header unset X-Powered-By
+  Header always unset X-Powered-By
 </IfModule>
 
 Options +FollowSymLinks -MultiViews
@@ -69,6 +76,7 @@ RewriteCond %{SERVER_PORT} 80
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
 # Allow any files or directories that exist to be displayed directly
+RewriteCond %{REQUEST_FILENAME} !index.php
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -l
@@ -78,5 +86,4 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^ %{REQUEST_URI}.php [L]
 
-RewriteCond %{REQUEST_URI} !^index.php
-RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI} [L,QSA]
+RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI}&referer_host=%{HTTP_REFERER} [L,QSA]

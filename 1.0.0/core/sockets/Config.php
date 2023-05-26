@@ -16,6 +16,37 @@ trait Config{
     private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
+    /**
+     * @param array $allowed_origins String[] of allowed origins like "http://example.com"
+     * @param bool $allow_all_origins
+     * @param \Closure|null $other_headers example function(){ header("Access-Control-Allow-Origin: Origin, X-Requested-With, Content-Type, Accept"); }
+     * @return bool
+     */
+    public static function set_cors(array $allowed_origins, bool $allow_all_origins = false, ?\Closure $other_headers = null) : bool {
+        if($allow_all_origins) {
+            header("Access-Control-Allow-Origin: *");
+            if($other_headers !== null)
+                $other_headers();
+
+            return true;
+        }
+
+        $http_origin = rtrim($_GET['referer_host'],"/");
+
+        // in an ideal word, this variable will only be empty if it's the same origin
+        if(empty($http_origin))
+            return true;
+
+        if(in_array($http_origin, $allowed_origins, true)){
+            header("Access-Control-Allow-Origin: $http_origin");
+            if($other_headers !== null)
+                $other_headers();
+
+            return true;
+        }
+
+        return false;
+    }
     public function is_mobile() : bool {
         return (bool) strpos(strtolower($_SERVER['HTTP_USER_AGENT']),"mobile");
     }

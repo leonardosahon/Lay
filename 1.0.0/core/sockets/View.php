@@ -85,7 +85,7 @@ trait View{
     public function inject_view(string $root = "/", string $get_name = "brick") : string {
         self::is_init();
         $handle_assets_like_js = function ($view){
-            $ext_array = ["js","css","map","jpeg","jpg","png","gif","jiff","svg"];
+            $ext_array = ["js","css","map","jpeg","jpg","png","gif","jiff","svg","json","xml","yaml"];
             $x = explode(".",$view);
             $ext = strtolower(end($x));
 
@@ -99,9 +99,9 @@ trait View{
         };
 
         $root_url = self::get_site_data('base_no_proto');
-        $root_file_system = ltrim(explode("index.php",$_SERVER['SCRIPT_NAME'])[0],"/");
+        $root_file_system = rtrim(explode("index.php",$_SERVER['SCRIPT_NAME'])[0],"/");
 
-        $view = $_GET[$get_name] ?? "";
+        $view = str_replace("/index.php","",$_GET[$get_name]);
         $view = str_replace([$root_url,$root_file_system],"",$view);
 
         if($root != "/") $view = str_replace(["/$root/","/$root","$root/"],"", $view);

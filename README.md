@@ -15,6 +15,6 @@ Current Version: `1.0.0`
 
 ## Documentation
 
-We wil begin creating officials documentations soon, pleas bear with us for the moment.
+We wil begin creating officials documentations soon, please bear with us for the moment.
 
 Meanwhile, visit: https://lay.osaitech.dev to check the status of things
