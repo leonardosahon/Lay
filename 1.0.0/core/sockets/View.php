@@ -101,7 +101,7 @@ trait View{
         $root_url = self::get_site_data('base_no_proto');
         $root_file_system = rtrim(explode("index.php",$_SERVER['SCRIPT_NAME'])[0],"/");
 
-        $view = str_replace("/index.php","",$_GET[$get_name]);
+        $view = str_replace("/index.php","",$_GET[$get_name] ?? "");
         $view = str_replace([$root_url,$root_file_system],"",$view);
 
         if($root != "/") $view = str_replace(["/$root/","/$root","$root/"],"", $view);

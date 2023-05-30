@@ -66,7 +66,7 @@ trait Init{
         $proto_plain    = $proto;
         $proto          = $proto . "://";
         $base_no_proto  = rtrim(str_replace($slash,"/", end($base)),"/");
-        $localhost      = ["127.0.","192.168."];
+        $localhost      = ["127.0.","192.168.","::1"];
         $env            = $options['env'];
 
         switch (strtolower($env)){
@@ -74,7 +74,13 @@ trait Init{
             case "prod": case "production": $env = "prod"; break;
         }
 
-        $is_live_server = ($env_host !== "localhost" && strpos($env_host,$localhost[0]) === false && strpos($env_host,$localhost[1]) === false) || $env == "prod";
+        $is_live_server = (
+            $env_host !== "localhost" &&
+            (
+                strpos($env_host,$localhost[0]) === false && strpos($env_host,$localhost[1]) === false && strpos($env_host,$localhost[2]) === false
+            )
+            || $env == "prod"
+        );
 
         if($is_live_server) {
             $env            = "prod";

@@ -22,16 +22,21 @@ trait Config{
      * @param \Closure|null $other_headers example function(){ header("Access-Control-Allow-Origin: Origin, X-Requested-With, Content-Type, Accept"); }
      * @return bool
      */
-    public static function set_cors(array $allowed_origins, bool $allow_all_origins = false, ?\Closure $other_headers = null) : bool {
-        if($allow_all_origins) {
+    public static function set_cors(array $allowed_origins, bool $allow_all = false, ?\Closure $other_headers = null) : bool {
+        if($allow_all) {
             header("Access-Control-Allow-Origin: *");
+            header("Access-Control-Allow-Credentials: true");
+            header("Access-Control-Allow-Headers: *");
+            header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+            header('Access-Control-Max-Age: 86400');    // cache for 1 day
+
             if($other_headers !== null)
                 $other_headers();
 
             return true;
         }
 
-        $http_origin = rtrim($_GET['referer_host'],"/");
+        $http_origin = rtrim($_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? "","/");
 
         // in an ideal word, this variable will only be empty if it's the same origin
         if(empty($http_origin))

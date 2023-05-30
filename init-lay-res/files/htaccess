@@ -74,16 +74,7 @@ RewriteCond %{REMOTE_HOST} !::1
 RewriteCond %{SERVER_PORT} 80
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
-# Allow any files or directories like [jpg,css,js,etc] that exist to be displayed directly,
-# any other file should go through the index.php on the root folder
-RewriteCond %{REQUEST_URI} !/index\.php$
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d [OR]
-RewriteCond %{REQUEST_FILENAME} -l
-RewriteRule ^ - [L]
-
-# Allow api/index.php to be accessible through the url for api requests
-RewriteCond %{REQUEST_URI} /api/index\.php$
+# Allow any files or directories like [jpg,css,js,etc] that exist to be displayed correctly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -l
@@ -93,4 +84,5 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^ %{REQUEST_URI}.php [L]
 
-RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI}&referer_host=%{HTTP_REFERER} [L,QSA]
+# Default file for handling any other request uri
+RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI} [L,QSA]
