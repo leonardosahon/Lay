@@ -1,10 +1,26 @@
 <?php
 declare(strict_types=1);
-session_start();
 use Lay\core\LayConfig;
-$slash =  DIRECTORY_SEPARATOR;
 
+$slash =  DIRECTORY_SEPARATOR;
 require_once "Lay" . $slash . "AutoLoader.php";
+
+LayConfig::session_start([
+    "http_only" => true,
+    "only_cookies" => true,
+    "secure" => true,
+]);
+
+LayConfig::set_cors(
+    [],
+    false,
+    function (){
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Headers: *");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+        header('Access-Control-Max-Age: 86400');    // cache for 1 day
+    }
+);
 
 if(!isset($BOB_D_BUILDER))
     \Lay\core\Exception::throw_exception("BAD REQUEST", "This script cannot be accessed this way, please return home");
