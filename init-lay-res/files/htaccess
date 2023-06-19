@@ -58,6 +58,11 @@ Order allow,deny
 Deny from all
 </FilesMatch>
 
+# Deny access to .git
+<FilesMatch "^/.*/\.git/">
+Deny from all
+</FilesMatch>
+
 ## Force website to redirect to www.domain.tld
 # Make condition active on production server
 RewriteCond %{REMOTE_HOST} !127.0.0.1
