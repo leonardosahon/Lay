@@ -1,3 +1,5 @@
+ServerSignature Off
+
 # Disable directory browsing
 Options -Indexes
 
@@ -14,11 +16,15 @@ Options -Indexes
   AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-# Font Packages CORS Issues resolution
 <IfModule mod_headers.c>
+  # Font Packages CORS Issues resolution
   <FilesMatch "\.(ttf|ttc|otf|eot|woff|font.css|css)$">
     Header set Access-Control-Allow-Origin "*"
   </FilesMatch>
+
+  # Hide PHP X-powered header
+  Header unset X-Powered-By
+  Header always unset X-Powered-By
 </IfModule>
 
 Options +FollowSymLinks -MultiViews
@@ -52,6 +58,11 @@ Order allow,deny
 Deny from all
 </FilesMatch>
 
+# Deny access to .git
+<FilesMatch "^/.*/\.git/">
+Deny from all
+</FilesMatch>
+
 ## Force website to redirect to www.domain.tld
 # Make condition active on production server
 RewriteCond %{REMOTE_HOST} !127.0.0.1
@@ -68,7 +79,7 @@ RewriteCond %{REMOTE_HOST} !::1
 RewriteCond %{SERVER_PORT} 80
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
-# Allow any files or directories that exist to be displayed directly
+# Allow any files or directories like [jpg,css,js,etc] that exist to be displayed correctly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -l
@@ -78,5 +89,5 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^ %{REQUEST_URI}.php [L]
 
-RewriteCond %{REQUEST_URI} !^index.php
+# Default file for handling any other request uri
 RewriteRule ^(.*)$ index.php?brick=%{REQUEST_URI} [L,QSA]

@@ -41,4 +41,13 @@ final class Crypt {
 
         return $output;
     }
+
+    public function csrf_gen(string $user_data, ?string $key = null) : string {
+        $key = $key === null ? date("YmdHis") : $key;
+        return hash_hmac('sha256',$user_data, $key);
+    }
+
+    public function csrf_test(string $expected, string $value) : bool {
+        return hash_equals($expected, $value);
+    }
 }

@@ -47,7 +47,7 @@ trait Includes{
         $route = @self::$INC_CUSTOM_ROUTE[$route_key];
 
         if(empty($route))
-            Exception::throw_exception("Trying to access a custom route doesn't exist. $route_key","ROUTE::ERR");
+            Exception::throw_exception("Trying to access a custom route that doesn't exist. $route_key","ROUTE::ERR");
 
         return $route[0];
     }
