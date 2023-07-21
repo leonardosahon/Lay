@@ -123,6 +123,7 @@ trait SelectorOOP {
             $cols = "";
             try {
                 foreach ($d['columns'] as $k => $c){
+                    $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
                     $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
                 }
             }catch (\Exception $e){
@@ -135,6 +136,7 @@ trait SelectorOOP {
             $values = "";
             try{
                 foreach ($d['values'] as $k => $c){
+                    $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
                     $values .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
                 }
             }catch (\Exception $e){
@@ -163,6 +165,7 @@ trait SelectorOOP {
             $cols = "";
             try {
                 foreach ($values as $k => $c) {
+                    $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
                     $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
                 }
             }catch (\Exception $e){
