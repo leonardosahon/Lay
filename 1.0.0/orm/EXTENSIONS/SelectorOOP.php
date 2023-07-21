@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Lay\orm\EXTENSIONS;
 
 use Closure;
-use Lay\orm\Exception;
+use Lay\orm\SQL;
 
 trait SelectorOOP {
     private static int $current_index = 0;
@@ -15,7 +15,7 @@ trait SelectorOOP {
         self::$current_index -= 1;
         return $r;
     }
-    private function store_vars($key, $value, $id1 = null, $id2 = null) : self {
+    private function store_vars(string $key, mixed $value, $id1 = null, $id2 = null) : self {
         $index = max(self::$current_index,0);
 
         if($id1 === true)
@@ -39,10 +39,10 @@ trait SelectorOOP {
     final public function table(string $table) : self {
         return $this->store_vars('table',$table);
     }
-    final public function column(string $cols) : self {
+    final public function column(string|array $cols) : self {
         return $this->store_vars('columns',$cols);
     }
-    final public function value(string $values) : self {
+    final public function value(string|array $values) : self {
         return $this->store_vars('values',$values);
     }
     final public function switch(string $switch_id, string $column_for_condition,string $column_for_assignment) : self {
@@ -100,7 +100,7 @@ trait SelectorOOP {
         $this->row();
         return $this->select();
     }
-    final public function then_insert(string $columns) : bool {
+    final public function then_insert(string|array $columns) : bool {
         $this->column($columns);
         return $this->insert();
     }
@@ -118,6 +118,31 @@ trait SelectorOOP {
     /** @see SQL_CORE::query_insert() */
     final public function insert() : bool {
         $d = $this->get_vars();
+
+        if(is_array(@$d['columns'])){
+            $cols = "";
+            try {
+                foreach ($d['columns'] as $k => $c){
+                    $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
+                }
+            }catch (\Exception $e){
+                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to insert into a DB: $e");
+            }
+            $d['columns'] = rtrim($cols,",");
+        }
+
+        if(is_array(@$d['values'])){
+            $values = "";
+            try{
+                foreach ($d['values'] as $k => $c){
+                    $values .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
+                }
+            }catch (\Exception $e){
+                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to insert into a DB: $e");
+            }
+            $d['values'] = rtrim($values,",");
+        }
+
         $cols = @$d['columns'];
         $values = @$d['values'];
 
@@ -126,6 +151,43 @@ trait SelectorOOP {
 
         return $this->query_insert(@$d['table'],$cols,$values,@$d['debug']) ?? false;
     }
+    /** @see SQL_CORE::query_update() */
+    final public function edit() : bool {
+        $d = $this->get_vars();
+        $values = $d['values'] ?? $d['columns'] ?? "NOTHING";
+
+        if($values === "NOTHING")
+            $this->oop_exception();
+
+        if(is_array($values)){
+            $cols = "";
+            try {
+                foreach ($values as $k => $c) {
+                    $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
+                }
+            }catch (\Exception $e){
+                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to update a DB: $e");
+            }
+            $values = rtrim($cols,",");
+        }
+
+        if(!empty(@$d['switch'])){
+            $switch = [];
+            foreach ($d['switch'] as $k => $match){
+                $switch[] = [
+                    "switch" => $match['switch'],
+                    "column" => $match['column'],
+                    "case" => $d['case'][$k]
+                ];
+            }
+            $values = [
+                "values" => $values,
+                "match" => $switch
+            ];
+        }
+        return $this->query_update($d['table'],$values,@$d['clause'],@$d['debug'],@$d['no_false']);
+    }
+
     /** @see SQL_CORE::query_select() */
     final public function select() : ?array {
         $d = $this->get_vars();
@@ -162,30 +224,6 @@ trait SelectorOOP {
             $this->oop_exception();
 
         return $this->query_count($col,$d['table'],@$d['clause'],@$d['debug']);
-    }
-    /** @see SQL_CORE::query_update() */
-    final public function edit() : bool {
-        $d = $this->get_vars();
-        $values = $d['values'] ?? $d['columns'] ?? "NOTHING";
-
-        if($values === "NOTHING")
-            $this->oop_exception();
-
-        if(!empty(@$d['switch'])){
-            $switch = [];
-            foreach ($d['switch'] as $k => $match){
-                $switch[] = [
-                    "switch" => $match['switch'],
-                    "column" => $match['column'],
-                    "case" => $d['case'][$k]
-                ];
-            }
-            $values = [
-                "values" => $values,
-                "match" => $switch
-            ];
-        }
-        return $this->query_update($d['table'],$values,@$d['clause'],@$d['debug'],@$d['no_false']);
     }
     /** @see SQL_CORE::query_delete() */
     final public function delete() : bool {
