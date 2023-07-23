@@ -17,7 +17,8 @@ trait Includes{
         return self::$INC_VARS;
     }
 
-    public function inc_file_as_string(string $file_location,$meta = [],$local = [],array $local_raw = []) : string {
+    public function inc_file_as_string(string $file_location, $meta = [], $local = [], array $local_raw = []) : string {
+        $local_array = $local_raw;
         self::is_init();
         $layConfig = self::instance();
         ob_start(); include $file_location; return ob_get_clean();
@@ -60,25 +61,40 @@ trait Includes{
         $inc_root = $this->get_res__server('inc');
         $ctrl_root = $this->get_res__server('ctrl');
         $view_root = $this->get_res__server('view');
+        $type_loc = $inc_root;
 
         $default_routes = fn($side) => [
-            "inc_$side" => [$inc_root . "__$side" . $slash, ".inc"],
-            "ctrl_$side" => [$ctrl_root . "__$side" . $slash, ".php"],
-            "view_$side" => [$view_root . "__$side" . $slash, ".view"],
+            "inc_$side" => [
+                'root' => $inc_root . "__$side" . $slash,
+                'ext' => ".inc"
+            ],
+            "ctrl_$side" => [
+                'root' => $ctrl_root . "__$side" . $slash,
+                'ext' => ".php"
+            ],
+            "view_$side" => [
+                'root' => $view_root . "__$side" . $slash,
+                'ext' => ".view"
+            ],
         ];
 
         if(self::$DEFAULT_ROUTE_SET === false && self::$USE_DEFAULT_ROUTE) {
-            self::$INC_CUSTOM_ROUTE = array_merge(self::$INC_CUSTOM_ROUTE, $default_routes('back'), $default_routes('front'));
             self::$DEFAULT_ROUTE_SET = true;
+
+            self::$INC_CUSTOM_ROUTE = array_merge(
+                self::$INC_CUSTOM_ROUTE,
+                $default_routes('back'),
+                $default_routes('front')
+            );
         }
 
         foreach (self::$INC_CUSTOM_ROUTE as $k => $v){
-            if($type == $k) {
-                $type_loc = $v[0];
-                $type = $v[1] ?? ".php";
-                $using_custom_route = true;
-                break;
-            }
+            if($type != $k) continue;
+
+            $using_custom_route = true;
+            $type_loc = $v['root'];
+            $type = $v['ext'] ?? ".php";
+            break;
         }
 
         if(!$using_custom_route)
@@ -104,6 +120,7 @@ trait Includes{
         $meta = $var['META'] ?? [];
         $local = $var['LOCAL'] ?? [];
         $local_raw = $var['LOCAL_RAW'] ?? [];
+        $local_array = $var['LOCAL_ARRAY'] ?? [];
 
         if(self::$USE_OBJS){
             $meta = $obj->to_object($meta);
@@ -120,5 +137,10 @@ trait Includes{
 
         $once ? include_once $file : include $file;
         return null;
+    }
+
+    public function inc_controller(string $controller_location, string $controller_side, bool $require = false, array $vars = []) : void {
+        $controller_location = str_replace(".php","",$controller_location);
+        $this->inc_file($controller_location, "ctrl_{$controller_side}", false, $require, $vars);
     }
 }

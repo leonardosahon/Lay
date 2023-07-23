@@ -25,12 +25,19 @@ class SQL extends \Lay\orm\Exception {
     }
     /**
      * @param $connection mysqli|array|null The link to a mysqli connection or an array of [host, user, password, db]
-     * When nothing is passed the class assumes dev isn't doing any db operation
+     * When nothing is passed, the class assumes dev isn't doing any db operation
      */
     public static function init($connection = null) : self {
         self::_init($connection);
         return self::instance();
     }
+
+    /**
+     * Turns any number of dimensions of an array to a single dimension array. 
+     * The latest values will replace arrays with the same keys  
+     * @param array $array 
+     * @return array
+     */
     final public function array_flatten(array $array) : array {
         $arr = $array;
         if(count(array_filter($array,"is_array")) > 0) {
@@ -51,6 +58,51 @@ class SQL extends \Lay\orm\Exception {
             }
         }
         return $arr;
+    }
+
+    /**
+     * Enhanced array search, this will search for values even in multiple dimensions of arrays
+     * @param string $needle
+     * @param array $haystack
+     * @param bool $strict choose between == or === comparison operator
+     * @param int $total_dimension ***Do not modify this option, it is readonly to the developer***
+     * @return string[]
+     */
+    final public function array_search(string $needle, array $haystack, bool $strict = false, int $total_dimension = 0) : array {
+        $result = [
+            "value" => "LAY_NULL",
+        ];
+
+        foreach ($haystack as $i => $d){
+            if(is_array($d)){
+                ++$total_dimension;
+                $result['index_d' . $total_dimension] = $i;
+                $search = $this->array_search($needle, $d, $strict, $total_dimension);
+
+                if($search['value'] !== "LAY_NULL") {
+                    $result = array_merge($result,$search);
+                    break;
+                }
+                --$total_dimension;
+                continue;
+            }
+
+            if(($strict === false && $needle == $d)){
+                $total_dimension++;
+                $result['index_d' . $total_dimension] = $i;
+                $result['value'] = $d;
+                break;
+            }
+
+            if(($strict === true && $needle === $d)){
+                $total_dimension++;
+                $result['index_d' . $total_dimension] = $i;
+                $result['value'] = $d;
+                break;
+            }
+        }
+
+        return $result;
     }
 
     /**

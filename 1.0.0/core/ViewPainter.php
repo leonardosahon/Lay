@@ -133,6 +133,7 @@ final class ViewPainter {
             ],
             "local" => $meta['local'] ?? [],
             "local_raw" => $meta['local_raw'] ?? [],
+            "local_array" => $meta['local_array'] ?? [],
         ];
 
         $meta['page']['title_raw'] = $meta['page']['title'];
@@ -152,6 +153,7 @@ final class ViewPainter {
             "META" => $meta,
             "LOCAL" => $meta['local'],
             "LOCAL_RAW" => $meta['local_raw'],
+            "LOCAL_ARRAY" => $meta['local_array'],
         ]);
 
         self::$VIEW_ARGS = [...$meta_args];

@@ -17,7 +17,7 @@ function route_ctrl(...$controls) : void {
                 Exception::throw_exception("API could not find the requested resource, ensure the parameters are correct and the resource exists. 
                 <div style='color: green'>Param: <b style='color: yellow'>$ctrl</b></div>","API FAILURE");
             break;
-            case "enu": $layConfig->inc_file("end_users","ctrl_front"); break;
+            case "enu": $layConfig->inc_controller("end_users","front"); break;
         }
     }
 }

@@ -81,7 +81,15 @@ trait Resources {
     private static function get_res(string $obj_type, $resource, string ...$index_chain) {
 
         foreach ($index_chain as $v) {
-            $resource = @$resource->{$v};
+            if(is_object($resource)){
+                $resource = $resource->{$v};
+                continue;
+            }
+
+            if(is_array($resource)){
+                $resource = $resource[$v];
+                continue;
+            }
 
             if($resource === null)
                 Exception::throw_exception("[$v] doesn't exist in the [res_$obj_type] chain",$obj_type);

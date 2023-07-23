@@ -24,7 +24,7 @@ trait View{
      * $current_domain: This variable holds each individual domain alias, so you can use it for further processing
      <br>
         [
-            {domain}|{domain alias}|{domain alias}|..." => function ($view, $current_domain) {
+            {domain}|{domain alias}|{domain alias}|..." => function ($view, $current_domain) : string {
                 return $view;
             },
          ]
@@ -55,6 +55,7 @@ trait View{
                     $host = ltrim($host, "/");
 
                     if(substr($view,0, strlen($host)) == $host){
+                        $view = str_replace($host,"", $view);
                         $domain = $host;
                         $found = true;
                         break;
@@ -64,6 +65,7 @@ trait View{
 
                 $host = $proto . $host;
                 if(substr($base,0, strlen($host)) == $host){
+                    $view = str_replace($host,"", $view);
                     $domain = $host;
                     $found = true;
                     break;
@@ -73,7 +75,7 @@ trait View{
 
         if(!empty($domains))
             $view = $domains[$domain_key]($view,$domain);
-
+        
         if(empty($view))
             $view = "index";
 

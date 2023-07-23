@@ -48,7 +48,7 @@ trait Clean {
 
         $esc_str = function ($mode,$value) use($link){
             // Extra layer of security for escape string
-            if($mode == "strict") {
+            if($mode == "strict" || $mode == "PREVENT_SQL_INJECTION") {
                 $keyWords = ["SELECT","INSERT","DELETE","UPDATE","CREATE","DROP","SHOW","USE","DESCRIBE","DESC","ALTER","UNION","INFORMATION_SCHEMA"];
                 $keyWords = array_merge($keyWords, array_map("strtolower", $keyWords));
                 $value = str_replace($keyWords, array_map(fn($x) => mysqli_real_escape_string($link,$x), $keyWords), $value);
