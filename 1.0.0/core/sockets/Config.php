@@ -82,7 +82,7 @@ trait Config
 
     public function is_mobile(): bool
     {
-        return (bool)strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile");
+        return (bool)strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? ""), "mobile");
     }
 
     public function switch(array $bool_valued_array): self
