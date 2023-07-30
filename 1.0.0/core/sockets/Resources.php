@@ -49,10 +49,11 @@ trait Resources {
         $root_server    = $dir  . "res" . $slash . "server" . $slash;
         $obj = [
             "dir"     =>   $dir,
+            "db"      =>   $root_server     . "includes"    . $slash . "__db" . $slash,
             "inc"     =>   $root_server     . "includes"    . $slash,
             "ctrl"    =>   $root_server     . "controller"  . $slash,
             "view"    =>   $root_server     . "view"        . $slash,
-            "upload"  =>   "res"            . $slash . "uploads" . $slash,
+            "upload"  =>   "res" . $slash . "uploads" . $slash,
         ];
 
         self::$server = ObjectHandler::instance()->to_object($obj);

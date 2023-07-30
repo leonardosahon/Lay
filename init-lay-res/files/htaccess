@@ -44,22 +44,26 @@ Order allow,deny
 Deny from all
 </FilesMatch>
 
+# Deny access to .git
+<FilesMatch "^/.*/\.git/">
+Deny from all
+</FilesMatch>
+
+<FilesMatch "^/.*/res/server/">
+Deny from all
+</FilesMatch>
+
 # Deny access to files with outlined extensions
-<FilesMatch "\.(ini|psd|log|sh|sql|view|inc|lock)$">
+<FilesMatch "\.(env|ini|psd|log|sh|sql|view|inc|lock|lenv)$">
 RewriteRule '' / [R=301,L]
 Order allow,deny
 Deny from all
 </FilesMatch>
 
 # Deny access to specified files
-<FilesMatch "(composer|package)\.json">
+<FilesMatch "(composer|package|package-lock)\.json">
 RewriteRule '' / [R=301,L]
 Order allow,deny
-Deny from all
-</FilesMatch>
-
-# Deny access to .git
-<FilesMatch "^/.*/\.git/">
 Deny from all
 </FilesMatch>
 

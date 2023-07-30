@@ -50,7 +50,7 @@ trait Includes{
         if(empty($route))
             Exception::throw_exception("Trying to access a custom route that doesn't exist. $route_key","ROUTE::ERR");
 
-        return $route[0];
+        return $route[0] ?? $route['root'];
     }
 
     public function inc_file(?string $file, string $type = "inc", bool $once = true, bool $strict = true, ?array $vars = []) : ?string {

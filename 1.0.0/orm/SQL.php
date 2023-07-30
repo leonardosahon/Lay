@@ -12,22 +12,12 @@ use mysqli_result;
 class SQL extends \Lay\orm\Exception {
     use Config;
     use EXTENSIONS\Controller;
-
-    private static self $instance;
-    private function __construct(){}
-    private function __clone(){}
     public string $query;
-
-    public static function instance() : self {
-        if(!isset(self::$instance))
-            self::$instance = new self();
-        return self::$instance;
-    }
     /**
      * @param $connection mysqli|array|null The link to a mysqli connection or an array of [host, user, password, db]
      * When nothing is passed, the class assumes dev isn't doing any db operation
      */
-    public static function init($connection = null) : self {
+    public static function init(mysqli|array|null $connection = null) : self {
         self::_init($connection);
         return self::instance();
     }

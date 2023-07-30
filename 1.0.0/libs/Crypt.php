@@ -11,7 +11,8 @@ final class Crypt {
         return null;
     }
     //hashed values
-    public function encrypt(string $password){
+    public function encrypt(string $password): string
+    {
         return hash('sha512', "jnaOsk-kanjaS-cAs626-20Ica2-s06P6a-306W2a" . $password . "ashRjh-asDjhs-vjhSja-svHjas-hjhdAv-512Aiu");
     }
 
@@ -37,7 +38,7 @@ final class Crypt {
         else
             $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
 
-        if($output == false) $output = null;
+        if(!$output) $output = null;
 
         return $output;
     }

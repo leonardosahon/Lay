@@ -23,7 +23,8 @@
     "ext-json": "*",
     "ext-openssl": "*",
     "ext-exif": "*",
-    "ext-gd": "*"
+    "ext-gd": "*",
+    "ext-sodium": "*"
   },
   "require-dev": {
     "wolfcast/browser-detection": "2.9.5"

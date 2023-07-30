@@ -3,78 +3,88 @@ declare(strict_types=1);
 namespace Lay\orm;
 use mysqli;
 
-/**
- * Trait Config
- * @package osai\SQL_MODEL
- * @modified 08/11/2021
- */
 trait Config{
     private static mysqli $link;
     private static string $CHARSET = "utf8mb4";
+    private static array $DB_ARGS = [
+        "host" => null,
+        "user" => null,
+        "password" => null,
+        "db" => null,
+        "port" => null,
+        "socket" => null,
+        "env" => null,
+        "silent" => false,
+        "ssl" => [
+            "key" => null,
+            "certificate" => null,
+            "ca_certificate" => null,
+            "ca_path" => null,
+            "cipher_algos" => null,
+            "flag" => 0
+        ],
+    ];
 
-    private static function _init($connection) : void {
+    private static function _init(mysqli|array|null $connection) : void {
         $me = self::instance();
         $http_host = $_SERVER['REMOTE_ADDR'] ?? $_SERVER['HTTP_HOST'];
         $localhost = ["127.0.","192.168."];
         $env = is_array($connection) ? @$connection['env'] : null;
 
         // confirm development environment or guess it based on host
-        (empty($env) && ($http_host == "localhost" || strpos($http_host,$localhost[0]) !== false || strpos($http_host,$localhost[1]) !== false)) ?
+        (empty($env) && ($http_host == "localhost" || str_contains($http_host, $localhost[0]) || str_contains($http_host, $localhost[1]))) ?
             $me->set_env("DEVELOPMENT") :
             $me->set_env("PRODUCTION");
 
-        is_array($connection) ? $me->connect($connection) : $me->plug($connection);
+        $me->set_db($connection);
     }
 
     /**
      * Connect Controller Manually From Here
-     * @param $cnn_arg array associative array of connection parameter ["host","user","password","db","env"]
-     * env takes either ("dev" || "prod") || ("development" || "production")
      * @return mysqli|null
      **/
-    public function connect(array $cnn_arg) : ?mysqli {
-        $host = $cnn_arg['host'];
-        $usr = $cnn_arg['user'];
-        $pass = $cnn_arg['password'];
-        $dbname = $cnn_arg['db'];
-        $port = $cnn_arg['port'] ?? null;
-        $socket = $cnn_arg['socket'] ?? null;
-        $charset = $cnn_arg['charset'] ?? self::$CHARSET;
-        $this->set_env($cnn_arg['env'] ?? $this->get_env());
+    private function connect() : ?mysqli {
+        extract(self::$DB_ARGS);
+        $charset = $charset ?? self::$CHARSET;
+        $this->set_env($env ?? $this->get_env());
         $cxn = $this->ping(true,null, true);
-        if(!($cxn['host'] == $host and $cxn['user'] == $usr and $cxn['db'] == $dbname)) {
+        $port = $port ?: null;
+        $socket = $socket ?: null;
+
+        if(!($cxn['host'] == $host and $cxn['user'] == $user and $cxn['db'] == $db)) {
             $mysqli = null;
 
             try {
-                if(isset($cnn_arg['ssl'])){
+                if(!empty(@$ssl['certificate']) && !empty(@$ssl['ca_certificate'])){
                     $mysqli = mysqli_init();
                     mysqli_ssl_set(
                         $mysqli,
-                        $cnn_arg['ssl']['key'] ?? "",
-                        $cnn_arg['ssl']['certificate'] ?? "",
-                        $cnn_arg['ssl']['ca_certificate'] ?? "",
-                        $cnn_arg['ssl']['ca_path'] ?? "",
-                        $cnn_arg['ssl']['cipher_algos'] ?? "",
+                        @$ssl['key'],
+                        @$ssl['certificate'],
+                        @$ssl['ca_certificate'],
+                        @$ssl['ca_path'],
+                        @$ssl['cipher_algos'],
                     );
-                    mysqli_real_connect($mysqli, $host, $usr, $pass, $dbname, $port, $socket, $cnn_arg['ssl']['flag'] ?? 0);
+                    mysqli_real_connect($mysqli, $host, $user, $password, $db, $port, $socket, (int) @$ssl['flag']);
                 }
 
                 if (!$mysqli){
-                    $mysqli = mysqli_connect($host, $usr, $pass, $dbname, $port, $socket);
+                    $mysqli = mysqli_connect($host, $user, $password, $db, $port, $socket);
                     $mysqli->set_charset($charset);
                 }
+
 
                 $this->set_link($mysqli);
             }catch (\Exception $e){}
 
             if(!$mysqli){
-                if (isset($cnn_arg['silent']))
+                if (filter_var($silent,FILTER_VALIDATE_BOOL))
                     return null;
-                
                 else
                     $this->show_exception(2);
             }
         }
+
         return $this->get_link();
     }
 
@@ -83,28 +93,17 @@ trait Config{
      * @param mysqli $link
      * @return mysqli
      */
-    public function plug(mysqli $link) : mysqli {
-        $cxnOld = $this->ping(true);
-        if(empty($cxnOld['host']) || empty($cxnOld['user']) || empty($cxnOld['db']))
+    private function plug(mysqli $link) : mysqli {
+        $cxn_old = $this->ping(true);
+
+        if(empty($cxn_old['host']) || empty($cxn_old['user']) || empty($cxn_old['db']))
             $this->set_link($link);
         else {
-            $cxnNew = $this->ping(true, $link);
-            if (!($cxnOld['host'] == $cxnNew['host'] and $cxnOld['user'] == $cxnNew['user'] and $cxnOld['db'] == $cxnNew['db']))
+            $cxn_new = $this->ping(true, $link);
+            if (!($cxn_old['host'] == $cxn_new['host'] and $cxn_old['user'] == $cxn_new['user'] and $cxn_old['db'] == $cxn_new['db']))
                 $this->set_link($link);
         }
         return $this->get_link();
-    }
-
-    # close connection
-    public function close(?mysqli $link = null, bool $silent_error = false) : bool {
-        try {
-            return mysqli_close($link ?? $this->get_link());
-        }catch (\Exception $e){
-            if(!$silent_error)
-                $this->show_exception(3);
-        }
-
-        return false;
     }
 
     /**
@@ -124,13 +123,33 @@ trait Config{
                     $db = $x['db'];
                     $usr = $x['users'];
                     $host = $x['host_short'];
-                    if ($ignore_msg == false) $this->show_exception(1, [$db, $usr, $host]);
+                    if (!$ignore_msg) $this->show_exception(1, [$db, $usr, $host]);
                 }
-                else if ($ignore_no_conn == false) $this->show_exception(0);
+                else if (!$ignore_no_conn) $this->show_exception(0);
             }
         } return ["host" => $host, "user" => $usr, "db" => $db];
     }
 
+    public function close(?mysqli $link = null, bool $silent_error = false) : bool {
+        try {
+            return mysqli_close($link ?? $this->get_link());
+        }catch (\Exception $e){
+            if(!$silent_error)
+                $this->show_exception(3);
+        }
+
+        return false;
+    }
+    public function set_db(mysqli|array $args) : void {
+        if(!is_array($args)) {
+            $this->plug($args);
+            return;
+        }
+
+        self::$DB_ARGS = $args;
+        $this->connect();
+    }
+    public function get_db_args() : array { return self::$DB_ARGS; }
     public function set_link(mysqli $link): void { self::$link = $link;}
 
     public function get_link(): ?mysqli { return self::$link ?? null; }

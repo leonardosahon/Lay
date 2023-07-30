@@ -79,8 +79,10 @@ trait View{
         if(empty($view))
             $view = "index";
 
-        if($default_fn)
+        if($default_fn){
+            $view = ltrim($view, "/");
             $default_fn($view,explode("/",$view));
+        }
 
         return $view;
     }

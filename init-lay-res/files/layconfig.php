@@ -66,12 +66,4 @@ $layConfig::set_res__client("front","js",       $root . "assets/js/");
 // copyright for the footer and your further action 😉
 $layConfig::set_site_data("copy","&copy; <a href=\"{$layConfig->get_site_data('base')}\">$site_name</a>. " . date("Y") . ". All Rights Reserved");
 
-$includes_dir = $layConfig->get_res__server('inc');
-
-if($layConfig::get_env() == "DEV")
-    include_once($includes_dir . "dev_connection.inc");
-else
-    include_once($includes_dir . "prod_connection.inc");
-
-// add ORM
-$layConfig::include_sql(!isset($SQL_EXCLUDE), $db_connection);
+$layConfig::set_orm(!isset($SQL_EXCLUDE));
