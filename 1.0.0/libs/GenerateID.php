@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
 namespace Lay\libs;
+use Lay\core\sockets\IsSingleton;
 use Lay\orm\SQL;
 
 class GenerateID {
+    use IsSingleton;
     private static int $recursion_index = 0;
     
     private static string $prepend;
@@ -11,18 +13,9 @@ class GenerateID {
     private static int $digit_length = 7;
     private static string $confirm_table;
     private static string $confirm_column;
-    private static GenerateID $instance;
-    private function __construct(){}
-    private function __clone(){}
     protected static function count(string $table, string $column, $value) : bool {
         $value = SQL::instance()->clean($value,16,'strict');
         return SQL::instance()->count($column,$table,"WHERE $column='$value'") > 0;
-    }
-
-    public static function instance() : self {
-        if(!isset(self::$instance))
-            self::$instance = new GenerateID();
-        return self::$instance;
     }
 
     public function digit(?int $digit_length = 7) : self {

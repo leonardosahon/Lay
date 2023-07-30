@@ -9,6 +9,7 @@ trait Controller{
     use SelectorProcedure;
     use Clean;
     use OneLiner;
+    use IsSingleton;
 
     protected static function core() : SQL {
         return SQL::instance();
