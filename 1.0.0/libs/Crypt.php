@@ -37,7 +37,7 @@ final class Crypt {
         else
             $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
 
-        if($output == false) $output = null;
+        if(!$output) $output = null;
 
         return $output;
     }

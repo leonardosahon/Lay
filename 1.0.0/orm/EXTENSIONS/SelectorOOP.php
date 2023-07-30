@@ -32,9 +32,16 @@ trait SelectorOOP {
         
         return $this;
     }
-    final public function op() : self {
+    final public function op(?string $table = null) : self {
         self::$current_index++;
+
+        if($table)
+            $this->table($table);
+
         return $this;
+    }
+    final function open(string $table) : self {
+        return $this->op($table);
     }
     final public function table(string $table) : self {
         return $this->store_vars('table',$table);

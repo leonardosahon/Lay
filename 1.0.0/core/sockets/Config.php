@@ -115,6 +115,45 @@ trait Config
         return strtoupper(self::$ENV);
     }
 
+    public static function set_orm(bool $include = true): ?SQL {
+        self::is_init();
+        $file = self::get_env() == "DEV" ? 'dev' : 'prod';
+
+        $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('db') . $file . ".lenv");
+
+        $map = SQL::instance()->get_db_args();
+
+        foreach (explode("\n",$output) as $i => $e){
+            if(empty($e)) continue;
+            $entry = explode("=",$e);
+            $key = strtolower(str_replace("DB_","",$entry[0]));
+            $value = $entry[1];
+
+            if(!empty($value)) {
+                if (filter_var($value, FILTER_VALIDATE_INT))
+                    $value = filter_var($value, FILTER_VALIDATE_INT);
+
+                if (filter_var($value, FILTER_VALIDATE_BOOL) && !is_int($value))
+                    $value = filter_var($value, FILTER_VALIDATE_BOOL);
+            }
+
+            if(str_contains($key,"ssl")){
+                $key = str_replace("ssl_","",$key);
+                $map['ssl'][$key] = $value;
+            }
+            else {
+                if($key == "name")
+                    $key = "db";
+
+                $map[$key] = $value;
+            }
+        }
+
+        self::$CONNECTION_ARRAY = $map;
+
+        return $include ? self::connect($map) : null;
+    }
+
     public static function get_orm(): SQL
     {
         self::is_init();
@@ -158,7 +197,7 @@ trait Config
             return;
 
         $orm = self::$SQL_INSTANCE;
-        if ($orm) $orm->close($orm->get_link() ?? $link, true);
+        $orm?->close($orm->get_link() ?? $link, true);
     }
 
     public static function include_sql(bool $include = true, array $connection_param = []): ?SQL

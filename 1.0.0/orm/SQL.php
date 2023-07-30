@@ -27,7 +27,7 @@ class SQL extends \Lay\orm\Exception {
      * @param $connection mysqli|array|null The link to a mysqli connection or an array of [host, user, password, db]
      * When nothing is passed, the class assumes dev isn't doing any db operation
      */
-    public static function init($connection = null) : self {
+    public static function init(mysqli|array|null $connection = null) : self {
         self::_init($connection);
         return self::instance();
     }

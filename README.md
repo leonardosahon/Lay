@@ -2,7 +2,7 @@
 
 Lay A Lite Php Framework to get your project up and running.
 
-PHP Version: `7.4 >`
+PHP Version: `8.0 >`
 Current Version: `1.0.0`
 
 ## Get Started
