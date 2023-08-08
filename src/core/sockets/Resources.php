@@ -48,8 +48,10 @@ trait Resources {
         $slash = DIRECTORY_SEPARATOR;
         $root_server    = $dir  . "res" . $slash . "server" . $slash;
         $obj = [
+            "root"    =>   $dir,
             "dir"     =>   $dir,
-            "db"      =>   $root_server     . "includes"    . $slash . "__db" . $slash,
+            "lay_env" =>   $root_server     . "includes"    . $slash . "__env" . $slash,
+            "db"      =>   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash,
             "inc"     =>   $root_server     . "includes"    . $slash,
             "ctrl"    =>   $root_server     . "controller"  . $slash,
             "view"    =>   $root_server     . "view"        . $slash,
@@ -79,8 +81,7 @@ trait Resources {
         self::$site = ObjectHandler::instance()->to_object($obj);
     }
 
-    private static function get_res(string $obj_type, $resource, string ...$index_chain) {
-
+    private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {
         foreach ($index_chain as $v) {
             if(is_object($resource)){
                 $resource = $resource->{$v};
@@ -114,7 +115,12 @@ trait Resources {
         array_pop($index);
 
         $object_push = function (&$key) use ($value) {
-            $key = $value;
+            $self = self::instance();
+            $key = str_replace(
+                [ "@back","@front","@custom" ],
+                [ $self->get_res__client('back','root'), $self->get_res__client('front','root'), $self->get_res__client('custom','root') ],
+                $value
+            );
         };
         switch (count($index)){
             default:

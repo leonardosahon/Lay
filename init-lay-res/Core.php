@@ -4,18 +4,18 @@ require_once "CopyDirectory.php";
 class Core {
     private static string $init_lay_files = "init-lay-res" . DIRECTORY_SEPARATOR . "files";
     private static array $ag;
-    private static string $default_lay_version;
     private static string $default_lay_location;
     private static string $current_project_location;
-    private static bool $update_lay_version_by_default;
+    private static bool $always_update_lay_package = true;
+    private static bool $always_overwrite_project = false;
+    private static object $composer;
 
     public function __construct(
         array $arguments,
-        string $version,
         string $lay_location
     ){
         self::$ag = $arguments;
-        self::$default_lay_version = $version;
+        self::$composer = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "src" . DIRECTORY_SEPARATOR . "composer.json"));
         self::$default_lay_location = $lay_location . DIRECTORY_SEPARATOR;
     }
     
@@ -24,55 +24,64 @@ class Core {
     }
 
     public function set_update_lay(bool $switch) : void {
-        self::$update_lay_version_by_default = $switch;
+        self::$always_update_lay_package = $switch;
+    }
+
+    public function set_overwrite(bool $switch) : void {
+        self::$always_overwrite_project = $switch;
     }
 
     public function intro($kill = false) {
-        $ver = self::$default_lay_version;
+        $ver = self::$composer->version;
+        $created = self::$composer->time;
+        $updated= self::$composer->modified;
+        $project= self::$composer->name;
+        $home= self::$composer->homepage;
+
         print "----------------------------------------------------------\n";
-        print "-- Name:     \t  Lay Project Initiator                    \n";
+        print "-- Name:     \t  $project                                 \n";
         print "-- Version:  \t  $ver                                     \n";
         print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
-        print "-- Created:  \t  08/02/2022;                              \n";
+        print "-- Created:  \t  $created                                 \n";
+        print "-- Updated:  \t  $updated                                 \n";
+        print "-- Homepage: \t  $home                                    \n";
         print "----------------------------------------------------------\n";
         if ($kill) die;
     }
     
     public function help() {
         $script_name = "init-lay";
+        $overwrite = str_replace(1, "true", self::$always_overwrite_project);
+        $overwrite = $overwrite == "" ? 'false' : $overwrite;
+        $update = str_replace(1, "true", self::$always_update_lay_package);
+        $update= $update== "" ? 'false' : $update;
         
         $this->intro();
         print "This is the quickest and easiest way to initiate a project using Lay a lite php framework\n";
         print "----------------------------------------------------------\n";
-        print "Usage: php $script_name [PROJECT_LOCATION] [-v <LAY_VERSION>] [-l <LAY_PACKAGE_LOCATION>] 
-        \t[-w <OVERWRITE_EXISTING_PROJECT>] [-u <UPDATE_OR_DOWNGRADE_LAY>]\n";
-        print "Example: php $script_name clients/a-new-project -v 1.0.0 -l library/Lay -w false -u true\n";
-        print"### Keywords ###\n\n".
-        "Keyword \t\t\t\t|\t Value \t\t|\t Required\n\n".
-        "-v (VERSION_OF_LAY_TO_USE)         \t|\t true||false  \t|\t    false\n".
-        "-w (OVERWRITE_EXISTING_PROJECT)    \t|\t true||false  \t|\t    false\n".
-        "-u (UPDATE_OR_DOWNGRADE_LAY)       \t|\t true||false  \t|\t    false\n".
-        "-l (LAY_PACKAGE_LOCATION)          \t|\t PATH_TO_LAY  \t|\t    false\n\n";
-        print "This script doesn't overwrite a project or update a project's Lay package by default\n";
+        print "Usage: php $script_name [PROJECT_LOCATION] [-l <LAY_PACKAGE_LOCATION>] [-w <OVERWRITE_EXISTING_PROJECT>] [-u <UPDATE_OR_DOWNGRADE_LAY>]\n";
+        print "Example: php $script_name clients/a-new-project -l my-libraries/Lay -w false -u true\n";
+        print"\n### Keywords ###\n".
+        "Keyword \t\t\t\t| Value \t|\t Required  |\t Default\n";
+        print "--------------------------------------------------------------------------------------------\n";
+        print "-w (OVERWRITE_EXISTING_PROJECT)  \t| true||false   |\t    false  |\t " . $overwrite . "\n".
+        "-u (UPDATE_OR_REFRESH_LAY)       \t| true||false   |\t    false  |\t " . $update . "\n".
+        "-l (LAY_PACKAGE_LOCATION)        \t| PATH_TO_LAY   |\t    false  |\t " . self::$default_lay_location . "\n\n";
         die;
     }
     
     public function use_error($msg) {
-        print "####\n";
-        print "# Error Encountered \n";
-        print "- What happened? $msg\n";
-        print "####\n";
+        print "\n#### Error Encountered ###\n";
+        print "# What Happened? # \n$msg";
+        print "\n####\n";
         die;
     }
 
-    public function set_flag($index, &$version, &$location, &$overwrite, &$update) {
+    public function set_flags($index, &$location, &$overwrite, &$update) {
         $ag = self::$ag;
         $flag = @$ag[$index + 1];
         switch (substr($ag[$index], 0, 2)) {
             default:
-                break;
-            case '-v':
-                $version = $flag;
                 break;
             case '-l':
                 $location = $flag;
@@ -99,7 +108,7 @@ class Core {
     }
 
     public function copy_routine(string $target_dir, ?string $source = null, ?string $target_name = null) {
-        if (self::$update_lay_version_by_default)
+        if (file_exists($target_dir . $target_name) && !self::$always_overwrite_project)
             return null;
 
         $this->mkdir_or_cp_file($target_dir);
@@ -108,10 +117,11 @@ class Core {
             $this->mkdir_or_cp_file($target_dir,self::$init_lay_files . DIRECTORY_SEPARATOR . $source, $target_name ?? $source);
     }
 
-    public function create_project($lay,$project_root) : void {
+    public function create_project($lay, $project_root) : void {
         $sections = ["__front","__back"];
         $sections_js = ["front","back"];
         $s = DIRECTORY_SEPARATOR;
+        $lay = $lay . "src" . $s;
 
         $this->copy_routine("api","api-index.php","index.php");
 
@@ -119,8 +129,9 @@ class Core {
         $view = "res{$s}server{$s}view$s";
         $client = "res{$s}client{$s}dev$s";
 
-        $this->copy_routine($inc . "__db" . $s, "connection.lenv", "dev.lenv");
-        $this->copy_routine($inc . "__db" . $s, "connection.lenv", "prod.lenv");
+        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "dev.lenv");
+        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "prod.lenv");
+        $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
 
         // server files
         for($i = 0; $i < count($sections); $i++){
@@ -135,6 +146,7 @@ class Core {
             $this->copy_routine($inc . "$section","script.inc");
             
             $this->copy_routine($view . "$section","homepage.view");
+            $this->copy_routine($view . "$section","another.view");
             $this->copy_routine($view . "$section","error.view");
         }
 
@@ -145,7 +157,7 @@ class Core {
 
         $section = $client . "custom{$s}";
         $this->copy_routine($section . "css");
-        $this->copy_routine($section . "js");
+        $this->copy_routine($section . "js","index.js");
         $this->copy_routine($section . "images");
         $this->copy_routine($section . "plugin");
 
@@ -158,7 +170,7 @@ class Core {
 
         // copy default root folder files
         $this->copy_routine("", "favicon.ico");
-        $this->copy_routine("", "bob_d_builder.php");
+        $this->copy_routine("", "builder_default.php");
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");
         $this->copy_routine("", "htaccess", ".htaccess");

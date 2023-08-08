@@ -1,2 +1,2 @@
 <?php
-echo $meta->view->body;
+echo $view->body;

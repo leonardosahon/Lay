@@ -14,12 +14,14 @@ if(!isset($DISABLE_TIMEZONE))
 
 trait Init{
     private static string $ENV;
-
     private static bool $INITIALIZED = false;
     private static function is_init() : void {
         if(!self::$INITIALIZED)
             self::instance()->init();
     }
+
+    public static bool $ENV_IS_PROD = false;
+    public static bool $ENV_IS_DEV = true;
 
     public function init() : self {
         $options = self::$layConfigOptions ?? [];
@@ -27,13 +29,13 @@ trait Init{
         $options = array_merge($options,[
             # This tells Lay to use `dev/` folder on production rather than `prod/` folder as the source for client resources
             "use_prod" => $options['switch']['use_prod'] ?? true,
-            # on true, this strips white spaces from the html output. Note; it doesn't strip white spaces off the <script></script> elements or anything in-between elements for that matter
+            # On true, this strips space from the html output. Note; it doesn't strip space off the <script></script> elements or anything in-between elements for that matter
             "compress_html" => $options['switch']['compress_html'] ?? true,
             # This forces Lay to use https:// instead of http:// for its proto; Default is true for production environment
             # A use case is; when simulating production server, but don't have access to ssl
             "use_https" => $options['switch']['use_https'] ?? true,
             "default_inc_routes" => $options['switch']['default_inc_routes'] ?? true,
-            # This comes in play when adding files with in-house inclusion function, it determines if files should be
+            # This comes in play, when adding files with in-house inclusion function, it determines if files should be
             # accessible as <array> or <object>
             "use_objects" => $options['switch']['use_objects'] ?? true,
 
@@ -70,14 +72,22 @@ trait Init{
         $env            = $options['env'];
 
         switch (strtolower($env)){
-            default: $env = "dev"; break;
-            case "prod": case "production": $env = "prod"; break;
+            default:
+                $env = "dev";
+                self::$ENV_IS_PROD = false;
+                self::$ENV_IS_DEV = true;
+            break;
+            case "prod": case "production":
+                $env = "prod";
+                self::$ENV_IS_PROD = true;
+                self::$ENV_IS_DEV = false;
+            break;
         }
 
         $is_live_server = (
             $env_host !== "localhost" &&
             (
-                strpos($env_host,$localhost[0]) === false && strpos($env_host,$localhost[1]) === false && strpos($env_host,$localhost[2]) === false
+                !str_contains($env_host, $localhost[0]) && !str_contains($env_host, $localhost[1]) && !str_contains($env_host, $localhost[2])
             )
             || $env == "prod"
         );
@@ -85,6 +95,8 @@ trait Init{
         if($is_live_server) {
             $env            = "prod";
             $env_src        = $options['use_prod'] ? $env : "dev";
+            self::$ENV_IS_PROD = true;
+            self::$ENV_IS_DEV = false;
         }
 
         self::$ENV      = self::$ENV ?? $env;

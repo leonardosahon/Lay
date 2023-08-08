@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Lay\core\sockets;
 
 use Lay\core\Exception;
+use Lay\libs\Mailer;
 use Lay\libs\ObjectHandler;
 use Lay\orm\SQL;
 use Lay\AutoLoader;
@@ -13,6 +14,7 @@ trait Config
 {
     private static SQL $SQL_INSTANCE;
     private static array $CONNECTION_ARRAY;
+    private static array $SMTP_ARRAY;
     private static array $layConfigOptions;
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
@@ -115,15 +117,51 @@ trait Config
         return strtoupper(self::$ENV);
     }
 
+    public static function set_smtp(): void {
+        self::is_init();
+
+        if(isset(self::$SMTP_ARRAY))
+            return;
+
+        $map = Mailer::get_credentials();
+
+        $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('lay_env') . "smtp.lenv");
+
+        foreach (explode("\n",$output) as $e){
+            if(empty($e)) continue;
+            $entry = explode("=",$e);
+            $key = strtolower($entry[0]);
+            $value = $entry[1];
+
+            if(!empty($value) && $x = filter_var($value, FILTER_VALIDATE_INT)) {
+                $value = $x;
+            }
+
+            if(!is_int($value) && str_starts_with($value,'$L{')){
+                $value = explode("->",str_replace(['$L{','}'],"", $value));
+                $value = self::instance()->get_site_data(...$value);
+            }
+            $map[$key] = $value;
+        }
+
+        self::$SMTP_ARRAY = $map;
+
+        Mailer::set_credentials($map);
+    }
+
     public static function set_orm(bool $include = true): ?SQL {
         self::is_init();
+
+        if(isset(self::$CONNECTION_ARRAY))
+            return $include ? self::connect(self::$CONNECTION_ARRAY) : null;
+
         $file = self::get_env() == "DEV" ? 'dev' : 'prod';
 
         $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('db') . $file . ".lenv");
 
         $map = SQL::instance()->get_db_args();
 
-        foreach (explode("\n",$output) as $i => $e){
+        foreach (explode("\n",$output) as $e){
             if(empty($e)) continue;
             $entry = explode("=",$e);
             $key = strtolower(str_replace("DB_","",$entry[0]));

@@ -6,12 +6,11 @@ use Lay\core\ViewPainter;
 trait View{
     /**
      * @param array $page_data
-     * @param ...$options
      * @see ViewPainter
      */
-    public function view(array $page_data, ...$options) : void {
+    public function view(array $page_data) : void {
         self::is_init();
-        ViewPainter::instance()->paint($page_data,...$options);
+        ViewPainter::instance()->paint($page_data);
     }
     public function view_const(array $page_data) : void {
         self::is_init();
@@ -21,7 +20,7 @@ trait View{
     /**
      * @param array $domains a function that accepts ($view, $current_domain) as args
      * $view: This is the current view url; e.g A Homepage view can be "index"; About Us Page can be "about"
-     * $current_domain: This variable holds each individual domain alias, so you can use it for further processing
+     * $current_domain: This variable holds each domain alias, so you can use it for further processing
      <br>
         [
             {domain}|{domain alias}|{domain alias}|..." => function ($view, $current_domain) : string {
@@ -51,10 +50,10 @@ trait View{
                 continue;
 
             foreach (explode("|", $dmn) as $host){
-                if(substr($host,0,1) == "/") {
+                if(str_starts_with($host, "/")) {
                     $host = ltrim($host, "/");
 
-                    if(substr($view,0, strlen($host)) == $host){
+                    if(str_starts_with($view, $host)){
                         $view = str_replace($host,"", $view);
                         $domain = $host;
                         $found = true;
@@ -64,7 +63,7 @@ trait View{
                 }
 
                 $host = $proto . $host;
-                if(substr($base,0, strlen($host)) == $host){
+                if(str_starts_with($base, $host)){
                     $view = str_replace($host,"", $view);
                     $domain = $host;
                     $found = true;

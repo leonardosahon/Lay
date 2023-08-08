@@ -119,7 +119,7 @@ trait Config{
             if(isset($this->get_link()->host_info)) {
                 if (@mysqli_ping($cxn)) {
                     $x = $this->query("SELECT SUBSTRING_INDEX(host, ':', 1) AS host_short,
-                    USER AS users, db FROM information_schema.processlist", "assoc", "select");
+                    USER AS users, db FROM information_schema.processlist", ["fetch_as" => "assoc", "query_type" => "select"]);
                     $db = $x['db'];
                     $usr = $x['users'];
                     $host = $x['host_short'];
