@@ -6,22 +6,27 @@ trait OneLiner {
     public function change_db(string $dbName) : bool {
         return mysqli_select_db(self::core()->get_link(),self::core()->clean($dbName,20));
     }
-    public function last_id(){
+
+    /**
+     * Only works with a column that AUTO_INCREMENT
+     * @return int|string
+     */
+    public function last_id(): int|string {
         return mysqli_insert_id(self::core()->get_link());
     }
     /**
      * @param $cols string columns to extract
      * @param $table string table to extract from
-     * @param string $where default[id] auto incremented column
+     * @param string $where default[id] AUTO_INCREMENT column
      * @param int $debug 1 if you wish to debug your query
      * @return array|null
      **/
     public function last_col(string $cols, string $table, string $where = 'id', int $debug = 0) : ?array {
-        $id = ($where=='id') ? ("id=" . $this->last_id()) : ($where);
-        return self::core()->query("SELECT $cols FROM $table WHERE $id", "last_insert", $debug);
+        $id = ($where=='id') ? ("id='" . $this->last_id() . "'") : ($where);
+        return self::core()->query("SELECT $cols FROM $table WHERE $id", ["query_type" => "last_insert"], $debug);
     }
     /**
-     * Get last value of a table's int column
+     * Get the last value of a table's int column
      * @param string $table
      * @param string $column column to check for last value
      * @param string|null $clause condition for selection

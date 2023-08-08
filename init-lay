@@ -9,12 +9,11 @@ $s = DIRECTORY_SEPARATOR; // this is '\' for windows and '/' for linux, mac or U
 
 // You may modify this section if you wish
 $overwrite_existing_project_by_default = false;
-$update_lay_version_by_default = false;
-$default_lay_version = "1.0.0"; // change this to the latest version of Lay
+$always_update_lay_package = true;
 $default_lay_location = "{$s}var{$s}www{$s}Lay"; // change this to the location of your Lay package
 
 require_once $default_lay_location . $s . "init-lay-res" . $s . "Core.php";
-$core = new Core($argv,$default_lay_version,$default_lay_location);
+$core = new Core($argv, $default_lay_location);
 
 if($argc == 1)
     $core->help(true);
@@ -25,25 +24,45 @@ if($ag[1] == "-h" || $ag[1] == "--help")
 if(substr($ag[1],0,1) == "-")
     $core->use_error("Project location cannot start with '-', if you wish to bypass that, add a `forward slash (/) to it`");
 
+$overwrite_project = $overwrite_existing_project_by_default;
+$update_project = $always_update_lay_package;
+
 for($i = 0; $i < $argc; $i++){
-    $core->set_flag($i,$default_lay_version,$default_lay_location, $overwrite_existing_project_by_default, $update_lay_version_by_default);
+    $core->set_flags($i, $default_lay_location, $overwrite_project, $update_project);
 }
 
 // start process
-print "Project Creation Initiated\n";
-
 $project_root = ltrim($ag[1],"/");
 $core->set_current_project($project_root);
-$core->set_update_lay($update_lay_version_by_default);
+$core->set_update_lay($update_project);
+$core->set_overwrite($overwrite_project);
 
-$lay = rtrim($default_lay_location,$s) . $s;
+$lay = rtrim($default_lay_location, $s) . $s;
 
 if(!is_dir($default_lay_location))
     $core->use_error("The specified `default_lay_location` '$default_lay_location' does not exist, please change the value to the place where you cloned the `Lay` package into and try again");
 
-if(is_dir($project_root) and $overwrite_existing_project_by_default === false and $update_lay_version_by_default === false)
-    $core->use_error("You are trying to create an existing project, delete the folder and try again, or change the name. If you really want to overwrite the project, use the argument `-w true`. If you want to just update/downgrade the Lay version pass the Lay version using the version argument `-v LAY_VERSION` and the update argument `-u true`");
 
-$core->create_project($lay . $default_lay_version, $project_root);
+if(!is_dir($project_root)){
+    print "Fresh Project Creation Initiated\n";
+        $core->create_project($lay, $project_root);
+    print "Fresh Project Creation Completed\n";
+    return;
+}
 
-print "Project Creation Completed\n";
+print "Existing Project Modification Initiated\n";
+
+if($overwrite_existing_project_by_default === false && $overwrite_project === false)
+    $core->use_error(
+        "You are trying to overwrite an existing project, please rename the existing folder or change the name of your current project location.\n".
+        "If you really want to overwrite the project, use add flag `-w true` to your command."
+    );
+
+if($always_update_lay_package === false && $update_project === false)
+    $core->use_error(
+        "You are trying to update the lay package of your project, if this is your wish add the flag `-u true` to your command"
+    );
+
+$core->create_project($lay, $project_root);
+
+print "Exisitng Project Modification Completed\n";

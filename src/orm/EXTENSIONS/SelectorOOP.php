@@ -29,9 +29,14 @@ trait SelectorOOP {
 
         else
             $this->cached_options[$index][$key] = $value;
-        
+
         return $this;
     }
+
+    /**
+     * @deprecated use open instead
+     * @removed
+     */
     final public function op(?string $table = null) : self {
         self::$current_index++;
 
@@ -71,16 +76,19 @@ trait SelectorOOP {
         return $this->store_vars('clause',$clause);
     }
     final public function fun(Closure $function) : self {
-        return $this->store_vars('function',$function);
+        return $this->store_vars('fun',$function);
     }
     final public function debug() : self {
         return $this->store_vars('debug',1);
     }
+    final public function catch() : self {
+        return $this->store_vars('catch',1);
+    }
     final public function no_null() : self {
-        return $this->store_vars('no_null',"!");
+        return $this->store_vars('can_be_null',false);
     }
     final public function no_false() : self {
-        return $this->store_vars('no_false','~');
+        return $this->store_vars('can_be_false',false);
     }
     final public function assoc() : self {
         return $this->store_vars('fetch_as','assoc');
@@ -122,43 +130,42 @@ trait SelectorOOP {
         return $this->select();
     }
 
-    /** @see SQL_CORE::query_insert() */
-    final public function insert() : bool {
-        $d = $this->get_vars();
+    final public function uuid() : string {
+        return $this->query("SELECT UUID()")[0];
+    }
 
-        if(is_array(@$d['columns'])){
+    final public function last_item(string $column_to_check) : array {
+        $d = $this->get_vars();
+        $d['return'] = "not_null";
+        $d['clause'] = $d['clause'] ?? "";
+        $d['columns'] = $d['columns'] ?? $d['values'] ?? "*";
+
+        return $this->query("SELECT {$d['columns']} FROM {$d['table']} {$d['clause']} ORDER BY $column_to_check DESC LIMIT 1", $d);
+    }
+
+    final public function insert(?array $column_and_values = null) : bool {
+        $d = $this->get_vars();
+        $column_and_values = $column_and_values ?? $d['values'] ?? $d['columns'];
+
+        if(is_array($column_and_values)){
             $cols = "";
             try {
                 foreach ($d['columns'] as $k => $c){
                     $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
-                    $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
+
+                    if(!str_ends_with($c . "",")"))
+                        $c = "'$c'";
+
+                    $cols .= $c == null ? "`$k`=NULL," : "`$k`=$c,";
                 }
             }catch (\Exception $e){
-                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to insert into a DB: $e");
+                $this->oop_exception("Error occurred when trying to insert into a DB: $e");
             }
-            $d['columns'] = rtrim($cols,",");
+            $column_and_values = rtrim($cols,",");
         }
 
-        if(is_array(@$d['values'])){
-            $values = "";
-            try{
-                foreach ($d['values'] as $k => $c){
-                    $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
-                    $values .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
-                }
-            }catch (\Exception $e){
-                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to insert into a DB: $e");
-            }
-            $d['values'] = rtrim($values,",");
-        }
-
-        $cols = @$d['columns'];
-        $values = @$d['values'];
-
-        if($cols == "*")
-            $cols = $values;
-
-        return $this->query_insert(@$d['table'],$cols,$values,@$d['debug']) ?? false;
+        $d['query_type'] = "INSERT";
+        return $this->query("INSERT INTO `{$d['table']}` SET $column_and_values",$d) ?? false;
     }
     /** @see SQL_CORE::query_update() */
     final public function edit() : bool {
@@ -166,7 +173,7 @@ trait SelectorOOP {
         $values = $d['values'] ?? $d['columns'] ?? "NOTHING";
 
         if($values === "NOTHING")
-            $this->oop_exception();
+            $this->oop_exception("There's nothing to update, please use the `column` or `value` method to rectify pass the columns to be updated");
 
         if(is_array($values)){
             $cols = "";
@@ -176,7 +183,7 @@ trait SelectorOOP {
                     $cols .= $c == null ? "`$k`=NULL," : "`$k`='$c',";
                 }
             }catch (\Exception $e){
-                SQL::instance()->use_exception("LAY_ORM_ERR", "Error occurred when trying to update a DB: $e");
+                $this->oop_exception("Error occurred when trying to update a DB: $e");
             }
             $values = rtrim($cols,",");
         }
@@ -204,44 +211,54 @@ trait SelectorOOP {
         $table = $d['table'];
         $clause = @$d['clause'];
         $cols = $d['values'] ?? $d['columns'] ?? "*";
-        $opts = [@$d['fetch_as'],@$d['loop'],@$d['no_null'],@$d['debug'],["fun" => @$d['function']],["except" => @$d['except']]];
+        $d['query_type'] = "SELECT";
 
         if(!isset($d['join']))
-            return $this->query_select($cols, $table, $clause, $opts);
+            return $this->query("SELECT $cols FROM $table $clause", $d);
 
         $join = [];
+        $join_query = "";
+
         foreach ($d['join'] as $k => $joint){
             $on = $d['on'][$k];
             $join[] = [
                 "table" => $joint['table'],
-                "type" => @$joint['type'],
+                "type" => match (strtolower($joint['type'] ?? "")) {
+                    "left", "inner", "right" => strtoupper($joint['type']),
+                    default => "",
+                },
                 "on" => [$on['child_table'],$on['parent_table']],
             ];
+
+            $join_query .= "{$join['type']} JOIN {$join['table']} ON {$join['on'][0]} = {$join['on'][1]} ";
         }
-        return $this->query_select([
-            "cols" => $cols,
-            "table" => $table,
-            "clause" => $clause,
-            "join" => $join,
-        ],$opts);
+
+        $clause = $join_query . $clause;
+
+        return $this->query("SELECT $cols FROM $table $clause", $d);
     }
-    /** @see SQL_CORE::query_count() */
-    final public function count_row() : int {
+
+    final public function count_row(?string $column = null, ?string $WHERE = null) : int {
         $d = $this->get_vars();
-        $col = $d['values'] ?? $d['columns'] ?? "NOTHING";
+        $col = $column ?? $d['values'] ?? $d['columns'] ?? "NOTHING";
+        $WHERE = $WHERE ? "WHERE $WHERE" : ($d['clause'] ?? null);
 
         if($col === "NOTHING")
-            $this->oop_exception();
+            $this->oop_exception("No column to count");
 
-        return $this->query_count($col,$d['table'],@$d['clause'],@$d['debug']);
+        $d['query_type'] = "COUNT";
+        return $this->query("SELECT COUNT($col) FROM {$d['table']} $WHERE", $d);
     }
-    /** @see SQL_CORE::query_delete() */
-    final public function delete() : bool {
+
+    final public function delete(?string $WHERE = null) : bool {
         $d = $this->get_vars();
-        return $this->query_delete($d['table'],$d['clause'],(int) @$d['debug']);
+        $d['clause'] = $WHERE ? "WHERE $WHERE" : $d['clause'];
+        $d['query_type'] = "DELETE";
+
+        return $this->query("DELETE FROM {$d['table']} {$d['clause']}", $d);
     }
 
-    private function oop_exception() : void {
-        $this->use_exception("SQL_OOP::ERR", "No columns to update was passed, please use the `column` or `value` method to rectify this");
+    private function oop_exception(string $message) : void {
+        $this->use_exception("SQL_OOP::ERR", $message);
     }
 }

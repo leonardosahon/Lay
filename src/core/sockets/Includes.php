@@ -5,7 +5,7 @@ use Lay\core\Exception;
 use Lay\libs\ObjectHandler;
 
 trait Includes{
-    private static array $INC_VARS = ["META" => null, "PAINT" => null];
+    private static array $INC_VARS = ["META" => null];
     private static array $INC_CUSTOM_ROUTE = [];
 
     public static function set_inc_vars(array $vars) : void {
@@ -17,8 +17,9 @@ trait Includes{
         return self::$INC_VARS;
     }
 
-    public function inc_file_as_string(string $file_location, $meta = [], $local = [], array $local_raw = []) : string {
-        $local_array = $local_raw;
+    public function inc_file_as_string(string $file_location, array|object $meta = [], array|object $local = [], array $local_array = []) : string {
+        $local_raw = $local_array;
+        $view = is_array($meta) ? ($meta['view'] ?? null) : $meta?->view;
         self::is_init();
         $layConfig = self::instance();
         ob_start(); include $file_location; return ob_get_clean();
@@ -127,11 +128,12 @@ trait Includes{
             $local = $obj->to_object($local);
         }
 
+
         if(!file_exists($file) && $strict)
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
 
         if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
-            return $this->inc_file_as_string($file, $meta, $local, $local_raw);
+            return $this->inc_file_as_string($file, $meta, $local, $local_array ?? $local_raw);
 
         $layConfig = $this;
 

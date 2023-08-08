@@ -19,13 +19,16 @@ $lay.src = {
     front_img : $id("LAY-FRONT-IMG").value,
     front_root : $id("LAY-FRONT-ROOT").value,
     back_root : $id("LAY-BACK-ROOT").value,
+    custom_root : $id("LAY-CUSTOM-ROOT").value,
     uploads : $id("LAY-UPLOAD").value,
 }
 $lay.fn = {
     copy: (str, successMsg = "Link copied successfully") => {
         if(navigator.clipboard) {
             navigator.clipboard.writeText(str)
-            osNote(successMsg,"success")
+                .catch(() => osNote("Cannot copy, enable clipboard permission from your setting and try again"))
+                .then(r => osNote(successMsg,"success"))
+
             return true
         }
 

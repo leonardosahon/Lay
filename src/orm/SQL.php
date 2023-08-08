@@ -140,7 +140,7 @@ class SQL extends \Lay\orm\Exception {
             $values = $mode == "multi2" ? "$values" : "($values)";
             $q = "INSERT INTO $table ($insert_clause) VALUES $values";
         }
-        return $this->query($q, "insert", $debug,$option);
+        return $this->query($q, ["query_type" => "insert"], $debug,$option);
     }
     /**
      * SELECT
@@ -179,10 +179,10 @@ class SQL extends \Lay\orm\Exception {
 
             foreach ($columns['join'] as $col_opt) {
                 $join = strtolower($col_opt['type'] ?? $col_opt['join'] ?? "");
-                switch ($join){
-                    case "left":case "inner":case "right": $join = strtoupper($join); break;
-                    default: $join =  ""; break;
-                }
+                $join = match ($join) {
+                    "left", "inner", "right" => strtoupper($join),
+                    default => "",
+                };
                 $on = $col_opt['on'];
 
                 $join_table .= "$join JOIN {$col_opt['table']} ON $on[0] = $on[1] ";
@@ -193,7 +193,7 @@ class SQL extends \Lay\orm\Exception {
             $clause = $join_table . $clause;
         }
 
-        $option = array_merge($option,["result","select"]);
+        $option = array_merge($option,["result","query_type" => "select"]);
         if($table) $table = "FROM $table";
         return $this->query("SELECT $final_columns $table $clause",$option,$debug);
     }
@@ -213,7 +213,7 @@ class SQL extends \Lay\orm\Exception {
             $debug = 1;
         if(!is_int($option[1]))
             $clause = $option[1];
-        return $this->query("SELECT COUNT($column) FROM $table $clause", "count",$debug,$option);
+        return $this->query("SELECT COUNT($column) FROM $table $clause", ["query_type" => "count"],$debug,$option);
     }
     /**
      * UPDATE
@@ -280,7 +280,7 @@ class SQL extends \Lay\orm\Exception {
             $clause = rtrim($clause," AND");
         }
 
-        return $this->query("UPDATE $table SET $update_values $clause", "update",$debug,$misc);
+        return $this->query("UPDATE $table SET $update_values $clause", ["query_type" => "update"],$debug,$misc);
     }
     /**
      * DELETE
@@ -291,7 +291,7 @@ class SQL extends \Lay\orm\Exception {
      **/
     final public function query_delete(string $table, string $where, int $debug=0) : bool {
         $where = strtolower(substr(trim($where),0,5)) == "where" ? trim(substr(trim($where),5)) : $where;
-        return $this->query("DELETE FROM $table WHERE $where", "delete", $debug);
+        return $this->query("DELETE FROM $table WHERE $where", ["query_type" => "delete"], $debug);
     }
     /**
      * Query Engine
@@ -301,60 +301,92 @@ class SQL extends \Lay\orm\Exception {
      * if you want to access the mysqli_query directly, pass "exec"
      * @return int|bool|array|null|mysqli_result
      */
-    final public function query(string $query, ...$option) {
+    final public function query(string $query, mixed ...$option) : int|bool|array|null|mysqli_result {
         $this->query = "<div>$query</div>";
-        $debug = 0;
+
         $option = $this->array_flatten($option);
+        $debug = $option['debug'] ?? 0;
+        $catch_error = $option['catch'] ?? 0;
         $return = "result";
-        ///////////// OPTIONS ///////////
+        $can_be_null = $option['can_be_null'] ?? true;
+        $can_be_false = $option['can_be_false'] ?? true;
+        $query_type = strtoupper($option['query_type'] ?? "");
+
         ///RETURN TYPE
-        if(in_array(1,$option,true)) $debug = 1;
-        if(in_array("exec",$option,true)) $return = "exec";
-        ///QUERY TYPE
-        if(in_array("insert" ?? "INSERT",$option,true)) $query_type = "INSERT";
-        elseif(in_array("select" ?? "SELECT",$option,true)) $query_type = "SELECT";
-        elseif(in_array("count" ?? "COUNT",$option,true)) $query_type = "COUNT";
-        elseif(in_array("update" ?? "UPDATE",$option,true)) $query_type = "UPDATE";
-        elseif(in_array("delete" ?? "DELETE",$option,true)) $query_type = "DELETE";
-        elseif(in_array("last_insert",$option,true)) $query_type = "LAST_INSERTED";
-        elseif(!(@$option['type'])){
+        if(in_array("exec",$option,true))
+            $return = "exec";
+
+        if(in_array("!" ?? "!null" ?? "not_null",$option,true))
+            $can_be_null = false;
+
+        if(in_array("weak",$option,true) || in_array("~",$option,true))
+            $can_be_false = false;
+
+
+        if(empty($query_type)){
             $qr = explode(" ", trim($query),2);
             $query_type = strtoupper(substr($qr[1],0,5));
             $query_type = $query_type == "COUNT" ? $query_type : strtoupper($qr[0]);
         }
-        else $query_type = $option['type'] ?? $option['custom'];
+
         ///LOOP AND FETCH AS
         if(in_array("loop" ?? "LOOP",$option,true)) $loop = 1;
         if(in_array("row" ?? "ROW",$option,true)) $as = "row";
-        if(in_array("assoc" ?? "ROW",$option,true)) $as = "assoc";
+        if(in_array("assoc" ?? "ASSOC",$option,true)) $as = "assoc";
 
-        // Debug
-        $option['debug'][0] = $query;  $option['debug'][1] = $query_type;
-        if($debug) $this->show_exception(-9, $option['debug']);
+        // prepare to show query for review if the correct parameter is passed
+        $option['debug'] = [];
+        $option['debug'][0] = $query;
+        $option['debug'][1] = $query_type;
 
+        if($debug)
+            $this->show_exception(-9, $option['debug']);
+
+        // execute query
         $exec = false;
-
         try{
             $exec = mysqli_query(self::$link,$query);
-        }catch (\Exception $e){}
+        } catch (\Exception $e){
+            if($exec === false && $catch_error === 0)
+                $this->show_exception(-10,$option['debug']);
+        }
 
-        if($exec === false)
-            $this->show_exception(-10,$option['debug']);
+        if ($query_type == "COUNT")
+            return (int) mysqli_fetch_row($exec)[0];
+
+        // prevent select queries from returning bool
+        if(in_array($query_type,["SELECT","LAST_INSERT"]))
+            $can_be_false = false;
 
         // Sort out result
+        if (mysqli_affected_rows(self::$link) == 0) {
+            if($can_be_false)
+                return false;
 
-        if ($query_type == "COUNT") return (int) mysqli_fetch_row($exec)[0];
-        if(($query_type == "SELECT" || $query_type == "LAST_INSERTED") && $return == "result") {
-            $loop = $option['loop'] ?? $loop ?? null;
-            $except = $option['except'] ?? "";
-            $fun = $option['fun'] ?? null;
-            $exec = $this->store_result($exec, $loop, $as ?? null, $except, $fun);
-            if(in_array("!" ?? "!null" ?? "not_null",$option,true))
-                $exec = $exec ?? [];
-
-            return $exec;
+            return !$can_be_null ? [] : null;
         }
-        if(!(in_array("weak",$option,true) || in_array("~",$option,true)) && mysqli_affected_rows(self::$link) == 0) return false;
+
+        if (!$exec) {
+            if($can_be_false)
+                return false;
+
+            return !$can_be_null ? [] : null;
+        }
+
+        if(($query_type == "SELECT" || $query_type == "LAST_INSERTED") && $return == "result") {
+
+            $exec = $this->store_result(
+                $exec,
+                $option['loop'] ?? $loop ?? null,
+                $as ?? null,
+                $option['except'] ?? "",
+                $option['fun'] ?? null
+            );
+
+            if(!$can_be_null)
+                $exec = $exec ?? [];
+        }
+
         return $exec;
     }
 

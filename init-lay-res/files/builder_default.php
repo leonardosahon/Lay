@@ -9,23 +9,21 @@ if(!isset($BOB_D_BUILDER))
 function bob_d_builder(string $view) : void {
     $layConfig = LayConfig::instance();
     $link = fn($link = "") => $layConfig->get_site_data("base") . $link;
-    $layConfig::set_inc_vars([
-        "LOCAL" => [
-            "link" => $link,
-            "img" => $layConfig->get_res__client('front', 'img'),
-            "img_custom" => $layConfig->get_res__client('custom', 'img'),
-            "logo" => $layConfig->get_site_data('img', 'logo'),
-            "section" => "app",
-        ]
-    ]);
 
     $layConfig->view_const([
         "page" => [
             "type" => "front"
         ],
         "body" => [
-            "class" => "defult-home pointer-wrap",
-        ]
+            "class" => "home-body",
+        ],
+        "local" => [
+            "link" => $link,
+            "img" => $layConfig->get_res__client('front', 'img'),
+            "img_custom" => $layConfig->get_res__client('custom', 'img'),
+            "logo" => $layConfig->get_site_data('img', 'logo'),
+            "section" => "app",
+        ],
     ]);
 
     switch ($view){
@@ -55,7 +53,22 @@ function bob_d_builder(string $view) : void {
                 "view" => [
                     "body" => "homepage"
                 ],
+                "assets" => [
+                    "@custom/js/index.js"
+                ]
             ]);
         break;
+        case "another-page":
+            $layConfig->view([
+                "page" => [
+                    "title" => "Another Page",
+                    "desc" => "This is a sample description for a another Lay Page, it's that easy"
+                ],
+                "view" => [
+                    "body" => "another"
+                ],
+            ]);
+        break;
+        
     }
 }

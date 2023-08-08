@@ -11,4 +11,4 @@
         font-size: 1.2rem;
     }
 </style>
-<?php echo $meta->view->head;
+<?php echo $view->head;

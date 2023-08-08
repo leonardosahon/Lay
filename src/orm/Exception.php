@@ -123,7 +123,7 @@ class Exception {
                 $act = $this->container("SQL Err","<b style='color: #008dc5'>".mysqli_error(SQL::instance()->get_link())."</b> <div style='margin: 10px 0'>Statement: __RAW_VALUE_TYPE__</div>", ["stack"=>$dbg,"core"=>"error","raw"=>["__RAW_VALUE_TYPE__" => $query_type],"act"=>"kill"]);
             break;
             case -9:
-                $act = $this->container("SQL Rev","<pre style='color: #dea303 !important'>$query</pre>",["stack"=>$dbg,"core"=>"view"]);
+                $act = $this->container("SQL Review","<pre style='color: #dea303 !important'>$query</pre>",["stack"=>$dbg,"core"=>"view"]);
                 break;
             case -8:$act = $this->container($opt['title'],$opt['body_includes'],["stack"=>$dbg,"core"=>"error","act" => @$opt['kill'] ? "kill" : "allow", "raw" => $opt['raw']]);break;
 

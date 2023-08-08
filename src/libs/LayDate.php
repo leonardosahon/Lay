@@ -4,9 +4,10 @@ namespace Lay\libs;
 
 use Lay\core\sockets\IsSingleton;
 
-class DateHandler {
+class LayDate {
     use IsSingleton;
-    public function date(?string $datetime = null, int $level = 10, string $format = "Y-m-d H:i:s") : string {
+
+    public static function date(?string $datetime = null, int $level = 10, string $format = "Y-m-d H:i:s") : string {
         $datetime = $datetime ?: date("Y-m-d H:i:s");
         switch ($level){
             case 0: $format = "H:i:s"; break;

@@ -1,2 +1,2 @@
 <?php
-echo $meta->view->script;
+echo $view->script;
