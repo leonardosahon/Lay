@@ -55,7 +55,7 @@ trait Config{
             $mysqli = null;
 
             try {
-                if(!empty(@$ssl['certificate']) && !empty(@$ssl['ca_certificate'])){
+                if(!empty(@$ssl['certificate']) || !empty(@$ssl['ca_certificate'])){
                     $mysqli = mysqli_init();
                     mysqli_ssl_set(
                         $mysqli,

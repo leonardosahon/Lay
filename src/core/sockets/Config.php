@@ -175,6 +175,7 @@ trait Config
                     $value = filter_var($value, FILTER_VALIDATE_BOOL);
             }
 
+
             if(str_contains($key,"ssl")){
                 $key = str_replace("ssl_","",$key);
                 $map['ssl'][$key] = $value;

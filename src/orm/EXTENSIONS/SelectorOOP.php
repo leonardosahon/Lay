@@ -97,7 +97,7 @@ trait SelectorOOP {
         return $this->store_vars('fetch_as','row');
     }
     final public function loop() : self {
-        return $this->store_vars('loop','loop');
+        return $this->store_vars('loop',1);
     }
     final public function not_empty() : self {
         $this->no_null();
@@ -146,11 +146,15 @@ trait SelectorOOP {
     final public function insert(?array $column_and_values = null) : bool {
         $d = $this->get_vars();
         $column_and_values = $column_and_values ?? $d['values'] ?? $d['columns'];
+        $table = $d['table'] ?? null;
+
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
         if(is_array($column_and_values)){
             $cols = "";
             try {
-                foreach ($d['columns'] as $k => $c){
+                foreach ($column_and_values as $k => $c){
                     $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
 
                     if(!str_ends_with($c . "",")"))
@@ -165,15 +169,45 @@ trait SelectorOOP {
         }
 
         $d['query_type'] = "INSERT";
-        return $this->query("INSERT INTO `{$d['table']}` SET $column_and_values",$d) ?? false;
+        return $this->query("INSERT INTO `$table` SET $column_and_values",$d) ?? false;
     }
-    /** @see SQL_CORE::query_update() */
+
+    final public function insert_raw() : bool {
+        $d = $this->get_vars();
+        $columns = $d['columns'] ?? null;
+        $values = $d['values'] ?? null;
+        $clause = $d['clause'] ?? null;
+        $table = $d['table'] ?? null;
+
+        if(empty($columns))
+            $this->oop_exception("You did not initialize the `columns`. Use the `->column(String)` method like this: `->column('id,name')`");
+
+        if(empty($values))
+            $this->oop_exception("You did not initialize the `values`. Use the `->value(String)` method. Example: `->value(\"(1, 'user name'), (2, 'another user name')\")`");
+
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
+
+        $columns = rtrim($columns,",");
+
+        if(str_starts_with($values,"("))
+            $values = "VALUES" . rtrim($values, ",");
+
+        $d['query_type'] = "INSERT";
+        return $this->query("INSERT INTO `$table` ($columns) $values $clause",$d) ?? false;
+    }
+
     final public function edit() : bool {
         $d = $this->get_vars();
         $values = $d['values'] ?? $d['columns'] ?? "NOTHING";
+        $clause = $d['clause'] ?? null;
+        $table = $d['table'] ?? null;
 
         if($values === "NOTHING")
             $this->oop_exception("There's nothing to update, please use the `column` or `value` method to rectify pass the columns to be updated");
+
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
         if(is_array($values)){
             $cols = "";
@@ -189,29 +223,41 @@ trait SelectorOOP {
         }
 
         if(!empty(@$d['switch'])){
-            $switch = [];
+            $case_value = "";
+            $clause = !$clause ? "" : $clause . " AND ";
+
             foreach ($d['switch'] as $k => $match){
-                $switch[] = [
-                    "switch" => $match['switch'],
-                    "column" => $match['column'],
-                    "case" => $d['case'][$k]
-                ];
+                $case = "";
+                $case_list = "";
+                foreach ($d['case'][$k] as $j => $c){
+                    $case .= "WHEN '$j' THEN $c ";
+                    $case_list .= "'$j',";
+                }
+
+                $case_list = "(" . rtrim($case_list, ",") . ")";
+                $case_value .= "`{$match['column']}` = CASE `{$match['switch']}` $case END,";
+
+                $clause .= " `{$match['switch']}` IN $case_list AND";
             }
-            $values = [
-                "values" => $values,
-                "match" => $switch
-            ];
+
+            $values = $values . ",";
+            $values .= rtrim($case_value, ",");
+            $clause = rtrim($clause," AND");
         }
-        return $this->query_update($d['table'],$values,@$d['clause'],@$d['debug'],@$d['no_false']);
+
+        $d['query_type'] = "update";
+        return $this->query("UPDATE $table SET $values $clause", $d);
     }
 
-    /** @see SQL_CORE::query_select() */
     final public function select() : ?array {
         $d = $this->get_vars();
-        $table = $d['table'];
+        $table = $d['table'] ?? null;
         $clause = @$d['clause'];
         $cols = $d['values'] ?? $d['columns'] ?? "*";
         $d['query_type'] = "SELECT";
+
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
         if(!isset($d['join']))
             return $this->query("SELECT $cols FROM $table $clause", $d);
@@ -242,20 +288,28 @@ trait SelectorOOP {
         $d = $this->get_vars();
         $col = $column ?? $d['values'] ?? $d['columns'] ?? "NOTHING";
         $WHERE = $WHERE ? "WHERE $WHERE" : ($d['clause'] ?? null);
+        $table = $d['table'] ?? null;
+
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
         if($col === "NOTHING")
             $this->oop_exception("No column to count");
 
         $d['query_type'] = "COUNT";
-        return $this->query("SELECT COUNT($col) FROM {$d['table']} $WHERE", $d);
+        return $this->query("SELECT COUNT($col) FROM $table $WHERE", $d);
     }
 
     final public function delete(?string $WHERE = null) : bool {
         $d = $this->get_vars();
         $d['clause'] = $WHERE ? "WHERE $WHERE" : $d['clause'];
         $d['query_type'] = "DELETE";
+        $table = $d['table'] ?? null;
 
-        return $this->query("DELETE FROM {$d['table']} {$d['clause']}", $d);
+        if(empty($table))
+            $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
+
+        return $this->query("DELETE FROM $table {$d['clause']}", $d);
     }
 
     private function oop_exception(string $message) : void {

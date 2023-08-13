@@ -7,7 +7,7 @@ trait Clean {
         "%22","%3C", "%3E","%3F","%2F","%5C","%7C","%60","%2C","_","-","–","%0A","%E2","%80","%99","%E2%80%98","%E2%80%99"];
     protected static array $escape_string = [];
     /**
-     * # Clean variables for SQL or generally
+     * ## Clean variables for SQL or generally
      * @param string|int|float $value string value to be cleansed
      * @param float $level__combo <table><tr><th>BASE FUNCTIONS</th></tr>
      * <tr><td>0</td><td>real_escape_string[<b>default</b>]</td></tr><tr><td>1</td><td>strip_tags</td></tr>
@@ -28,7 +28,7 @@ trait Clean {
      * pass an int value of 1 to the function to debug it
      * @return mixed
      */
-    public function clean($value, float $level__combo = 0, ...$options) {
+    public function clean(string|int|float|null $value, float $level__combo = 0, ...$options): mixed {
         // perquisite
         $core = self::core();
         $link = $core->get_link();
