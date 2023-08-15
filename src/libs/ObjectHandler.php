@@ -15,6 +15,7 @@ class ObjectHandler {
     public function get_json(bool $strict = true, bool $return_array = false): object|bool|null|array
     {
         // TODO: Come up with a solution to work around processing post requests with
+
         $x = file_get_contents("php://input");
         $msg = "No values found in request; check if you actually sent your values as \$_POST";
         $post = (object) $_POST;

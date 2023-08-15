@@ -46,28 +46,13 @@ abstract class Mailer {
     /**
      * @param array|string $subject_or_opt could serve as subject or option parameter,
      * @param array $opt [] the table heads serve as the 1st dimension keys
-     * <table>
-     *   <tr>
-     *      <th>email {string}</th>
-     *      <th>name {string}</th>
-     *      <th>subject {string} [optional]</th>
-     *      <th>recipient {string} [optional]</th>
-     *      <th>attachment {array} [optional]</th>
-     *      <th>bcc {array} [optional]</th>
-     *      <th>cc {array} [optional]</th>
-     *   </tr>
-     *   <tr>
-     *      <td>Email of Recipient. (Serves as sender email when sending to server)</td>
-     *      <td>Name of Recipient. (Serves as sender name when sending to server)</td>
-     *      <td>Subject of email</td>
-     *      <td>
-     *          ["name","file" (absolute location to file using site base as the root link), "type" (MIME file type, empty by default)]
-     *      </td>
-     *      <td>By default recipient is `client`, pass `server` as key with value `true`, if you want to send to domain server; example: `'server' => true`</td>
-     *      <td>[bcc email address, bcc recipient name]</td>
-     *      <td>[cc email address, cc recipient name]</td>
-     *   </tr>
-     * </table>
+     * - **email {string}**
+     * - **name {string}**
+     * - **subject {string}** It becomes optional when the `$subject_or_opt` is a string
+     * - **recipient {string}** [optional] `client` (default) | `server`. Use server when you want to send an email to the server.
+     * - **attachment {array}** [optional] ["name","file" (absolute location to file using site base as the root link), "type" (MIME file type, empty by default)]
+     * - **bcc {array}** [optional] [bcc email address, bcc recipient name]
+     * - **cc {array}** [optional] [cc email address, cc recipient name]
      * @return bool|null returns true on successful
      * @throws Exception
      */

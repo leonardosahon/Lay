@@ -26,7 +26,7 @@ abstract class Password {
     public static function crypt(?string $string, bool $encrypt = true): ?string {
         if($string == null) return null;
         $layer_1 = '@91_$!9u(2&y=uy+**43|\ur`y`3ut2%%iu#4#3(oo[u{3{4y7367622556';
-        $layer = self::hash("soft-salted-prefix-bini-name-included-to-avoid-brute-force-ukpato-evboehia-okogbo" .
+        $layer = hash("sha512","soft-salted-prefix-bini-name-included-to-avoid-brute-force-ukpato-evboehia-okogbo" .
             $layer_1 . "soft-salted-suffix-you-should-expect-giegbefumwen-maybe-ehose-nohaso");
 
         $encrypt_method = "AES-256-CBC";

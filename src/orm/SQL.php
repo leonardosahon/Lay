@@ -61,6 +61,9 @@ class SQL extends \Lay\orm\Exception {
      * @return int|bool|array|null|mysqli_result
      */
     final public function query(string $query, mixed ...$option) : int|bool|array|null|mysqli_result {
+        if(!isset(self::$link))
+            $this->show_exception(0);
+
         $option = $this->array_flatten($option);
         $debug = $option['debug'] ?? 0;
         $catch_error = $option['catch'] ?? 0;
@@ -100,9 +103,11 @@ class SQL extends \Lay\orm\Exception {
 
         // execute query
         $exec = false;
+        $has_error = false;
         try{
             $exec = mysqli_query(self::$link,$query);
         } catch (\Exception $e){
+            $has_error = true;
             if($exec === false && $catch_error === 0)
                 $this->show_exception(-10,$option['debug']);
         }
@@ -111,7 +116,8 @@ class SQL extends \Lay\orm\Exception {
         $this->query_info = [
             "status" => SQLEnums::success,
             "has_data" => true,
-            "data" => $exec
+            "data" => $exec,
+            "has_error" => $has_error
         ];
 
         ////// return result of a query
@@ -140,6 +146,7 @@ class SQL extends \Lay\orm\Exception {
             $this->query_info = [
                 "status" => SQLEnums::fail,
                 "has_data" => false,
+                "has_error" => $has_error,
             ];
 
             if($can_be_false)

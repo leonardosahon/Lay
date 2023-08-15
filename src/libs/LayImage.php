@@ -163,15 +163,8 @@ final class LayImage{
             $tmpImg = $tmpFolder . DIRECTORY_SEPARATOR . "temp.tmp";
             $directory = $directory . DIRECTORY_SEPARATOR . $file_name;
 
-            if (!extension_loaded("gd")) {
-                if($copy_tmp_file && @!copy($tmp_name, $directory))
-                    $this->exception("Failed to move image; (\$_FILES['$post_name']) to location: ($directory); location may not exist or permission not enough");
-
-                if(!$copy_tmp_file && @!move_uploaded_file($tmp_name, $directory))
-                    $this->exception("Failed to move image; (\$_FILES['$post_name']) to location: ($directory); location may not exist or permission not enough");
-
-                return $file_name;
-            }
+            if (!extension_loaded("gd"))
+                $this->exception("GD Library not installed, please install php-gd extension and try again");
 
             if($copy_tmp_file && !copy($tmp_name,$tmpImg))
                 $this->exception("Failed to copy temporary image <b>FROM</b; $tmp_name <b>TO</b> $tmpImg <b>USING</b> (\$_FILES['$post_name']), ensure location exists, or you have permission");

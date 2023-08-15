@@ -13,6 +13,10 @@ trait SelectorOOP {
         $r = $this->cached_options[self::$current_index];
         unset($this->cached_options[self::$current_index]);
         self::$current_index -= 1;
+
+        if(empty($r))
+            $this->oop_exception("No variable passed to ORM. At least `table` should be passed");
+
         return $r;
     }
     private function store_vars(string $key, mixed $value, $id1 = null, $id2 = null) : self {
@@ -46,7 +50,12 @@ trait SelectorOOP {
         return $this;
     }
     final function open(string $table) : self {
-        return $this->op($table);
+        self::$current_index++;
+
+        if($table)
+            $this->table($table);
+
+        return $this;
     }
     final public function table(string $table) : self {
         return $this->store_vars('table',$table);
@@ -136,7 +145,7 @@ trait SelectorOOP {
 
     final public function last_item(string $column_to_check) : array {
         $d = $this->get_vars();
-        $d['return'] = "not_null";
+        $d['can_be_null'] = false;
         $d['clause'] = $d['clause'] ?? "";
         $d['columns'] = $d['columns'] ?? $d['values'] ?? "*";
 
