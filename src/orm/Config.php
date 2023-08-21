@@ -48,14 +48,14 @@ trait Config{
         $charset = $charset ?? self::$CHARSET;
         $this->set_env($env ?? $this->get_env());
         $cxn = $this->ping(true,null, true);
-        $port = $port ?: null;
-        $socket = $socket ?: null;
+        $port = $port ?? null;
+        $socket = $socket ?? null;
 
         if(!($cxn['host'] == $host and $cxn['user'] == $user and $cxn['db'] == $db)) {
             $mysqli = null;
 
             try {
-                if(!empty(@$ssl['certificate']) && !empty(@$ssl['ca_certificate'])){
+                if(!empty(@$ssl['certificate']) || !empty(@$ssl['ca_certificate'])){
                     $mysqli = mysqli_init();
                     mysqli_ssl_set(
                         $mysqli,

@@ -18,10 +18,7 @@ abstract class LayCookieStorage {
     private static string $table =  "lay_cookie_storages";
     private static function init() : void {
         if(!isset(self::$session_user_cookie))
-            self::$session_user_cookie = "_". substr(
-                openssl_encrypt(self::lay()->get_site_data('name','short'), "AES-256-CTR", self::$table,0,"h7y6367637673773")
-                ,0,10
-            );
+            self::$session_user_cookie = "lay_cok_" . self::orm()->clean(self::lay()->get_site_data('name','short'),6);
 
         self::create_table();
     }
@@ -31,31 +28,25 @@ abstract class LayCookieStorage {
 
     private static function create_table() : void {
         $table = self::$table;
-        $table_exists = true;
 
-        try {
-            $table_exists = self::orm()->open(self::$table)->catch()->clause("LIMIT 1")->select();
-        }catch (\Exception $e){}
+        // check if table exists, but catch the error
+        self::orm()->open(self::$table)->catch()->clause("LIMIT 1")->select();
 
-        if($table_exists)
+        // Check if the above query had an error. If no error, table exists, else table doesn't exist
+        if(self::orm()->query_info['has_error'] === false)
             return;
 
-        self::orm()->query("CREATE TABLE IF NOT EXISTS $table (
-                id varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-                created_by varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-                created_at datetime NOT NULL,
-                deleted int(1) DEFAULT 0 NOT NULL,
-                deleted_by varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL,
-                deleted_at datetime DEFAULT NULL NULL,
-                env_info text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL,
-                auth text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL NULL,
-                expire datetime DEFAULT NULL NULL,
-                CONSTRAINT `PRIMARY` PRIMARY KEY (id),
-                CONSTRAINT {$table}_uid UNIQUE KEY (id)
+        self::orm()->query("CREATE TABLE IF NOT EXISTS `$table` (
+                `id` varchar(36) UNIQUE PRIMARY KEY,
+                `created_by` varchar(36) NOT NULL,
+                `created_at` datetime,
+                `deleted` int(1) DEFAULT 0 NOT NULL,
+                `deleted_by` varchar(36),
+                `deleted_at` datetime,
+                `env_info` text,
+                `auth` text,
+                `expire` datetime
             )
-            ENGINE=InnoDB
-            DEFAULT CHARSET=utf8mb4
-            COLLATE=utf8mb4_general_ci;
         ");
     }
 
@@ -73,38 +64,24 @@ abstract class LayCookieStorage {
             'secure' => $options['secure'] ??  null,
         ]);
 
-        if (self::lay()::get_env() == "dev")
+        if (self::lay()::$ENV_IS_DEV)
             $secure = $secure ?? false;
 
         $name = str_replace(["=", ",", ";", " ", "\t", "\r", "\n", "\013","\014"],"",$name);
 
-        return setcookie($name, $value, [
+        setcookie($name, $value, [
             "expires" => $expires == 0 ? (int) $expires : strtotime($expires),
             "path" => $path,
-            "domain" => $domain ?? self::lay()->get_site_data('base'),
+            "domain" => $domain ?? $_SERVER['HTTP_HOST'],
             "secure" => $secure ?? true,
             "httponly" => $httponly,
             "samesite" => $samesite
         ]);
+
+        return isset($_COOKIE[$name]);
     }
 
-    private static function destroy_cookie($name) : void {
-        self::set_cookie($name, "", ["expires" => "now",]);
-    }
-
-    private static function decrypted_cookie() : ?string {
-        self::init();
-        $cookie = $_COOKIE[self::$session_user_cookie] ?? null;
-        if(!$cookie) return null;
-        return Password::crypt($cookie, false);
-    }
-
-    private static function delete_expired_tokens() : void {
-        $today = LayDate::date();
-        self::orm()->open(self::$table)->delete("DATEDIFF('$today',`expire`) > 30");
-    }
-
-    private static function store_user_token(string $user_id, string $hashed_pass) : ?array {
+    private static function store_user_token(string $user_id) : ?string {
         $orm = self::orm();
         $env_info = self::browser_info() . " IP: " . self::get_ip();
         $expire = LayDate::date("30 days");
@@ -113,85 +90,112 @@ abstract class LayCookieStorage {
 
         self::delete_expired_tokens();
 
-        $token = self::get_user_token($user_id);
-
-        if(!empty($token))
-            return $token;
-
-        $token = $orm->uuid();
-
         $orm->open(self::$table)->then_insert([
-            "id" => $token,
+            "id" => "UUID()",
             "created_by" => $user_id,
             "created_at" => $now,
-            "auth" => $hashed_pass,
+            "auth" => Password::hash($user_id),
             "expire" => $expire,
             "env_info" => $env_info
         ]);
 
-        return ["id" => $token, "auth" => $hashed_pass];
+        return $orm->table(self::$table)->last_item("created_at")['id'];
     }
 
-    private static function get_user_token(string $token) : array {
-        $orm = self::orm();
-        $env_info = $orm->clean(self::browser_info(),11, "PREVENT_SQL_INJECTION");
+    private static function save_user_token(string $user_id) : ?string {
         $today = LayDate::date();
-        $token = $orm->clean($token,16,'strict');
+        $data = self::validate_cookie()['data'];
+
+        if(!empty($data)) {
+            self::orm()->open(self::$table)
+                ->column(["expire" => $today])
+                ->then_update("WHERE created_by='{$data['created_by']}' AND auth='{$data['auth']}'");
+            return null;
+        }
+
+        return self::store_user_token($user_id);
+    }
+
+    private static function get_user_token(string $id) : array {
+        $orm = self::orm();
+        $id = $orm->clean($id,16,'strict');
 
         return $orm->open(self::$table)
-            ->column("id,auth")
-            ->then_select("WHERE id='$token' AND env_info='$env_info' AND DATEDIFF('$today',`expire`) < 31");
+            ->column("created_by, auth")
+            ->then_select("WHERE id='$id'");
     }
 
-    private static function save_user_token(string $user_id) : ?array {
+    private static function destroy_cookie($name) : void {
+        self::set_cookie($name, "", ["expires" => "now",]);
+    }
+
+    private static function decrypt_cookie() : ?string {
+        self::init();
+
+        if(!isset($_COOKIE[self::$session_user_cookie]))
+            return null;
+
+        $cookie = $_COOKIE[self::$session_user_cookie] ?? null;
+
+        if(!$cookie)
+            return null;
+
+        return Password::crypt($cookie, false);
+    }
+
+    private static function delete_expired_tokens() : void {
         $today = LayDate::date();
-        $token = self::get_user_token($user_id);
-        $hashed_pass = Password::hash($user_id);
-
-        if(!empty($token)) {
-            self::orm()->open(self::$table)
-                ->column([
-                    "expire" => $today,
-                    "auth" => $hashed_pass
-                ])
-                ->then_update("WHERE id='{$token['id']}'");
-
-            return [
-                "id" => $token['id'],
-                "auth" => $hashed_pass
-            ];
-        }
-        return self::store_user_token($user_id,$hashed_pass);
+        self::orm()->open(self::$table)->delete("DATEDIFF('$today',`expire`) > 30");
     }
 
-    private static function delete_user_token(string $token) : void {
-        $token = self::orm()->clean($token,11,'PREVENT_SQL_INJECTION');
-        self::orm()->open(self::$table)->delete("id='$token'");
+    private static function delete_user_token(string $token_id) : void {
+        $token_id = self::orm()->clean($token_id,11,'PREVENT_SQL_INJECTION');
+        self::orm()->open(self::$table)->delete("id='$token_id'");
     }
+
+
+    /*
+     * ### PUBLIC ###
+     */
 
     public static function save_to_db(string $immutable_key) : bool {
         self::init();
 
+        self::delete_expired_tokens();
+
+        if(isset($_COOKIE[self::$session_user_cookie]))
+            return true;
+
+
         return self::set_cookie(
             self::$session_user_cookie,
-            Password::crypt(LayCookieStorage::save_user_token($immutable_key)['id'])
+            Password::crypt(LayCookieStorage::save_user_token($immutable_key))
         );
     }
 
     public static function clear_from_db() : void {
         self::init();
 
-        if($token = self::decrypted_cookie())
-            LayCookieStorage::delete_user_token($token);
+        if($id = self::decrypt_cookie())
+            LayCookieStorage::delete_user_token($id);
 
         self::destroy_cookie(self::$session_user_cookie);
     }
 
-    public static function check_db() : array {
-        if($token = self::decrypted_cookie())
-            return self::get_user_token($token);
+    public static function validate_cookie() : array {
+        self::init();
 
-        return [];
+        if(!isset($_COOKIE[self::$session_user_cookie]))
+            return ["code" => 2, "msg" => "Cookie is not set", "data" => null];
+
+        if($id = self::decrypt_cookie())
+            return [
+                "code" => 1,
+                "msg" => "Cookie found!",
+                "data" => self::get_user_token($id)
+            ];
+
+        return ["code" => 0, "msg" => "Could not decrypt, invalid token saved", "data" => null];
     }
 
     public static function save(string $cookie_name, string $cookie_value, string $expire="30 days", string $path="/", ?string $domain = null, ?bool $secure = null, ?bool $http_only = null, ?string $same_site = null) : bool {

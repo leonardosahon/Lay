@@ -45,9 +45,7 @@ Deny from all
 </FilesMatch>
 
 # Deny access to .git
-<FilesMatch "^/.*/\.git/">
-Deny from all
-</FilesMatch>
+RewriteRule .git - [R=403,L]
 
 <FilesMatch "^/.*/res/server/">
 Deny from all

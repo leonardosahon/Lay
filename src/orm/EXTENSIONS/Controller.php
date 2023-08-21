@@ -5,11 +5,22 @@ namespace Lay\orm\EXTENSIONS;
 use Lay\orm\SQL;
 
 trait Controller{
-    use SelectorOOP;
-    use SelectorProcedure;
+    use IsSingleton;
     use Clean;
     use OneLiner;
-    use IsSingleton;
+    use SelectorOOP;
+
+    /**
+     * @deprecated
+     */
+    use SelectorProcedure;
+    /**
+     * @deprecated
+     */
+    use LegacyQueries;
+
+    #!optional
+    use ArraySearch;
 
     protected static function core() : SQL {
         return SQL::instance();

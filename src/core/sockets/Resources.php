@@ -50,6 +50,7 @@ trait Resources {
         $obj = [
             "root"    =>   $dir,
             "dir"     =>   $dir,
+            "lay"    =>    $dir             . "Lay"         . $slash,
             "lay_env" =>   $root_server     . "includes"    . $slash . "__env" . $slash,
             "db"      =>   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash,
             "inc"     =>   $root_server     . "includes"    . $slash,
