@@ -48,8 +48,8 @@ trait Config{
         $charset = $charset ?? self::$CHARSET;
         $this->set_env($env ?? $this->get_env());
         $cxn = $this->ping(true,null, true);
-        $port = $port ?: null;
-        $socket = $socket ?: null;
+        $port = $port ?? null;
+        $socket = $socket ?? null;
 
         if(!($cxn['host'] == $host and $cxn['user'] == $user and $cxn['db'] == $db)) {
             $mysqli = null;

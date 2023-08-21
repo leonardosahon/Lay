@@ -89,7 +89,7 @@ const $on = (element, event, listener, ...options) => {
     let option = options[0] ?? "on";
     try {
         let addListener = (listenerElement, index) => {
-            let listenerFn = e => listener(e, $type(element) === "Array" ? element[index] : element, index, ...options);
+            let listenerFn = e => listener(e, element.length ? element[index] : element, index, ...options);
             if (option === "on") {
                 let eventList = event.split(",");
                 if (eventList.length > 1) eventList.forEach((listen => listenerElement["on" + listen] = listenerFn)); else listenerElement["on" + event] = listenerFn;
@@ -101,7 +101,8 @@ const $on = (element, event, listener, ...options) => {
                 if (eventList.length > 1) eventList.forEach((listen => listenerElement.addEventListener(listen, listenerFn, option))); else listenerElement.addEventListener(event, listenerFn, option);
             }
         };
-        if ($type(element) === "Array") return element.forEach(((ele, i) => addListener(ele, i)));
+
+        if (element.length) return element.forEach(((ele, i) => addListener(ele, i)));
         addListener(element);
     } catch (e) {
         $omjsError("$on", e, true);
@@ -329,36 +330,86 @@ const $mirror = (parentField, ...children) => {
     }));
 };
 
-const $mediaPreview = (elementToWatch, placeToPreview, other = {}) => {
-    let placeholder = other.default ?? null;
-    let type = other.type ?? 0;
-    let event_wrap = other.event ?? true;
-    let operation = other.operation ?? (() => "operation");
-    let previewPlaceholder = placeholder ?? placeToPreview.src;
-    let previewMedia = () => {
+/**
+ * ### Preview Media on a Specified Element
+ * @param srcElement {HTMLInputElement|NodeList|HTMLCollection}
+ * @param previewElement :HTMLImageElement
+ * @param then {Function}
+ * @param on {String}
+ * @param useReader {Boolean}
+ * @returns {void|*}
+ */
+const $media = ({
+    srcElement,
+    previewElement,
+    then = null,
+    on = "change",
+    useReader = true
+}) => {
+    const currentMediaSrc = previewElement.src;
+
+    let previewMedia = (srcElement) => {
         let srcProcessed = [];
-        if (type === 1) {
-            let reader = new FileReader;
-            $on(reader, "load", (() => {
-                if (elementToWatch.value !== "") {
-                    placeToPreview.src = reader.result;
-                    if (operation !== "operation") operation(reader.result);
-                } else placeToPreview.src = previewPlaceholder;
-            }), "on");
-            reader.readAsDataURL(elementToWatch.files[0]);
-        } else if (type === 2) placeToPreview.src = elementToWatch.value !== "" ? elementToWatch.value : previewPlaceholder; else {
-            if (placeToPreview !== "multiple") {
-                if (elementToWatch.value !== "") {
-                    srcProcessed = URL.createObjectURL(elementToWatch.files[0]);
-                    placeToPreview.src = srcProcessed;
-                } else placeToPreview.src = previewPlaceholder;
-            } else {
-                if (elementToWatch.value !== "") Array.from(elementToWatch.files).forEach((file => srcProcessed.push(URL.createObjectURL(file))));
-            }
-            if (operation !== "operation") operation(srcProcessed);
+
+        switch (srcElement.type) {
+            default:
+                previewElement.src = srcElement.value !== "" ? srcElement.value : currentMediaSrc;
+            break;
+
+            case "file":
+                if(useReader) {
+                    const reader = new FileReader;
+
+                    $on(reader, "load", () => {
+                        if (srcElement.value === "")
+                            return previewElement.src = currentMediaSrc;
+
+                        previewElement.src = reader.result;
+
+                        then && then(reader.result);
+                    }, "on");
+
+                    if(srcElement.files[0])
+                        return reader.readAsDataURL(srcElement.files[0]);
+
+                    previewElement.src = currentMediaSrc
+                }
+
+                if(!srcElement.multiple){
+                    srcElement.value !== "" && $loop(Array.from(srcElement.files),file => srcProcessed.push(URL.createObjectURL(file)))
+
+                    return then && then(srcProcessed);
+                }
+
+                if (srcElement.value === "")
+                    return previewElement.src = currentMediaSrc;
+
+                srcProcessed = URL.createObjectURL(srcElement.files[0]);
+                previewElement.src = srcProcessed;
+
+                then && then(srcProcessed);
+            break;
         }
+
     };
-    if (event_wrap === true) $on(elementToWatch, "change", previewMedia, "on"); else if ($type(event_wrap) === "String") $on(elementToWatch, event_wrap, previewMedia, "on"); else previewMedia();
+
+    if(!on)
+        return previewMedia(srcElement);
+
+    if($type(srcElement) !== "Array")
+        return $on(srcElement, on, () => previewMedia(srcElement), "on");
+
+    $loop(srcElement, src => $on(src, on, () => previewMedia(src), "on"))
+}
+
+const $mediaPreview = (elementToWatch, placeToPreview, other = {}) => {
+    return $media({
+        srcElement: elementToWatch,
+        previewElement: placeToPreview,
+        on: other.event ?? null,
+        then: other.operation,
+        useReader: other.type ?? false,
+    });
 };
 
 const $showPassword = () => {
@@ -784,7 +835,7 @@ const $preloader = (act = "show") => {
             x = "";
             $loop(data, ((value, name) => x += name + "=" + value + "&"));
         }
-        data = x.replace(/&+$/, "");
+        data = x?.replace(/&+$/, "");
         break;
 
       case "xml":
