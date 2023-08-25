@@ -18,7 +18,7 @@ final class ViewPainter {
         $data = LayConfig::instance()->get_site_data();
 
         $ser = $data->base_no_proto . "/";
-        $repl = $_SERVER['REQUEST_URI'];
+        $repl = ltrim($_SERVER['REQUEST_URI'], "/");
         $url = str_replace($ser,$repl,$data->base);
 
         if($ser == "/")

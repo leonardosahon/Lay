@@ -29,7 +29,12 @@ abstract class CSV {
         $output = "";
 
         while ($row = fgetcsv($fh)){
-            $output .= $callback($row);
+            $x = $callback($row);
+            
+            if(is_array($x))
+                return $x;
+            
+            $output .= $x;
         }
 
         return self::resolve(1, "Processed successfully", [$output]);
