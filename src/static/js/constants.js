@@ -14,6 +14,7 @@ $lay.page = {
 $lay.src = {
     base : $id("LAY-PAGE-BASE").href,
     api : $id('LAY-API').value + "?c=",
+    serve : $id('LAY-API').value,
     custom_img : $id("LAY-CUSTOM-IMG").value,
     back_img : $id("LAY-BACK-IMG").value,
     front_img : $id("LAY-FRONT-IMG").value,

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\sockets;
 use Lay\core\Exception;
-use Lay\libs\ObjectHandler;
+use Lay\libs\LayObject;
 
 trait Resources {
     private static object $client;
@@ -42,7 +42,7 @@ trait Resources {
             ],
         ];
 
-        self::$client = ObjectHandler::instance()->to_object($obj);
+        self::$client = LayObject::instance()->to_object($obj);
     }
     protected static function set_internal_res_server(string $dir) : void {
         $slash = DIRECTORY_SEPARATOR;
@@ -59,7 +59,7 @@ trait Resources {
             "upload"  =>   "res" . $slash . "uploads" . $slash,
         ];
 
-        self::$server = ObjectHandler::instance()->to_object($obj);
+        self::$server = LayObject::instance()->to_object($obj);
     }
     protected static function set_internal_site_data(array $options) : void {
         $obj = array_merge([
@@ -79,7 +79,7 @@ trait Resources {
             "others" => $options['others'],
         ], $options );
 
-        self::$site = ObjectHandler::instance()->to_object($obj);
+        self::$site = LayObject::instance()->to_object($obj);
     }
 
     private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {

@@ -344,7 +344,7 @@ const $media = ({
     previewElement,
     then = null,
     on = "change",
-    useReader = true
+    useReader = false,
 }) => {
     const currentMediaSrc = previewElement.src;
 
@@ -372,7 +372,7 @@ const $media = ({
                     if(srcElement.files[0])
                         return reader.readAsDataURL(srcElement.files[0]);
 
-                    previewElement.src = currentMediaSrc
+                    return previewElement.src = currentMediaSrc
                 }
 
                 if(srcElement.multiple)
@@ -977,7 +977,7 @@ const $freeze = (element, operation, attr = true) => {
                     closeHandler();
                 }
             }), "on");
-            $drag(BOX, BOX_HEADER);
+            // $drag(BOX, BOX_HEADER);
             if (then) then();
         };
         const BOX_FLUSH = (where = "*") => {

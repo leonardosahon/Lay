@@ -123,15 +123,9 @@ class Core {
         $s = DIRECTORY_SEPARATOR;
         $lay = $lay . "src" . $s;
 
-        $this->copy_routine("api","api-index.php","index.php");
-
         $inc = "res{$s}server{$s}includes$s";
         $view = "res{$s}server{$s}view$s";
         $client = "res{$s}client{$s}dev$s";
-
-        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "dev.lenv");
-        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "prod.lenv");
-        $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
 
         // server files
         for($i = 0; $i < count($sections); $i++){
@@ -168,7 +162,15 @@ class Core {
         // copy specified Lay version
         new CopyDirectory($lay, $project_root . $s . "Lay");
 
-        // copy default root folder files
+        // copy default files
+        $this->copy_routine("","api.php");
+
+        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "dev.lenv");
+        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "prod.lenv");
+        $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
+
+        $this->copy_routine("res{$s}server{$s}controller{$s}__front{$s}", "EndUsers.php");
+
         $this->copy_routine("", "favicon.ico");
         $this->copy_routine("", "builder_default.php");
         $this->copy_routine("", "index.php");

@@ -5,7 +5,7 @@ namespace Lay\libs;
 /**
  * Password Encrypt Class for basic hashing
 */
-abstract class Password {
+abstract class LayPassword {
 
     public static function hash(string $password, ?string $hashed_password = null): string|bool {
         $hashed = password_hash($password,PASSWORD_DEFAULT);

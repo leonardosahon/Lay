@@ -4,7 +4,7 @@ namespace Lay\libs;
 use Lay\core\sockets\IsSingleton;
 use Lay\orm\SQL;
 
-class GenerateID {
+class LayGenId {
     use IsSingleton;
     private static int $recursion_index = 0;
     

@@ -1,10 +1,9 @@
 <?php
 
-namespace Lay\orm\EXTENSIONS;
+namespace Lay\libs;
 
-trait ArraySearch
+class LayArraySearch
 {
-
     /**
      * Enhanced array search, this will search for values even in multiple dimensions of arrays
      * @param string $needle
@@ -13,7 +12,7 @@ trait ArraySearch
      * @param int $total_dimension ***Do not modify this option, it is readonly to the developer***
      * @return string[]
      */
-    final public function array_search(string $needle, array $haystack, bool $strict = false, int $total_dimension = 0) : array {
+    final public static function run(string $needle, array $haystack, bool $strict = false, int $total_dimension = 0) : array {
         $result = [
             "value" => "LAY_NULL",
         ];
@@ -22,7 +21,7 @@ trait ArraySearch
             if(is_array($d)){
                 ++$total_dimension;
                 $result['index_d' . $total_dimension] = $i;
-                $search = $this->array_search($needle, $d, $strict, $total_dimension);
+                $search = self::run($needle, $d, $strict, $total_dimension);
 
                 if($search['value'] !== "LAY_NULL") {
                     $result = array_merge($result,$search);

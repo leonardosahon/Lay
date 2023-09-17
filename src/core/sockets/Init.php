@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\sockets;
 use Lay\core\Exception;
-use Lay\libs\ObjectHandler;
+use Lay\libs\LayObject;
 use Lay\orm\SQL;
 use Lay\AutoLoader;
 use stdClass;

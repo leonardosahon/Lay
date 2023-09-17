@@ -4,7 +4,7 @@ namespace Lay\libs;
 use Lay\core\sockets\IsSingleton;
 use Lay\orm\SQL;
 
-class ObjectHandler {
+class LayObject {
     use IsSingleton;
 
     /**
