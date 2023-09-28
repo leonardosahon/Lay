@@ -218,11 +218,6 @@ abstract class LayCookieStorage {
     public static function browser_info() : string {
         $root = self::lay()->get_res__server('root');
 
-        if(file_exists($root . "Lay/vendor/autoload.php"))
-            require_once  $root . "Lay/vendor/autoload.php";
-        else
-            require_once  $root . "vendor/autoload.php";
-
         $browser = new \Wolfcast\BrowserDetection();
         return $browser->getName() . " " . $browser->getPlatform() . " " . $browser->getUserAgent();
     }

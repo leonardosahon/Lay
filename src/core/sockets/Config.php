@@ -21,33 +21,75 @@ trait Config
     private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
-    public function switch(array $bool_valued_array): self
-    {
-        self::$layConfigOptions['switch'] = $bool_valued_array;
+    private function switch(string $key, mixed $value): self {
+        self::$layConfigOptions['switch'][$key] = $value;
         return self::$instance;
     }
 
-    public function header(array $project_wide_config): self
-    {
-        self::$layConfigOptions['header'] = $project_wide_config;
+    private function metadata(string $key, mixed $value) : self {
+        self::$layConfigOptions['meta'][$key] = $value;
         return self::$instance;
     }
 
-    public function meta(array $project_meta_data): self
-    {
-        self::$layConfigOptions['meta'] = $project_meta_data;
+    private function header_data(string $key, mixed $value) : self {
+        self::$layConfigOptions['header'][$key] = $value;
         return self::$instance;
     }
 
-    public function others(array $project_other_meta_data): self
+    public function dont_compress_html() : self {
+        return $this->switch("compress_html", false);
+    }
+
+    public function dont_use_prod_folder() : self {
+        return $this->switch("use_prod", false);
+    }
+
+    public function dont_use_https() : self {
+        return $this->switch("use_https", false);
+    }
+
+    public function dont_use_default_inc_routes() : self {
+        return $this->switch("default_inc_routes", false);
+    }
+
+    public function dont_use_objects() : self {
+        return $this->switch("use_objects", false);
+    }
+
+    public function dont_cache_domains() : self {
+        return $this->switch("cache_domains", false);
+    }
+
+    public function set_env(string $env = "dev"): self {
+        return $this->header_data("env", $env);
+    }
+
+    public function init_name(string $short, string $full) : self {
+        return $this->metadata("name", [ "short" => $short,  "full" => $full ]);
+    }
+    public function init_color(string $pry, string $sec) : self {
+        return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
+    }
+    public function init_mail(array $emails) : self {
+        return $this->metadata("mail", $emails);
+    }
+    public function init_tel(array $tels) : self {
+        return $this->metadata("tel", $tels);
+    }
+    public function init_author(string $author) : self {
+        return $this->metadata("author", $author);
+    }
+    public function init_copyright(string $copyright) : self {
+        return $this->metadata("copy", $copyright);
+    }
+
+    public function init_others(array $other_data): self
     {
-        self::$layConfigOptions['others'] = $project_other_meta_data;
+        self::$layConfigOptions['others'] = $other_data;
         return self::$instance;
     }
 
-
-    public static function session_start(array $flags = []): void
-    {
+    public static function session_start(array $flags = []): void {
         if (isset($_SESSION))
             return;
 
@@ -57,8 +99,11 @@ trait Config
         if (isset($flags['only_cookies']))
             ini_set("session.use_only_cookies", ((int)$flags['only_cookies']) . "");
 
-        if (isset($flags['secure']))
+        if (self::$ENV_IS_PROD && isset($flags['secure']))
             ini_set("session.cookie_secure", ((int)$flags['secure']) . "");
+
+        if (isset($flags['samesite']))
+            session_set_cookie_params(['samesite' => ucfirst($flags['samesite'])]);
 
         session_start();
     }

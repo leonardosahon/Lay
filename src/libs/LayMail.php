@@ -2,8 +2,6 @@
 declare(strict_types=1);
 namespace Lay\libs;
 
-require_once \Lay\AutoLoader::instance()::get_root_dir() . "vendor/autoload.php";
-
 use Lay\core\LayConfig;
 use Lay\orm\SQL;
 use PHPMailer\PHPMailer\PHPMailer;

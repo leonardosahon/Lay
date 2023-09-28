@@ -12,7 +12,7 @@ if(isset($DONT_EXPOSE_PHP))
 if(!isset($DISABLE_TIMEZONE))
     date_default_timezone_set('Africa/Lagos');
 
-trait Init{
+trait Init {
     private static string $ENV;
     private static bool $INITIALIZED = false;
     private static function is_init() : void {
@@ -38,9 +38,11 @@ trait Init{
             # This comes in play, when adding files with in-house inclusion function, it determines if files should be
             # accessible as <array> or <object>
             "use_objects" => $options['switch']['use_objects'] ?? true,
-
+            # Used by the View module to instruct the handler to cache all the listed domains in a session or cookie,
+            # depending on the value sent by dev
+            "cache_domains" => $options['switch']['cache_domains'] ?? true,
             "env" => $options['header']['env'] ?? "dev",
-            "name"    => [
+            "name" => [
                 "short" => $options['meta']['name']['short'] ?? "Lay - Lite PHP Framework",
                 "full" => $options['meta']['name']['full'] ?? "Lay - Lite PHP Framework | Simple, Light, Quick",
             ],

@@ -46,7 +46,18 @@ class AutoLoader {
             }
         });
     }
+
+    public static function load_vendor_classes() : void {
+        $autoloader = self::get_root_dir() . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
+
+        if(!file_exists($autoloader))
+            return;
+
+        @include_once $autoloader;
+    }
 }
 AutoLoader::load_lay_classes();
 # comment the line below if you're not interested in this package's autoloader
 AutoLoader::load_other_classes();
+# Load files from composer
+AutoLoader::load_vendor_classes();

@@ -1,8 +1,15 @@
 <?php
 $SQL_EXCLUDE = true; // Exclude DB Connection by default
-$BOB_D_BUILDER = true; // Used to ensure the `layconfig.php` and `bob_d_builder.php` files are accessed correctly
+$BOB_D_BUILDER = true; // Used to ensure the `layconfig.php` and `builder_default.php` files are accessed correctly
 
 include_once "layconfig.php";
-include_once "builder_default.php";
+$layConfig = \Lay\core\LayConfig::new();
 
-$layConfig->add_domain([], default_fn: fn($view) => bob_d_builder($view));
+$layConfig->add_domain(
+    id: "default",
+    patterns: ["*"],
+    handler: function($route, $route_as_array, $pattern, $domain_type) use ($SQL_EXCLUDE, $BOB_D_BUILDER) {
+        include_once "builder_default.php";
+        builder_default($route, $route_as_array, $pattern, $domain_type);
+    }
+);

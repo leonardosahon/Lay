@@ -6,7 +6,7 @@ use Lay\core\LayConfig;
 if(!isset($BOB_D_BUILDER))
     \Lay\core\Exception::throw_exception("BAD REQUEST", "This script cannot be accessed this way, please return home");
 
-function bob_d_builder(string $view) : void {
+function builder_default(string $view, array $view_args = []) : void {
     $layConfig = LayConfig::instance();
     $link = fn($link = "") => $layConfig->get_site_data("base") . $link;
 

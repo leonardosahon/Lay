@@ -964,7 +964,7 @@ const $freeze = (element, operation, attr = true) => {
             if ($html(BOX_FOOT).trim() === "") $style(BOX_FOOT, "display:none");
             if ($html(BOX_HEAD).trim() === "") $style(BOX_HEAD, "display:none");
             if (closeOnBlur === false) $on(BOX_OVERLAY, "click", closeHandler, "del"); else $on(BOX_OVERLAY, "click", closeHandler);
-            $on(BOX_CLOSE_BTN, "click", closeHandler, "on");
+            $on(BOX_CLOSE_BTN, "click", closeHandler);
             $on(BOX_WRAPPER, "click", (e => {
                 if ($class(e.target, "has", "osai-close-box") || $class(e.target.parentNode, "has", "osai-close-box")) {
                     e.preventDefault();

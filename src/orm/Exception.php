@@ -101,32 +101,19 @@ class Exception
         } else {
             $dir = AutoLoader::get_root_dir() . "Lay" . DIRECTORY_SEPARATOR . "error_logs";
             $file_log = $dir . DIRECTORY_SEPARATOR . "lay_error.log";
-            if (!is_dir($dir)) mkdir($dir, 0755);
 
-            if (!file_exists($file_log))
-                $fh = fopen($file_log, "w+");
-            elseif (filesize($file_log) > 2528576) {
-                $i = 0;
-                $logs = scandir($dir);
-                $last_log = end($logs);
-                $x = explode(".", $last_log);
+            if (!is_dir($dir))
+                mkdir($dir, 0755);
 
-                if (end($x) == "log")
-                    $i = ((int)explode("g", $x[0])[1] ?? 0) + 1;
-
-                $fh = fopen($dir . DIRECTORY_SEPARATOR . "lay_error$i.log", "w+");
-            } else {
-                $fh = fopen($file_log, "r+");
-                fseek($fh, 0, SEEK_END);
-            }
-            $body = strip_tags($body);
             $date = date("Y-m-d H:i:s e");
-            fwrite($fh, <<<DEBUG
+            $body = strip_tags($body);
+            $body = <<<DEBUG
             [$date] $title: $body
             $stack_raw
-            DEBUG
-            ) or die("Unable to write SQL error log in location " . $dir . " <br> Refer to " . __FILE__ . ": " . __LINE__);
-            fclose($fh);
+            DEBUG;
+
+            file_put_contents($file_log, $body, FILE_APPEND);
+
             echo "<b>Your attention is needed at the backend, check your Lay error logs for details</b>";
             return $other['act'] ?? "allow";
         }

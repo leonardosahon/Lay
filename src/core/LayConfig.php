@@ -8,5 +8,5 @@ final class LayConfig{
     use \Lay\core\sockets\Config;
     use \Lay\core\sockets\Resources;
     use \Lay\core\sockets\Includes;
-    use \Lay\core\sockets\View;
+    use \Lay\core\sockets\Domain;
 }
