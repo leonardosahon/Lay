@@ -1,0 +1,32 @@
+{
+  "name": "Lay",
+  "type": "project",
+  "description": "A Quick Start PHP Framework",
+  "keywords": ["framework", "lay", "lite framework", "lite php framework"],
+  "license": "MIT",
+  "version": "1.0.0",
+  "homepage": "https://lay.osaitech.dev/",
+  "time": "2021-09-22",
+  "modified" : "2023-05-16",
+
+  "authors": [
+    {
+      "name": "Osahenrumwen Aigbogun",
+      "email": "osahon@osaitech.dev",
+      "homepage": "https://osaitech.dev/",
+      "role": "Lead Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.0",
+    "ext-mysqli": "*",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "ext-exif": "*",
+    "ext-gd": "*",
+    "ext-sodium": "*"
+  },
+  "require-dev": {
+    "wolfcast/browser-detection": "2.9.5"
+  }
+}

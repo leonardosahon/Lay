@@ -7,7 +7,7 @@
   "version": "1.0.0",
   "homepage": "https://github.com/leonardosahon/lay",
   "time": "2021-09-22",
-  "modified" : "2023-08-15",
+  "modified" : "2023-10-01",
 
   "authors": [
     {
@@ -18,7 +18,7 @@
     }
   ],
   "require": {
-    "php": "^8.0",
+    "php": "^8.1",
     "ext-mysqli": "*",
     "ext-json": "*",
     "ext-openssl": "*",
@@ -27,6 +27,7 @@
     "ext-sodium": "*"
   },
   "require-dev": {
-    "wolfcast/browser-detection": "2.9.5"
+    "wolfcast/browser-detection": "2.9.5",
+    "opis/closure": "^3.5"
   }
 }

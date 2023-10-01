@@ -2,14 +2,13 @@
 declare(strict_types=1);
 namespace Lay\libs;
 
-require_once \Lay\AutoLoader::instance()::get_root_dir() . "vendor/autoload.php";
-
 use Lay\core\LayConfig;
+use Lay\orm\SQL;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-abstract class Mailer {
+abstract class LayMail {
     private static array $credentials = [
         "host" => null,
         "port" => null,
@@ -31,8 +30,8 @@ abstract class Mailer {
             $mail->Port       = self::$credentials['port'];       // use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
             $mail->Username   = self::$credentials['username'];
             $mail->Password   = self::$credentials['password'];
-        }catch (Exception $e){
-            \Lay\core\Exception::throw_exception("SMTP Credentials has not been setup","MAILER::ERR");
+        }catch (\Exception $e){
+            \Lay\core\Exception::throw_exception("SMTP Credentials has not been setup. " . $e->getMessage(),"SMTPCredentialsError", stack_track: $e->getTrace());
         }
         return $mail;
     }
@@ -46,17 +45,35 @@ abstract class Mailer {
     /**
      * @param array|string $subject_or_opt could serve as subject or option parameter,
      * @param array $opt [] the table heads serve as the 1st dimension keys
-     * - **email {string}**
-     * - **name {string}**
-     * - **subject {string}** It becomes optional when the `$subject_or_opt` is a string
-     * - **recipient {string}** [optional] `client` (default) | `server`. Use server when you want to send an email to the server.
-     * - **attachment {array}** [optional] ["name","file" (absolute location to file using site base as the root link), "type" (MIME file type, empty by default)]
-     * - **bcc {array}** [optional] [bcc email address, bcc recipient name]
-     * - **cc {array}** [optional] [cc email address, cc recipient name]
+     * <table>
+     *   <tr>
+     *      <th>email {string}</th>
+     *      <th>name {string}</th>
+     *      <th>subject {string} [optional]</th>
+     *      <th>recipient {string} [optional]</th>
+     *      <th>attachment {array} [optional]</th>
+     *      <th>bcc {array} [optional]</th>
+     *      <th>cc {array} [optional]</th>
+     *   </tr>
+     *   <tr>
+     *      <td>Email of Recipient. (Serves as sender email when sending to server)</td>
+     *      <td>Name of Recipient. (Serves as sender name when sending to server)</td>
+     *      <td>Subject of email</td>
+     *      <td>
+     *          ["name","file" (absolute location to file using site base as the root link), "type" (MIME file type, empty by default)]
+     *      </td>
+     *      <td>By default recipient is `client`, pass `server` as key with value `true`, if you want to send to domain server; example: `'server' => true`</td>
+     *      <td>[bcc email address, bcc recipient name]</td>
+     *      <td>[cc email address, cc recipient name]</td>
+     *   </tr>
+     * </table>
      * @return bool|null returns true on successful
      * @throws Exception
      */
-    final public static function queue(array|string $subject_or_opt, array $opt = []) : ?bool{
+    final public static function queue(array|string $subject_or_opt, array $opt = []) : ?bool {
+        if(!self::$credentials['host'])
+            LayConfig::set_smtp();
+
         $site_data = LayConfig::instance()->get_site_data();
         $opt = is_array($subject_or_opt) ? array_merge($opt,$subject_or_opt) : $opt;
 
@@ -66,13 +83,14 @@ abstract class Mailer {
         $name = $opt['name'] ?? null;
         $site_mail = self::$credentials['default_sender_email'] ?? $site_data->mail->{0};
         $site_name = self::$credentials['default_sender_name'] ?? $site_data->name->short;
+        $receiver = $opt['recipient'] ?? 'client';
 
         $recipient = [
             "to" => $email,
             "name" => $name
         ];
 
-        if(isset($opt["server"])) {
+        if(isset($opt["server"]) || $receiver == 'server') {
             $recipient = [
                 "to" => $site_mail,
                 "name" => $site_name
@@ -104,7 +122,7 @@ abstract class Mailer {
             $mail->addStringAttachment(
                 $attach['name'],
                 $attach['file'],
-                null,
+                $attach['encoding'] ?? null,
                 $attach['type'] ?? ''
             );
         }
@@ -113,13 +131,13 @@ abstract class Mailer {
             if($use_smtp)
                 $mail = self::smtp_settings($mail, isset($opt['debug']));
 
-            if(LayConfig::get_env() != "DEV" or isset($opt['force_dev']))
+            if(LayConfig::get_env() != "DEV" || isset($opt['force_dev']))
                 return $mail->send();
 
             return true;
 
         } catch (\Exception $e) {
-            \Lay\orm\SQL::instance()->use_exception("Mailer Error", htmlspecialchars($recipient['to']) . ' Mailer.php' . $mail->ErrorInfo, false);
+            \Lay\core\Exception::throw_exception(htmlspecialchars($recipient['to']) . ' LayMail.php' . $mail->ErrorInfo, "MailerError", false);
             // Reset the connection to abort sending this message
             // If Loop the loop will continue trying to send to the rest of the list
             $mail->getSMTPInstance()->reset();

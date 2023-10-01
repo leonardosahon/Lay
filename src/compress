@@ -13,12 +13,17 @@ $intro = function() {
     print "----------------------------------------------------------\n";
 
     // check dependencies
-    $npm = exec("npm -v");
-    $js = exec("terser --version");
-    $css = exec("cleancss --version");
+    $npm = shell_exec("npm -v 2>&1");
+    $js = shell_exec("terser --version 2>&1");
+    $css = shell_exec("cleancss --version 2>&1");
 
     if(!$npm || !$js || !$css) {
-        print "Some of the dependencies have not been installed, please install all of them to continue with this script\n";
+        print "Some of the dependencies have not been installed, please install all of them to continue with this script.\n 
+        Dependencies that exist: 
+        \n[npm: $npm]
+        \n[terser: $js]
+        \n[cleancss(clean-css-cli): $css]
+        \n";
         die;
     }
 };
@@ -58,7 +63,8 @@ if(!isset($bundle_dir)) {
 
 minify_dir($raw_dir,$bundle_dir);
 
-function minify_dir(string $parent_dir, string $output_dir, array &$error = []) {
+function minify_dir(string $parent_dir, string $output_dir, array &$error = []): void
+{
     if(!is_dir($parent_dir)){
         print "Argument[0] is not a directory; Argument[0] & Argument[1] should be directories\n";
         die;

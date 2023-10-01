@@ -344,7 +344,7 @@ const $media = ({
     previewElement,
     then = null,
     on = "change",
-    useReader = true
+    useReader = false,
 }) => {
     const currentMediaSrc = previewElement.src;
 
@@ -372,14 +372,11 @@ const $media = ({
                     if(srcElement.files[0])
                         return reader.readAsDataURL(srcElement.files[0]);
 
-                    previewElement.src = currentMediaSrc
+                    return previewElement.src = currentMediaSrc
                 }
 
-                if(!srcElement.multiple){
-                    srcElement.value !== "" && $loop(Array.from(srcElement.files),file => srcProcessed.push(URL.createObjectURL(file)))
-
-                    return then && then(srcProcessed);
-                }
+                if(srcElement.multiple)
+                    return osNote("Media preview doesn't support preview for multiple files")
 
                 if (srcElement.value === "")
                     return previewElement.src = currentMediaSrc;
@@ -710,6 +707,7 @@ const $preloader = (act = "show") => {
     }
     let xhr = false, response;
     let credential = option.credential ?? false;
+    let headers = option.headers ?? {};
     let content = option.content ?? "text/plain";
     let method = option.method ?? "get";
     data = option.data ?? option.form ?? data ?? null;
@@ -847,6 +845,7 @@ const $preloader = (act = "show") => {
         break;
     }
     requestHeader && xhr.setRequestHeader("Content-Type", requestHeader);
+    $loop(headers, (value, key) => xhr.setRequestHeader(key, value))
     xhr.send(data);
     preload();
 }));
@@ -965,7 +964,7 @@ const $freeze = (element, operation, attr = true) => {
             if ($html(BOX_FOOT).trim() === "") $style(BOX_FOOT, "display:none");
             if ($html(BOX_HEAD).trim() === "") $style(BOX_HEAD, "display:none");
             if (closeOnBlur === false) $on(BOX_OVERLAY, "click", closeHandler, "del"); else $on(BOX_OVERLAY, "click", closeHandler);
-            $on(BOX_CLOSE_BTN, "click", closeHandler, "on");
+            $on(BOX_CLOSE_BTN, "click", closeHandler);
             $on(BOX_WRAPPER, "click", (e => {
                 if ($class(e.target, "has", "osai-close-box") || $class(e.target.parentNode, "has", "osai-close-box")) {
                     e.preventDefault();
@@ -978,7 +977,7 @@ const $freeze = (element, operation, attr = true) => {
                     closeHandler();
                 }
             }), "on");
-            $drag(BOX, BOX_HEADER);
+            // $drag(BOX, BOX_HEADER);
             if (then) then();
         };
         const BOX_FLUSH = (where = "*") => {

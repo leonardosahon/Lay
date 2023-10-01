@@ -2,7 +2,7 @@
 
 git_origin=$(git config --get remote.origin.url)
 push_repo="n"
-commit_message=""
+commit_message="Default Lay Commit message"
 git_proj_dir=""
 
 lay_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -26,18 +26,26 @@ if [ $current_dir != "Lay" ]; then
 fi
 
 res_dir=$lay_dir"../"
+ignore=$1
 
-# Git Push Condition
-if [ -n "${git_origin}" ]; then
-  echo "You have git on your project with remote origin: $git_origin"
-  read -n1 -p "Do you want to also push? [Y/n]: " push_repo
-  git_proj_dir=$(git rev-parse --show-toplevel)
-  echo ""
+# talk about git on verbose mode
+if [ $1 == '-s' ]; then
+  ignore=$2
+  commit_message=''
+  # Git Push Condition
+else
+  if [ -n "${git_origin}" ]; then
+    echo "You have git on your project with remote origin: $git_origin"
+    read -n1 -p "Do you want to also push? [Y/n]: " push_repo
+    git_proj_dir=$(git rev-parse --show-toplevel)
+    echo ""
+  fi
+
+  case $push_repo in
+    n|N) echo "Ignoring git..." ;;
+    *) read -p "Commit message: " commit_message;;
+  esac
 fi
-case $push_repo in
-  n|N) echo "Ignoring git..." ;;
-  *) read -p "Commit message: " commit_message;;
-esac
 
 echo "**************** Production Bundling Begins"
 
@@ -46,7 +54,7 @@ terser $lay_dir'omj$/index.js' -c -m -o $lay_dir'omj$/index.min.js'
 terser $lay_dir'static/js/constants.js' -c -m -o $lay_dir'static/js/constants.min.js'
 
 echo "== RES FOLDER"
-php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod'
+php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod' -i $ignore
 
 echo "**************** Production Bundling Ends"
 

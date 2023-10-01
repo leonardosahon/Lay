@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace Lay\orm\EXTENSIONS;
 
+use Lay\orm\SQL;
+
 trait Clean {
     protected static array $stock_escape_string = ["%3D","%21","%2B","%40","%23","%24","%25","%5E","%26","%2A","%28","%29","%27",
         "%22","%3C", "%3E","%3F","%2F","%5C","%7C","%60","%2C","_","-","–","%0A","%E2","%80","%99","%E2%80%98","%E2%80%99"];
@@ -28,9 +30,9 @@ trait Clean {
      * pass an int value of 1 to the function to debug it
      * @return mixed
      */
-    public function clean(string|int|float|null $value, float $level__combo = 0, ...$options): mixed {
+    public function clean(mixed $value, float $level__combo = 0, ...$options): mixed {
         // perquisite
-        $core = self::core();
+        $core = SQL::new();
         $link = $core->get_link();
 
         $options = $core->array_flatten($options);
@@ -128,10 +130,14 @@ trait Clean {
     }
     public function add_escape_string(...$escape_string) : void {
         if(count(self::$escape_string) == 0) self::$escape_string = self::$stock_escape_string;
-        self::$escape_string = array_merge(self::$escape_string, self::core()->array_flatten($escape_string));
+        self::$escape_string = array_merge(self::$escape_string, SQL::new()->array_flatten($escape_string));
     }
     public function get_escape_string() : array { return self::$escape_string; }
-    public function reset_escape_string() : void { self::$escape_string = self::$stock_escape_string;}
+    public function reset_escape_string() : self
+    {
+        self::$escape_string = self::$stock_escape_string;
+        return $this;
+    }
 
     private function exceptions(int $level, array $args = []) : void {
         $option = [];
@@ -170,6 +176,6 @@ trait Clean {
 
         }
 
-        $this->use_exception($title,$body,true, true, $option);
+        $this->use_exception($title,$body,raw: $option);
     }
 }

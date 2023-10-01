@@ -5,7 +5,7 @@ namespace Lay\orm;
 use Closure;
 use mysqli_result;
 
-class SQLStoreResult extends \Lay\orm\Exception {
+class StoreResult extends \Lay\orm\Exception {
     /**
      * @param $exec mysqli_result
      * @param int|null $return_loop int|bool to activate loop or not
@@ -48,6 +48,7 @@ class SQLStoreResult extends \Lay\orm\Exception {
 
         return $result;
     }
+
     private static function exempt_column(?array $entry, ?string $columns) : array {
         if(!($entry && $columns))
             return [];

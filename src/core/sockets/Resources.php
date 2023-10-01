@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\sockets;
 use Lay\core\Exception;
-use Lay\libs\ObjectHandler;
+use Lay\libs\LayObject;
 
 trait Resources {
     private static object $client;
@@ -42,9 +42,10 @@ trait Resources {
             ],
         ];
 
-        self::$client = ObjectHandler::instance()->to_object($obj);
+        self::$client = LayObject::instance()->to_object($obj);
     }
     protected static function set_internal_res_server(string $dir) : void {
+
         $slash = DIRECTORY_SEPARATOR;
         $root_server    = $dir  . "res" . $slash . "server" . $slash;
         $obj = [
@@ -59,27 +60,28 @@ trait Resources {
             "upload"  =>   "res" . $slash . "uploads" . $slash,
         ];
 
-        self::$server = ObjectHandler::instance()->to_object($obj);
+        self::$server = LayObject::instance()->to_object($obj);
     }
     protected static function set_internal_site_data(array $options) : void {
         $obj = array_merge([
-            "author" => $options['author'],
-            "copy" => $options['copy'],
-            "name" => $options['name'],
+            "author" => $options['author'] ?? null,
+            "copy" => $options['copy'] ?? null,
+            "name" => $options['name'] ?? null,
             "img" => [
-                "logo" => self::$client->custom->img . "logo.png",
-                "favicon" => self::$client->custom->img . "favicon.png",
-                "icon" => self::$client->custom->img . "icon.png",
+                "logo" => isset(self::$client) ? self::$client->custom->img . "logo.png" : null,
+                "favicon" => isset(self::$client) ? self::$client->custom->img . "favicon.png" : null,
+                "icon" => isset(self::$client) ? self::$client->custom->img . "icon.png" : null,
             ],
-            "color" => $options['color'],
+            "color" => $options['color'] ?? null,
             "mail" => [
-                ...$options['mail']
+                ...$options['mail'] ?? []
             ],
-            "tel" => $options['tel'],
-            "others" => $options['others'],
+            "tel" => $options['tel'] ?? null,
+            "others" => $options['others'] ?? null,
         ], $options );
 
-        self::$site = ObjectHandler::instance()->to_object($obj);
+
+        self::$site = LayObject::instance()->to_object($obj);
     }
 
     private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {
@@ -168,15 +170,17 @@ trait Resources {
     # Site Metadata
     public static function set_site_data(...$index__and__value) : void {
         self::is_init();
+
         self::set_res(self::$site,[],...$index__and__value);
     }
     public function get_site_data(string ...$index_chain) {
-        self::is_init();
+        self::is_init(true);
         return self::get_res("site_data", self::$site,...$index_chain);
     }
 
     public function send_to_client(array $values) : string {
         self::is_init();
+
         foreach ($values as $v){
             self::$CLIENT_VALUES .= $v;
         }

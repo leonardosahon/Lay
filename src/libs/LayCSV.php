@@ -2,8 +2,8 @@
 
 namespace Lay\libs;
 
-abstract class CSV {
-    protected static function resolve(int $code, string $message, ?array $data = null) : array {
+abstract class LayCSV {
+    protected static function resolve(int $code, string $message, ?string $data = null) : array {
         return [
             "code" => $code,
             "msg" => $message,
@@ -18,7 +18,6 @@ abstract class CSV {
         if((filesize($file)/1000) > $max_size_kb)
             return self::resolve(0, "Max file size of [{$max_size_kb}kb] exceeded");
 
-
         if(!$file_type)
             return self::resolve(0, "Invalid file received");
 
@@ -29,9 +28,14 @@ abstract class CSV {
         $output = "";
 
         while ($row = fgetcsv($fh)){
-            $output .= $callback($row);
+            $x = $callback($row);
+
+            if(is_array($x))
+                return $x;
+
+            $output .= $x;
         }
 
-        return self::resolve(1, "Processed successfully", [$output]);
+        return self::resolve(1, "Processed successfully", $output);
     }
 }

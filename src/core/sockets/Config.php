@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Lay\core\sockets;
 
 use Lay\core\Exception;
-use Lay\libs\Mailer;
-use Lay\libs\ObjectHandler;
+use Lay\libs\LayMail;
+use Lay\libs\LayObject;
 use Lay\orm\SQL;
 use Lay\AutoLoader;
 use stdClass;
@@ -21,8 +21,83 @@ trait Config
     private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
-    public static function session_start(array $flags = []): void
+    private function switch(string $key, mixed $value): self {
+        self::$layConfigOptions['switch'][$key] = $value;
+        return self::$instance;
+    }
+
+    private function metadata(string $key, mixed $value) : self {
+        self::$layConfigOptions['meta'][$key] = $value;
+        return self::$instance;
+    }
+
+    private function header_data(string $key, mixed $value) : self {
+        self::$layConfigOptions['header'][$key] = $value;
+        return self::$instance;
+    }
+
+    public function dont_compress_html() : self {
+        return $this->switch("compress_html", false);
+    }
+
+    public function dont_use_prod_folder() : self {
+        return $this->switch("use_prod", false);
+    }
+
+    public function dont_use_https() : self {
+        return $this->switch("use_https", false);
+    }
+
+    public function dont_use_default_inc_routes() : self {
+        return $this->switch("default_inc_routes", false);
+    }
+
+    public function dont_use_objects() : self {
+        return $this->switch("use_objects", false);
+    }
+
+    public function dont_cache_domains() : self {
+        return $this->switch("cache_domains", false);
+    }
+
+    public function dont_cache_views() : self {
+        return $this->switch("cache_views", false);
+    }
+
+    public function set_env(string $env = "dev"): self {
+        return $this->header_data("env", $env);
+    }
+
+    public function init_name(string $short, string $full) : self {
+        return $this->metadata("name", [ "short" => $short,  "full" => $full ]);
+    }
+    public function init_color(string $pry, string $sec) : self {
+        return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
+    }
+    public function init_mail(string ...$emails) : self {
+        return $this->metadata("mail", $emails);
+    }
+    public function init_tel(string ...$tel) : self {
+        return $this->metadata("tel", $tel);
+    }
+    public function init_author(string $author) : self {
+        return $this->metadata("author", $author);
+    }
+    public function init_copyright(string $copyright) : self {
+        return $this->metadata("copy", $copyright);
+    }
+
+    public function init_end() : void {
+        self::initialize();
+    }
+
+    public function init_others(array $other_data): self
     {
+        self::$layConfigOptions['others'] = $other_data;
+        return self::$instance;
+    }
+
+    public static function session_start(array $flags = []): void {
         if (isset($_SESSION))
             return;
 
@@ -32,8 +107,11 @@ trait Config
         if (isset($flags['only_cookies']))
             ini_set("session.use_only_cookies", ((int)$flags['only_cookies']) . "");
 
-        if (isset($flags['secure']))
+        if (self::$ENV_IS_PROD && isset($flags['secure']))
             ini_set("session.cookie_secure", ((int)$flags['secure']) . "");
+
+        if (isset($flags['samesite']))
+            session_set_cookie_params(['samesite' => ucfirst($flags['samesite'])]);
 
         session_start();
     }
@@ -87,28 +165,31 @@ trait Config
         return (bool)strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? "cli"), "mobile");
     }
 
-    public function switch(array $bool_valued_array): self
-    {
-        self::$layConfigOptions['switch'] = $bool_valued_array;
-        return self::$instance;
-    }
+    public static function get_ip(): string {
+        $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+        foreach (
+            [
+                'HTTP_CLIENT_IP',
+                'HTTP_X_FORWARDED_FOR',
+                'HTTP_X_FORWARDED',
+                'HTTP_X_CLUSTER_CLIENT_IP',
+                'HTTP_FORWARDED_FOR',
+                'HTTP_FORWARDED',
+                'REMOTE_ADDR'
+            ] as $key
+        ) {
+            if (array_key_exists($key, $_SERVER) === true) {
+                foreach (explode(',', $_SERVER[$key]) as $ip_address) {
+                    $ip_address = trim($ip_address);
 
-    public function header(array $project_wide_config): self
-    {
-        self::$layConfigOptions['header'] = $project_wide_config;
-        return self::$instance;
-    }
+                    if (filter_var($ip_address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false)
+                        return $ip_address;
+                }
+            }
 
-    public function meta(array $project_meta_data): self
-    {
-        self::$layConfigOptions['meta'] = $project_meta_data;
-        return self::$instance;
-    }
+        }
 
-    public function others(array $project_other_meta_data): self
-    {
-        self::$layConfigOptions['others'] = $project_other_meta_data;
-        return self::$instance;
+        return $ip_address ?? "";
     }
 
     public static function get_env(): string
@@ -123,7 +204,12 @@ trait Config
         if(isset(self::$SMTP_ARRAY))
             return;
 
-        $map = Mailer::get_credentials();
+        if(!file_exists(self::instance()->get_res__server('lay_env') . "smtp.lenv")) {
+            Exception::throw_exception("smtp file does not exist", "NoSmtpEnvFile");
+            return;
+        }
+
+        $map = LayMail::get_credentials();
 
         $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('lay_env') . "smtp.lenv");
 
@@ -146,16 +232,25 @@ trait Config
 
         self::$SMTP_ARRAY = $map;
 
-        Mailer::set_credentials($map);
+        LayMail::set_credentials($map);
     }
 
-    public static function set_orm(bool $include = true): ?SQL {
+    public function init_orm(bool $connect_by_default = true): self {
         self::is_init();
 
-        if(isset(self::$CONNECTION_ARRAY))
-            return $include ? self::connect(self::$CONNECTION_ARRAY) : null;
+        if(isset(self::$CONNECTION_ARRAY)) {
+            if($connect_by_default)
+                self::connect(self::$CONNECTION_ARRAY);
+
+            return $this;
+        }
 
         $file = self::get_env() == "DEV" ? 'dev' : 'prod';
+
+        if(!file_exists(self::instance()->get_res__server('db') . $file . ".lenv")) {
+            Exception::throw_exception("db file does not exist", "NoDbEnvFile");
+            return $this;
+        }
 
         $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('db') . $file . ".lenv");
 
@@ -190,7 +285,10 @@ trait Config
 
         self::$CONNECTION_ARRAY = $map;
 
-        return $include ? self::connect($map) : null;
+        if($connect_by_default)
+            self::connect($map);
+
+        return $this;
     }
 
     public static function get_orm(): SQL
@@ -236,6 +334,10 @@ trait Config
             return;
 
         $orm = self::$SQL_INSTANCE;
+
+        if(!isset($orm->query_info))
+            return;
+
         $orm?->close($orm->get_link() ?? $link, true);
     }
 

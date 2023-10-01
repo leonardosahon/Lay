@@ -3,3 +3,4 @@
 /temp/
 /.idea/
 composer.lock
+.compress.log

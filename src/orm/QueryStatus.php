@@ -2,7 +2,7 @@
 
 namespace Lay\orm;
 
-enum SQLEnums : string {
+enum QueryStatus : string {
     case success = "Successful";
     case fail = "Failure";
 }

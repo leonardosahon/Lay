@@ -52,6 +52,11 @@ class SQL extends \Lay\orm\Exception {
         return $arr;
     }
 
+    public function switch_db(string $name) : bool {
+        $name = mysqli_real_escape_string(self::$link, $name);
+        return mysqli_select_db(self::$link, $name);
+    }
+
     /**
      * Query Engine
      * @param string $query
@@ -59,6 +64,7 @@ class SQL extends \Lay\orm\Exception {
      * args = "assoc||row", "loop","run||result", "!||!null||not_null", "query_type", {int} debug;
      * if you want to access the mysqli_query directly, pass "exec"
      * @return int|bool|array|null|mysqli_result
+     * @throws \Exception
      */
     final public function query(string $query, mixed ...$option) : int|bool|array|null|mysqli_result {
         if(!isset(self::$link))
@@ -114,7 +120,7 @@ class SQL extends \Lay\orm\Exception {
 
         // init query info structure
         $this->query_info = [
-            "status" => SQLEnums::success,
+            "status" => QueryStatus::success,
             "has_data" => true,
             "data" => $exec,
             "has_error" => $has_error
@@ -144,7 +150,7 @@ class SQL extends \Lay\orm\Exception {
 
         if (!$exec) {
             $this->query_info = [
-                "status" => SQLEnums::fail,
+                "status" => QueryStatus::fail,
                 "has_data" => false,
                 "has_error" => $has_error,
             ];
@@ -156,7 +162,7 @@ class SQL extends \Lay\orm\Exception {
         }
 
         if(($query_type == "SELECT" || $query_type == "LAST_INSERTED") && $return == "result") {
-            $exec = SQLStoreResult::store(
+            $exec = StoreResult::store(
                 $exec,
                 $option['loop'] ?? $loop ?? null,
                 $as ?? null,

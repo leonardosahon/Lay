@@ -83,7 +83,7 @@ abstract class LayCookieStorage {
 
     private static function store_user_token(string $user_id) : ?string {
         $orm = self::orm();
-        $env_info = self::browser_info() . " IP: " . self::get_ip();
+        $env_info = self::browser_info() . " IP: " . LayConfig::get_ip();
         $expire = LayDate::date("30 days");
         $now = LayDate::date();
         $user_id = $orm->clean($user_id,16,'strict');
@@ -94,7 +94,7 @@ abstract class LayCookieStorage {
             "id" => "UUID()",
             "created_by" => $user_id,
             "created_at" => $now,
-            "auth" => Password::hash($user_id),
+            "auth" => LayPassword::hash($user_id),
             "expire" => $expire,
             "env_info" => $env_info
         ]);
@@ -140,7 +140,7 @@ abstract class LayCookieStorage {
         if(!$cookie)
             return null;
 
-        return Password::crypt($cookie, false);
+        return LayPassword::crypt($cookie, false);
     }
 
     private static function delete_expired_tokens() : void {
@@ -169,7 +169,7 @@ abstract class LayCookieStorage {
 
         return self::set_cookie(
             self::$session_user_cookie,
-            Password::crypt(LayCookieStorage::save_user_token($immutable_key))
+            LayPassword::crypt(LayCookieStorage::save_user_token($immutable_key))
         );
     }
 
@@ -218,39 +218,7 @@ abstract class LayCookieStorage {
     public static function browser_info() : string {
         $root = self::lay()->get_res__server('root');
 
-        if(file_exists($root . "Lay/vendor/autoload.php"))
-            require_once  $root . "Lay/vendor/autoload.php";
-        else
-            require_once  $root . "vendor/autoload.php";
-
         $browser = new \Wolfcast\BrowserDetection();
         return $browser->getName() . " " . $browser->getPlatform() . " " . $browser->getUserAgent();
-    }
-
-    public static function get_ip(): string {
-        $ip_address = $_SERVER['REMOTE_ADDR'];
-        foreach (
-            [
-                'HTTP_CLIENT_IP',
-                'HTTP_X_FORWARDED_FOR',
-                'HTTP_X_FORWARDED',
-                'HTTP_X_CLUSTER_CLIENT_IP',
-                'HTTP_FORWARDED_FOR',
-                'HTTP_FORWARDED',
-                'REMOTE_ADDR'
-            ] as $key
-        ) {
-            if (array_key_exists($key, $_SERVER) === true) {
-                foreach (explode(',', $_SERVER[$key]) as $ip_address) {
-                    $ip_address = trim($ip_address);
-
-                    if (filter_var($ip_address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false)
-                        return $ip_address;
-                }
-            }
-
-        }
-
-        return $ip_address;
     }
 }
