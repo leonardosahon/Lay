@@ -1,18 +1,23 @@
 <?php
 declare(strict_types=1);
 namespace Lay\core\sockets;
-use Closure;
+use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\enums\CustomContinueBreak;
 use Lay\core\enums\DomainCacheKeys;
 use Lay\core\enums\DomainType;
 use Lay\core\ViewPainter;
-use Opis\Closure\SerializableClosure;
+use Lay\core\ViewTemplate;
 
-trait Domain{
+trait Domain {
     private static string $current_route;
-    private static array $default_domain;
+    private static array $current_route_details = [
+        "route" => "index",
+        "route_as_array" => [],
+        "domain_type" => DomainType::LOCAL,
+        "pattern" => "*",
+    ];
     private static bool $domain_found = false;
-    private static string $domains_list_key = "LAY_VIEW";
+    private static string $domains_list_key = "__LAY_DOMAINS__";
 
     private function domain_cache_key(DomainCacheKeys $key_type, string|null|int $key = null, mixed $value = null, bool $cache = true) : mixed {
         $cache = $this->get_site_data("cache_domains") && $cache;
@@ -77,21 +82,21 @@ trait Domain{
         return $this->domain_cache_key(DomainCacheKeys::CACHED);
     }
 
-    private function activate_domain(string $id, string $pattern, Closure $handler, DomainType $domain_type) : CustomContinueBreak {
+    private function activate_domain(string $id, string $pattern, ViewTemplate $handler, DomainType $domain_type) : CustomContinueBreak {
         $route = $this->get_current_route();
         $route = str_replace($pattern, "", $route);
         $route = ltrim($route, "/");
         $route_as_array = explode("/", $route);
 
-        $handler(
-            $route ?: "index",
-            $route_as_array,
-            $pattern,
-            $domain_type
-        );
-
         self::$domain_found = true;
         $this->cache_active_domain($id, $pattern);
+
+        self::$current_route_details['route'] = $route ?: "index";
+        self::$current_route_details['route_as_array'] = $route_as_array;
+        self::$current_route_details['pattern'] = $pattern;
+        self::$current_route_details['domain_type'] = $domain_type;
+
+        $handler->init();
 
         return CustomContinueBreak::BREAK;
     }
@@ -203,7 +208,7 @@ trait Domain{
 
         if($is_subdomain || $is_local_domain) {
 
-            $handler = $this->get_cached_domain_details($id)['handler']->getClosure();
+            $handler = $this->get_cached_domain_details($id)['handler'];
             $this->activate_domain($id, $pattern, $handler, $is_subdomain ? DomainType::SUB : DomainType::LOCAL);
             return CustomContinueBreak::BREAK;
         }
@@ -226,7 +231,7 @@ trait Domain{
                 return true;
 
             if($id == "default" || $pattern == "*"){
-                $handler = $this->get_cached_domain_details($id)['handler']->getClosure();
+                $handler = $this->get_cached_domain_details($id)['handler'];
                 $this->activate_domain($id, $pattern, $handler, DomainType::LOCAL);
             }
         }
@@ -239,12 +244,14 @@ trait Domain{
 
             $this->test_pattern($id, $pattern);
 
-            if($id == "default" || $pattern == "*")
+            if($id == "default" || $pattern == "*") {
                 $this->all_domain_is_cached();
+                $this->match_cached_domains();
+            }
         }
     }
 
-    public function add_domain(string $id, array $patterns, Closure $handler) : void {
+    public function add_domain(string $id, array $patterns, ViewTemplate $handler) : void {
         self::is_init();
 
         $this->get_current_route();
@@ -255,10 +262,18 @@ trait Domain{
         $this->cache_domain_details([
             "id" => $id,
             "patterns" => $patterns,
-            "handler" => new SerializableClosure($handler)
+            "handler" => $handler
         ]);
 
         $this->cache_patterns($id, $patterns);
+    }
+
+    public static function current_route_data(#[ExpectedValues(['route','route_as_array','domain_type','pattern', '*'])] string $key) : string|DomainType|array
+    {
+        if($key == "*")
+            return self::$current_route_details;
+
+        return self::$current_route_details[$key];
     }
 
     /**

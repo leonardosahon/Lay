@@ -60,6 +60,10 @@ trait Config
         return $this->switch("cache_domains", false);
     }
 
+    public function dont_cache_views() : self {
+        return $this->switch("cache_views", false);
+    }
+
     public function set_env(string $env = "dev"): self {
         return $this->header_data("env", $env);
     }
@@ -70,17 +74,21 @@ trait Config
     public function init_color(string $pry, string $sec) : self {
         return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
     }
-    public function init_mail(array $emails) : self {
+    public function init_mail(string ...$emails) : self {
         return $this->metadata("mail", $emails);
     }
-    public function init_tel(array $tels) : self {
-        return $this->metadata("tel", $tels);
+    public function init_tel(string ...$tel) : self {
+        return $this->metadata("tel", $tel);
     }
     public function init_author(string $author) : self {
         return $this->metadata("author", $author);
     }
     public function init_copyright(string $copyright) : self {
         return $this->metadata("copy", $copyright);
+    }
+
+    public function init_end() : void {
+        self::initialize();
     }
 
     public function init_others(array $other_data): self
@@ -227,17 +235,21 @@ trait Config
         LayMail::set_credentials($map);
     }
 
-    public static function set_orm(bool $include = true): ?SQL {
+    public function init_orm(bool $connect_by_default = true): self {
         self::is_init();
 
-        if(isset(self::$CONNECTION_ARRAY))
-            return $include ? self::connect(self::$CONNECTION_ARRAY) : null;
+        if(isset(self::$CONNECTION_ARRAY)) {
+            if($connect_by_default)
+                self::connect(self::$CONNECTION_ARRAY);
+
+            return $this;
+        }
 
         $file = self::get_env() == "DEV" ? 'dev' : 'prod';
 
         if(!file_exists(self::instance()->get_res__server('db') . $file . ".lenv")) {
             Exception::throw_exception("db file does not exist", "NoDbEnvFile");
-            return null;
+            return $this;
         }
 
         $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('db') . $file . ".lenv");
@@ -273,7 +285,10 @@ trait Config
 
         self::$CONNECTION_ARRAY = $map;
 
-        return $include ? self::connect($map) : null;
+        if($connect_by_default)
+            self::connect($map);
+
+        return $this;
     }
 
     public static function get_orm(): SQL
@@ -319,6 +334,10 @@ trait Config
             return;
 
         $orm = self::$SQL_INSTANCE;
+
+        if(!isset($orm->query_info))
+            return;
+
         $orm?->close($orm->get_link() ?? $link, true);
     }
 

@@ -50,19 +50,26 @@ if(!is_dir($project_root)){
     return;
 }
 
+$core->project_exists();
+
 print "Existing Project Modification Initiated\n";
 
-if($overwrite_existing_project_by_default === false && $overwrite_project === false)
+$overwrite = !($overwrite_existing_project_by_default === false && $overwrite_project === false);
+$update = !($always_update_lay_package === false && $update_project === false);
+
+$msg = $overwrite ? "Overwritten" : "Updated";
+
+if(!$overwrite && !$update)
     $core->use_error(
         "You are trying to overwrite an existing project, please rename the existing folder or change the name of your current project location.\n".
         "If you really want to overwrite the project, use add flag `-w true` to your command."
     );
 
-if($always_update_lay_package === false && $update_project === false)
+if(!$update)
     $core->use_error(
         "You are trying to update the lay package of your project, if this is your wish add the flag `-u true` to your command"
     );
 
 $core->create_project($lay, $project_root);
 
-print "Exisitng Project Modification Completed\n";
+print "Exisitng Project $msg Successfully\n";

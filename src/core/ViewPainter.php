@@ -4,12 +4,21 @@ namespace Lay\core;
 
 use Closure;
 use Lay\core\sockets\IsSingleton;
+use Opis\Closure\SerializableClosure;
 
 /**
  * Page Creator
  */
 final class ViewPainter {
     use IsSingleton;
+    const key_core = "core";
+    const key_page = "page";
+    const key_body = "body";
+    const key_view = "view";
+    const key_assets = "assets";
+    const key_local = "local";
+    const key_local_array = "local_array";
+
     private static array $constant_attributes = [];
 
     public static function constants(array $meta) : void {
@@ -25,30 +34,30 @@ final class ViewPainter {
             $url = rtrim($data->base, "/") . $repl;
 
         self::$constant_attributes = [
-            "core" => [
-                "close_connection" => $const['core']['close_connection'] ?? true,
-                "script" => $const['core']['script'] ?? true,
-                "strict" => $const['core']['strict'] ?? true,
-                "skeleton" => $const['core']['skeleton'] ?? true,
+            self::key_core => [
+                "close_connection" => $const[self::key_core]['close_connection'] ?? true,
+                "script" => $const[self::key_core]['script'] ?? true,
+                "strict" => $const[self::key_core]['strict'] ?? true,
+                "skeleton" => $const[self::key_core]['skeleton'] ?? true,
+                "append_site_name" => $const[self::key_core]['append_site_name'] ?? true,
             ],
-            "page" => [
-                "charset" =>  $const['page']['charset'] ?? "UTF-8",
-                "base" =>  $const['page']['base'] ?? null,
-                "url" => $const['page']['url'] ?? $url,
-                "canonical" => $const['page']['canonical'] ?? $url,
-                "title" => $const['page']['title'] ?? "Untitled Page",
-                "desc" => $const['page']['desc'] ?? "",
-                "img" => $const['page']['img'] ?? null,
-                "author" => $const['page']['author'] ?? null,
-                "append_site_name" => $const['page']['append_site_name'] ?? true,
+            self::key_page => [
+                "charset" =>  $const[self::key_page]['charset'] ?? "UTF-8",
+                "base" =>  $const[self::key_page]['base'] ?? null,
+                "url" => $const[self::key_page]['url'] ?? $url,
+                "canonical" => $const[self::key_page]['canonical'] ?? $url,
+                "title" => $const[self::key_page]['title'] ?? "Untitled Page",
+                "desc" => $const[self::key_page]['desc'] ?? "",
+                "img" => $const[self::key_page]['img'] ?? null,
+                "author" => $const[self::key_page]['author'] ?? null,
 
                 // It takes the value {front | back}, this helps ViewPainter locate internal assets matched in folders
                 // named __front | __back, for things like: views, includes and controllers
-                "type" =>  $const['page']['type'] ?? null,
+                "type" =>  $const[self::key_page]['type'] ?? null,
             ],
-            "body" =>  [
-                "class" =>  $const['body']['class'] ?? null,
-                "attr" =>   $const['body']['attr'] ?? null,
+            self::key_body =>  [
+                "class" =>  $const[self::key_body]['class'] ?? null,
+                "attr" =>   $const[self::key_body]['attr'] ?? null,
             ],
             /**
              * `view` is an array that accepts three [optional] keys for each section of the html page,
@@ -66,13 +75,13 @@ final class ViewPainter {
              *     while it looks for the value of the other keys, inside the includes folder.
              *
              *     `ViewPainter` will look for the files in a folder that matches {__front|__back} depending on the value
-             *     of `$meta['page']['type']`.
+             *     of `$meta[self::key_page]['type']`.
              *    @example: 'head' => 'header', 'body' => 'homepage',
              **/
-            "view" => [
-                "head" => $const['view']['head'] ?? null,
-                "body" => $const['view']['body'] ?? null,
-                "script" => $const['view']['script'] ?? null,
+            self::key_view => [
+                "head" => $const[self::key_view]['head'] ?? null,
+                "body" => $const[self::key_view]['body'] ?? null,
+                "script" => $const[self::key_view]['script'] ?? null,
             ],
             /**
              * `assets` searches for assets based on the `ARRAY_KEY`/`DIRECTORY_NAME`
@@ -80,41 +89,39 @@ final class ViewPainter {
              * The entries can also be an array:
              * @example "assets" => [ ["src" => "@custom/js/front/contact-us.js", "async" => true, "type" => "text/javascript"], ]
              **/
-            "assets" => $const['assets'] ?? [],
-            "local" => $const['local'] ?? [],
-            "local_raw" => $const['local_raw'] ?? [],
-            "local_array" => $const['local_array'] ?? [],
+            self::key_assets => $const[self::key_assets] ?? [],
+            self::key_local => $const[self::key_local] ?? [],
+            self::key_local_array => $const[self::key_local_array] ?? [],
         ];
     }
 
-    public function paint(array $meta_data) : void {
+    public function paint(array $page_data) : void {
         if(empty(self::$constant_attributes))
             self::constants([]);
 
         $layConfig = LayConfig::instance();
         $data = $layConfig->get_site_data();
 
-        $const = array_replace_recursive(self::$constant_attributes, $meta_data);;
+        $const = array_replace_recursive(self::$constant_attributes, $page_data);;
 
-        $const['page']['title_raw'] = $const['page']['title'];
+        $const[self::key_page]['title_raw'] = $const[self::key_page]['title'];
 
-        if(strtolower($const['page']['title_raw']) == "homepage"){
-            $const['page']['title'] = $data->name->full;
-            $const['page']['title_raw'] = $data->name->short;
+        if(strtolower($const[self::key_page]['title_raw']) == "homepage"){
+            $const[self::key_page]['title'] = $data->name->full;
+            $const[self::key_page]['title_raw'] = $data->name->short;
         }
         else{
-            $const['page']['title'] = !$const['page']['append_site_name'] ?
-                $const['page']['title_raw'] :
-                $const['page']['title_raw'] . " :: " . $data->name->short;
+            $const[self::key_page]['title'] = !$const[self::key_core]['append_site_name'] ?
+                $const[self::key_page]['title_raw'] :
+                $const[self::key_page]['title_raw'] . " :: " . $data->name->short;
         }
 
         // Pass the variables required by include files from this scope to their scope.
         // This affects all files included within this same scope.
         $layConfig::set_inc_vars([
             "META" => $const,
-            "LOCAL" => $const['local'],
-            "LOCAL_RAW" => $const['local_raw'],
-            "LOCAL_ARRAY" => $const['local_array'],
+            "LOCAL" => $const[self::key_local],
+            "LOCAL_ARRAY" => $const[self::key_local_array],
         ]);
 
         $this->skeleton($const);
@@ -124,7 +131,7 @@ final class ViewPainter {
         $layConfig = LayConfig::instance();
         $site_data = $layConfig->get_site_data();
         $client = $layConfig->get_res__client();
-        $page = $meta['page'];
+        $page = $meta[self::key_page];
 
         $img = $page['img'] ?? $site_data->img->icon;
         $author = $page['author'] ?? $site_data->author;
@@ -171,7 +178,7 @@ final class ViewPainter {
             $canonical
             {$this->skeleton_head($meta)}
         </head>
-        <body class="{$meta['body']['class']}" {$meta['body']['attr']}>
+        <body class="{$meta[self::key_body]['class']}" {$meta[self::key_body]['attr']}>
             <!--//START LAY CONSTANTS-->
             <input type="hidden" id="LAY-API" value="$client->api">
             <input type="hidden" id="LAY-UPLOAD" value="$client->upload">
@@ -195,30 +202,35 @@ final class ViewPainter {
 
     # This uses the parameters passed from the page array to handle the view either as Closure or by inclusion
     private function view_handler(string $view_section, array &$meta) : string {
-        $meta_view = $meta['view'][$view_section];
+        $meta_view = $meta[self::key_view][$view_section];
         $layConfig = LayConfig::instance();
-        $inc_type = $meta['page']['type'] == "back" ? "inc_back" : "inc_front";
+        $inc_type = $meta[self::key_page]['type'] == "back" ? "inc_back" : "inc_front";
         $type = "front";
         $section_prefix = $view_section == "body" ? "view" : "inc";
 
-        if($meta['page']['type'] == "back")
+        if($meta[self::key_page]['type'] == "back")
             $type = "back";
 
         ob_start();
 
         if($meta_view instanceof Closure)
-            $meta_view($meta);
+            echo $meta_view($meta);
+
+        elseif($meta_view instanceof SerializableClosure) {
+            $meta_view = $meta_view->getClosure();
+            echo $meta_view($meta);
+        }
 
         elseif($meta_view)
-            $layConfig->inc_file(explode(".$section_prefix", $meta_view)[0], $section_prefix . "_" . $type, strict: $meta['core']['strict']);
+            $layConfig->inc_file(explode(".$section_prefix", $meta_view)[0], $section_prefix . "_" . $type, strict: $meta[self::key_core]['strict']);
 
         $meta_view = ob_get_clean();
 
-        if($meta['core']['skeleton'] === true)
-            return $layConfig->inc_file($view_section, $inc_type, strict: $meta['core']['strict'], vars: [
+        if($meta[self::key_core]['skeleton'] === true)
+            return $layConfig->inc_file($view_section, $inc_type, strict: $meta[self::key_core]['strict'], vars: [
                 "INCLUDE_AS_STRING" => true,
                 "META" => [
-                    "view" => [
+                    self::key_view => [
                         $view_section => $meta_view
                     ]
                 ]
@@ -342,7 +354,7 @@ final class ViewPainter {
         };
         $view = $this->view_handler('head',$meta);
 
-        $this->prepare_assets($css_template, $meta['assets'], $view, "css");
+        $this->prepare_assets($css_template, $meta[self::key_assets], $view, "css");
 
         return $view;
     }
@@ -371,7 +383,7 @@ final class ViewPainter {
         $layConfig = LayConfig::instance();
         $core_script = "";
 
-        if($meta['core']['script']) {
+        if($meta[self::key_core]['script']) {
             $s = DIRECTORY_SEPARATOR;
             $env = strtolower($layConfig::get_env());
             $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
@@ -391,9 +403,9 @@ final class ViewPainter {
         }
 
         $view = $this->view_handler('script',$meta);
-        $this->prepare_assets($js_template, $meta['assets'], $view, "js");
+        $this->prepare_assets($js_template, $meta[self::key_assets], $view, "js");
 
-        if($meta['core']['close_connection'])
+        if($meta[self::key_core]['close_connection'])
             $layConfig->close_sql();
 
         return $core_script . $view;

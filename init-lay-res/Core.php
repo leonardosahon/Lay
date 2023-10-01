@@ -8,6 +8,7 @@ class Core {
     private static string $current_project_location;
     private static bool $always_update_lay_package = true;
     private static bool $always_overwrite_project = false;
+    private static bool $project_exists = false;
     private static object $composer;
 
     public function __construct(
@@ -29,6 +30,11 @@ class Core {
 
     public function set_overwrite(bool $switch) : void {
         self::$always_overwrite_project = $switch;
+    }
+
+    public static function project_exists(): void
+    {
+        self::$project_exists = true;
     }
 
     public function intro($kill = false) {
@@ -87,10 +93,10 @@ class Core {
                 $location = $flag;
                 break;
             case '-w':
-                $overwrite = (bool)$flag;
+                $overwrite = filter_var($flag, FILTER_VALIDATE_BOOL);
                 break;
             case '-u':
-                $update = (bool)$flag;
+                $update = filter_var($flag, FILTER_VALIDATE_BOOL);
                 break;
         }
     }
@@ -122,6 +128,13 @@ class Core {
         $sections_js = ["front","back"];
         $s = DIRECTORY_SEPARATOR;
         $lay = $lay . "src" . $s;
+
+        // copy specified Lay version
+        if(!self::$project_exists || (self::$project_exists && self::$always_update_lay_package))
+            new CopyDirectory($lay, $project_root . $s . "Lay");
+
+        if(self::$project_exists && !self::$always_overwrite_project)
+            return;
 
         $inc = "res{$s}server{$s}includes$s";
         $view = "res{$s}server{$s}view$s";
@@ -159,9 +172,6 @@ class Core {
         $this->copy_routine($section . "images","favicon.png");
         $this->copy_routine($section . "images","logo.png");
 
-        // copy specified Lay version
-        new CopyDirectory($lay, $project_root . $s . "Lay");
-
         // copy default files
         $this->copy_routine("","api.php");
 
@@ -170,11 +180,12 @@ class Core {
         $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
 
         $this->copy_routine("res{$s}server{$s}controller{$s}__front{$s}", "EndUsers.php");
+        $this->copy_routine("res{$s}server{$s}view{$s}", "DefaultViews.php");
 
         $this->copy_routine("", "favicon.ico");
-        $this->copy_routine("", "builder_default.php");
         $this->copy_routine("", "index.php");
         $this->copy_routine("", "layconfig.php");
+        $this->copy_routine("", "git-auto-deploy.php");
         $this->copy_routine("", "htaccess", ".htaccess");
         $this->copy_routine("", "gitignore", ".gitignore");
         $this->copy_routine("", "robots.txt");

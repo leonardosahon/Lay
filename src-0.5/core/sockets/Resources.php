@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\sockets;
 use Lay\core\Exception;
-use Lay\libs\LayObject;
+use Lay\libs\ObjectHandler;
 
 trait Resources {
     private static object $client;
@@ -42,49 +42,45 @@ trait Resources {
             ],
         ];
 
-        self::$client = LayObject::instance()->to_object($obj);
+        self::$client = ObjectHandler::instance()->to_object($obj);
     }
     protected static function set_internal_res_server(string $dir) : void {
-
         $slash = DIRECTORY_SEPARATOR;
         $root_server    = $dir  . "res" . $slash . "server" . $slash;
         $obj = [
-            "root"    =>   $dir,
             "dir"     =>   $dir,
-            "lay"    =>    $dir             . "Lay"         . $slash,
-            "lay_env" =>   $root_server     . "includes"    . $slash . "__env" . $slash,
-            "db"      =>   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash,
+            "db"      =>   $root_server     . "includes"    . $slash . "__db" . $slash,
             "inc"     =>   $root_server     . "includes"    . $slash,
             "ctrl"    =>   $root_server     . "controller"  . $slash,
             "view"    =>   $root_server     . "view"        . $slash,
             "upload"  =>   "res" . $slash . "uploads" . $slash,
         ];
 
-        self::$server = LayObject::instance()->to_object($obj);
+        self::$server = ObjectHandler::instance()->to_object($obj);
     }
     protected static function set_internal_site_data(array $options) : void {
         $obj = array_merge([
-            "author" => $options['author'] ?? null,
-            "copy" => $options['copy'] ?? null,
-            "name" => $options['name'] ?? null,
+            "author" => $options['author'],
+            "copy" => $options['copy'],
+            "name" => $options['name'],
             "img" => [
-                "logo" => isset(self::$client) ? self::$client->custom->img . "logo.png" : null,
-                "favicon" => isset(self::$client) ? self::$client->custom->img . "favicon.png" : null,
-                "icon" => isset(self::$client) ? self::$client->custom->img . "icon.png" : null,
+                "logo" => self::$client->custom->img . "logo.png",
+                "favicon" => self::$client->custom->img . "favicon.png",
+                "icon" => self::$client->custom->img . "icon.png",
             ],
-            "color" => $options['color'] ?? null,
+            "color" => $options['color'],
             "mail" => [
-                ...$options['mail'] ?? []
+                ...$options['mail']
             ],
-            "tel" => $options['tel'] ?? null,
-            "others" => $options['others'] ?? null,
+            "tel" => $options['tel'],
+            "others" => $options['others'],
         ], $options );
 
-
-        self::$site = LayObject::instance()->to_object($obj);
+        self::$site = ObjectHandler::instance()->to_object($obj);
     }
 
-    private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {
+    private static function get_res(string $obj_type, $resource, string ...$index_chain) {
+
         foreach ($index_chain as $v) {
             if(is_object($resource)){
                 $resource = $resource->{$v};
@@ -118,12 +114,7 @@ trait Resources {
         array_pop($index);
 
         $object_push = function (&$key) use ($value) {
-            $self = self::instance();
-            $key = str_replace(
-                [ "@back","@front","@custom" ],
-                [ $self->get_res__client('back','root'), $self->get_res__client('front','root'), $self->get_res__client('custom','root') ],
-                $value
-            );
+            $key = $value;
         };
         switch (count($index)){
             default:
@@ -170,17 +161,15 @@ trait Resources {
     # Site Metadata
     public static function set_site_data(...$index__and__value) : void {
         self::is_init();
-
         self::set_res(self::$site,[],...$index__and__value);
     }
     public function get_site_data(string ...$index_chain) {
-        self::is_init(true);
+        self::is_init();
         return self::get_res("site_data", self::$site,...$index_chain);
     }
 
     public function send_to_client(array $values) : string {
         self::is_init();
-
         foreach ($values as $v){
             self::$CLIENT_VALUES .= $v;
         }

@@ -6,7 +6,7 @@ use Closure;
 use Lay\core\enums\LayRequestMethod;
 
 // TODO: Implement Middleware Handler
-final class LayRequestHandler{
+final class LayRequestHandler {
     public static function new() : self {
         return new self();
     }
