@@ -1,14 +1,13 @@
 {
   "name": "leonard-osahon/lay",
-  "type": "project",
+  "type": "library",
   "description": "A Quick Start PHP Framework",
   "keywords": ["framework", "lay", "lite framework", "lite php framework"],
   "license": "MIT",
   "version": "1.0.0",
-  "homepage": "https://github.com/leonardosahon/lay",
+  "homepage": "https://lay.osaitech.dev",
   "time": "2021-09-22",
   "modified" : "2023-10-01",
-
   "authors": [
     {
       "name": "Osahenrumwen Aigbogun",
@@ -17,17 +16,28 @@
       "role": "Lead Developer"
     }
   ],
+  "support": {
+    "source": "https://github.com/leonardosahon/Lay",
+    "issues": "https://github.com/leonardosahon/Lay/issues"
+  },
   "require": {
+    "wolfcast/browser-detection": "2.9.7",
+    "phpmailer/phpmailer": "v6.8.0"
+  },
+  "require-dev": {
     "php": "^8.1",
+    "phpunit/phpunit": "10.3.2",
     "ext-mysqli": "*",
     "ext-json": "*",
     "ext-openssl": "*",
     "ext-exif": "*",
     "ext-gd": "*",
-    "ext-sodium": "*"
+    "ext-sodium": "*",
+    "ext-fileinfo": "*"
   },
-  "require-dev": {
-    "wolfcast/browser-detection": "2.9.5",
-    "opis/closure": "^3.5"
+  "autoload": {
+    "psr-4": {
+      "Leonard\\Lay\\": "src"
+    }
   }
 }

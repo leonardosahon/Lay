@@ -189,5 +189,11 @@ class Core {
         $this->copy_routine("", "htaccess", ".htaccess");
         $this->copy_routine("", "gitignore", ".gitignore");
         $this->copy_routine("", "robots.txt");
+
+        // copy composer dependencies to project root
+        $fh = fopen(self::$current_project_location . $s . "composer.json", "w");
+        $composer['require'] = self::$composer->require;
+        fwrite($fh, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+        fclose($fh);
     }
 }
