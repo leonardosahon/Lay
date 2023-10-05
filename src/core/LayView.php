@@ -155,7 +155,7 @@ final class LayView {
         return $this->store_page_data(ViewPainter::key_page, $key, $value);
     }
 
-    public function body_attr(?string $class = null, ?string $attribute = null) : self {
+    public function body_tag(?string $class = null, ?string $attribute = null) : self {
         return $this->store_page_data(ViewPainter::key_body, "body", ["class" => $class, "attr" => $attribute]);
     }
 

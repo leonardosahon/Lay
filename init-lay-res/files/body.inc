@@ -1,2 +1,5 @@
 <?php
-echo $view->body;
+global $view;
+?>
+
+<?= $view->body ?>

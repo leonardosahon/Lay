@@ -5,10 +5,7 @@ namespace Lay\core\sockets;
 
 use Lay\core\Exception;
 use Lay\libs\LayMail;
-use Lay\libs\LayObject;
 use Lay\orm\SQL;
-use Lay\AutoLoader;
-use stdClass;
 
 trait Config
 {
@@ -71,6 +68,7 @@ trait Config
     public function init_name(string $short, string $full) : self {
         return $this->metadata("name", [ "short" => $short,  "full" => $full ]);
     }
+
     public function init_color(string $pry, string $sec) : self {
         return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
     }

@@ -31,6 +31,8 @@ $site_name = "Sample Lay Project";
 ///// Project Configuration
 $layConfig = LayConfig::new();
 
+$GLOBALS['layConfig'] = $layConfig;
+
 $layConfig
     ->dont_use_prod_folder()
     ->init_name($site_name, "$site_name | Slogan Goes Here")
@@ -46,7 +48,8 @@ $layConfig
     ->init_copyright("&copy; <a href=\"{$layConfig->get_site_data('base')}\">$site_name</a>. " . date("Y") . ". All Rights Reserved");
 
 // Set a custom location for your static assets from Lays' default to yours.
-// Check docs for default locations
+// For default locations use:
+// var_dump($layConfig->get_res__client('front'));
 $layConfig::set_res__client("front", "img", "@front/assets/images/");
 $layConfig::set_res__client("front", "css", "@front/assets/css/");
 $layConfig::set_res__client("front", "js", "@front/assets/js/");

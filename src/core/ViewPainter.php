@@ -20,6 +20,7 @@ final class ViewPainter {
     const key_local_array = "local_array";
 
     private static array $constant_attributes = [];
+    private static array $meta_data = [];
 
     public static function constants(array $meta) : void {
         $const = array_replace_recursive(self::$constant_attributes, $meta);
@@ -124,10 +125,13 @@ final class ViewPainter {
             "LOCAL_ARRAY" => $const[self::key_local_array],
         ]);
 
-        $this->skeleton($const);
+        self::$meta_data = $const;
+        $this->create_html_page();
     }
 
-    private function skeleton(array $meta) : void {
+    private function create_html_page() : void {
+        $meta = self::$meta_data;
+
         $layConfig = LayConfig::instance();
         $site_data = $layConfig->get_site_data();
         $client = $layConfig->get_res__client();
@@ -176,7 +180,7 @@ final class ViewPainter {
             <meta itemprop="image" id="LAY-PAGE-IMG" content="{$img}">
             <link rel="icon" type="image/x-icon" href="{$site_data->img->favicon}">
             $canonical
-            {$this->skeleton_head($meta)}
+            {$this->skeleton_head()}
         </head>
         <body class="{$meta[self::key_body]['class']}" {$meta[self::key_body]['attr']}>
             <!--//START LAY CONSTANTS-->
@@ -189,8 +193,8 @@ final class ViewPainter {
             <input type="hidden" id="LAY-FRONT-ROOT" value="{$client->front->root}">
             <input type="hidden" id="LAY-CUSTOM-ROOT" value="{$client->custom->root}">
             <!--//END LAY CONSTANTS-->
-            {$this->skeleton_body($meta)}
-            {$this->skeleton_script($meta)}
+            {$this->skeleton_body()}
+            {$this->skeleton_script()}
         </body></html>
         STR;
 
@@ -201,7 +205,9 @@ final class ViewPainter {
     }
 
     # This uses the parameters passed from the page array to handle the view either as Closure or by inclusion
-    private function view_handler(string $view_section, array &$meta) : string {
+    private function view_handler(string $view_section) : string {
+        $meta = self::$meta_data;
+
         $meta_view = $meta[self::key_view][$view_section];
         $layConfig = LayConfig::instance();
         $inc_type = $meta[self::key_page]['type'] == "back" ? "inc_back" : "inc_front";
@@ -211,6 +217,9 @@ final class ViewPainter {
         if($meta[self::key_page]['type'] == "back")
             $type = "back";
 
+        // Accept the type of unique view type from the current page and store it in the `$meta_view` variable.
+        // This could be a view file, which will simply be the filename without its file extension (.view).
+        // Or use a closure which may or may not return a string; If not returning a string, it should echo a string.
         ob_start();
 
         if($meta_view instanceof Closure)
@@ -226,6 +235,8 @@ final class ViewPainter {
 
         $meta_view = ob_get_clean();
 
+        // This includes the `inc file` related to the section.
+        // That is: body.inc for `body section`, head.inc for `head section`.
         if($meta[self::key_core]['skeleton'] === true)
             return $layConfig->inc_file($view_section, $inc_type, strict: $meta[self::key_core]['strict'], vars: [
                 "INCLUDE_AS_STRING" => true,
@@ -240,8 +251,105 @@ final class ViewPainter {
     }
 
     # <Body> including <Header> or Top Half of <Body>
-    private function skeleton_body(array $meta) : string {
-        return $this->view_handler('body',$meta);
+    private function skeleton_body() : string {
+        return $this->view_handler('body');
+    }
+
+    # <Head> values that belong inside the <head> tag
+    private function skeleton_head() : string {
+        $meta = self::$meta_data;
+
+        $css_template = function(string $href, array $attributes = []) : string {
+            $rel = $attributes['rel'] ?? "stylesheet";
+
+            if(isset($attributes['rel']))
+                unset($attributes['rel']);
+
+            if(isset($attributes['src']))
+                unset($attributes['src']);
+
+            $attr = "";
+            foreach ($attributes as $i => $a){
+                $attr .= "$i=\"$a\" ";
+            }
+
+            return <<<LNK
+                <link href="$href" rel="$rel" $attr />
+            LNK;
+        };
+        $view = $this->view_handler('head');
+
+        $this->prepare_assets($css_template, $meta[self::key_assets], $view, "css");
+
+        return $view;
+    }
+
+    private function script_tag_template(string $src, array $attributes = []) : string
+    {
+        $defer = str_replace([1, true], 'true', (string)filter_var($attributes['defer'] ?? true, FILTER_VALIDATE_INT));
+        $defer = $defer == '' ? '' : "defer";
+
+        if (isset($attributes['src']))
+            unset($attributes['src']);
+
+        if (isset($attributes['defer']))
+            unset($attributes['defer']);
+
+        $attr = "";
+        foreach ($attributes as $i => $a) {
+            $attr .= "$i=\"$a\" ";
+        }
+
+        return <<<LNK
+                <script src="$src" $defer $attr></script>
+            LNK;
+    }
+    private function skeleton_script() : string {
+        $meta = self::$meta_data;
+
+        $layConfig = LayConfig::instance();
+        $core_script = $this->core_script();
+
+        $view = $this->view_handler('script');
+
+        $this->prepare_assets(
+            fn ($src, $attr = []) => $this->script_tag_template($src, $attr),
+            $meta[self::key_assets], $view,
+            "js"
+        );
+
+        if($meta[self::key_core]['close_connection'])
+            $layConfig->close_sql();
+
+        return $core_script . $view;
+    }
+
+    private function core_script() : string {
+        $meta = self::$meta_data;
+        $layConfig = LayConfig::instance();
+        $js_template = fn ($src, $attr) => $this->script_tag_template($src, $attr);
+        $core_script = "";
+
+        if($meta[self::key_core]['script']) {
+            $s = DIRECTORY_SEPARATOR;
+            $env = strtolower($layConfig::get_env());
+            $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
+            $lay_base = $layConfig->get_res__client()->lay;
+            list($omj,$const) = null;
+
+            if ($env == "prod") {
+                if (file_exists($lay_root . 'omj$' . $s . 'index.min.js'))
+                    $omj = $js_template($lay_base . 'omj$/index.min.js', ['defer' => false]);
+
+                if (file_exists($lay_root . "static{$s}js{$s}constants.min.js"))
+                    $const = $js_template($lay_base . 'static/js/constants.min.js', ['defer' => false]);
+            }
+
+            $core_script .= $omj ?? $js_template($lay_base . 'omj$/index.js',['defer' => false]);
+            $core_script .= $const ?? $js_template($lay_base . 'static/js/constants.js', ['defer' => false]);
+        }
+
+        return $core_script;
     }
 
     private function prepare_assets(\Closure $asset_template, array &$assets, string &$view, string $asset_type) : void {
@@ -331,83 +439,5 @@ final class ViewPainter {
 
             $view .= $resolve_asset($asset, $k, $assets, false);
         }
-    }
-    # <Head> values that belong inside the <head> tag
-    private function skeleton_head(array &$meta) : string {
-        $css_template = function(string $href, array $attributes = []) : string {
-            $rel = $attributes['rel'] ?? "stylesheet";
-
-            if(isset($attributes['rel']))
-                unset($attributes['rel']);
-
-            if(isset($attributes['src']))
-                unset($attributes['src']);
-
-            $attr = "";
-            foreach ($attributes as $i => $a){
-                $attr .= "$i=\"$a\" ";
-            }
-
-            return <<<LNK
-                <link href="$href" rel="$rel" $attr />
-            LNK;
-        };
-        $view = $this->view_handler('head',$meta);
-
-        $this->prepare_assets($css_template, $meta[self::key_assets], $view, "css");
-
-        return $view;
-    }
-
-    private function skeleton_script(array $meta) : string {
-        $js_template = function (string $src, array $attributes = []) : string {
-            $defer = str_replace([1,true], 'true', (string) filter_var($attributes['defer'] ?? true,FILTER_VALIDATE_INT));
-            $defer = $defer == '' ? '' : "defer";
-
-            if(isset($attributes['src']))
-                unset($attributes['src']);
-
-            if(isset($attributes['defer']))
-                unset($attributes['defer']);
-
-            $attr = "";
-            foreach ($attributes as $i => $a){
-                $attr .= "$i=\"$a\" ";
-            }
-
-            return <<<LNK
-                <script src="$src" $defer $attr></script>
-            LNK;
-        };
-
-        $layConfig = LayConfig::instance();
-        $core_script = "";
-
-        if($meta[self::key_core]['script']) {
-            $s = DIRECTORY_SEPARATOR;
-            $env = strtolower($layConfig::get_env());
-            $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
-            $lay_base = $layConfig->get_res__client()->lay;
-            list($omj,$const) = null;
-
-            if ($env == "prod") {
-                if (file_exists($lay_root . 'omj$' . $s . 'index.min.js'))
-                    $omj = $js_template($lay_base . 'omj$/index.min.js',['defer' => false]);
-
-                if (file_exists($lay_root . "static{$s}js{$s}constants.min.js"))
-                    $const = $js_template($lay_base . 'static/js/constants.min.js',['defer' => false]);
-            }
-
-            $core_script .= $omj ?? $js_template($lay_base . 'omj$/index.js',['defer' => false]);
-            $core_script .= $const ?? $js_template($lay_base . 'static/js/constants.js',['defer' => false]);
-        }
-
-        $view = $this->view_handler('script',$meta);
-        $this->prepare_assets($js_template, $meta[self::key_assets], $view, "js");
-
-        if($meta[self::key_core]['close_connection'])
-            $layConfig->close_sql();
-
-        return $core_script . $view;
     }
 }

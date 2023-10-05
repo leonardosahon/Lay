@@ -12,6 +12,7 @@ trait Includes{
         self::is_init();
         self::$INC_VARS = array_replace_recursive(self::$INC_VARS, array_replace_recursive(self::$INC_VARS, $vars));
     }
+
     public static function get_inc_vars() : array{
         self::is_init();
         return self::$INC_VARS;
@@ -21,9 +22,13 @@ trait Includes{
         if(!file_exists($file_location))
             Exception::throw_exception("Execution Failed trying to include file ($file_location)","File-Not-Found");
 
-        $local_raw = $local_array;
         $view = is_array($meta) ? ($meta['view'] ?? null) : $meta?->view;
-        
+
+        $GLOBALS['meta'] = $meta;
+        $GLOBALS['local'] = $local;
+        $GLOBALS['local_array'] = $local_array;
+        $GLOBALS['view'] = $view;
+
         $layConfig = self::instance();
         ob_start(); include $file_location; return ob_get_clean();
     }
@@ -123,7 +128,6 @@ trait Includes{
 
         $meta = $var['META'] ?? [];
         $local = $var['LOCAL'] ?? [];
-        $local_raw = $var['LOCAL_RAW'] ?? [];
         $local_array = $var['LOCAL_ARRAY'] ?? [];
 
         if(self::$USE_OBJS){
@@ -131,12 +135,11 @@ trait Includes{
             $local = $obj->to_object($local);
         }
 
-
         if(!file_exists($file) && $strict)
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
 
         if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
-            return $this->inc_file_as_string($file, $meta, $local, $local_array ?? $local_raw);
+            return $this->inc_file_as_string($file, $meta, $local, $local_array);
 
         $layConfig = $this;
 

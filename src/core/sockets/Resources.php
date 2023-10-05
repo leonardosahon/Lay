@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace Lay\core\sockets;
+use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\Exception;
 use Lay\libs\LayObject;
 
@@ -86,6 +87,12 @@ trait Resources {
 
     private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {
         foreach ($index_chain as $v) {
+            if($resource === null)
+                Exception::throw_exception("[$v] doesn't exist in the [res_$obj_type] chain", $obj_type);
+
+            if(empty($v))
+                continue;
+
             if(is_object($resource)){
                 $resource = $resource->{$v};
                 continue;
@@ -93,11 +100,8 @@ trait Resources {
 
             if(is_array($resource)){
                 $resource = $resource[$v];
-                continue;
             }
 
-            if($resource === null)
-                Exception::throw_exception("[$v] doesn't exist in the [res_$obj_type] chain",$obj_type);
         }
         return $resource;
     }
@@ -111,8 +115,10 @@ trait Resources {
      */
     private static function set_res(object &$resource, array $accepted_index = [], ...$index) : void {
         if(!empty($accepted_index) && !in_array($index[0],$accepted_index,true))
-            Exception::throw_exception("The index [$index[0]] being accessed may not exist or is forbidden.
-                You can only access these index: " . implode(", ",$accepted_index),"Invalid Index");
+            Exception::throw_exception(
+                "The index [$index[0]] being accessed may not exist or is forbidden.
+                You can only access these index: " . implode(", ",$accepted_index),"Invalid Index"
+            );
 
         $value = end($index);
         array_pop($index);
@@ -147,35 +153,47 @@ trait Resources {
         }
     }
 
-    # Client Side
-    public static function set_res__client(...$index__and__value) : void {
+    public static function set_res__client(
+        #[ExpectedValues(["back","front","upload"])] string $client_index,
+        mixed ...$chain_and_value
+    ) : void {
         self::is_init();
-        self::set_res(self::$client,["back","front","upload"],...$index__and__value);
+        self::set_res(self::$client,["back","front","upload"], $client_index, ...$chain_and_value);
     }
-    public function get_res__client(string ...$index_chain) {
+    public function get_res__client(
+        #[ExpectedValues(['api', 'lay', 'upload', 'custom', 'front', 'back'])] string $client_index = "",
+        string ...$index_chain
+    ) : mixed {
         self::is_init();
-        return self::get_res("client", self::$client,...$index_chain);
-    }
-
-    # Server Side
-    public static function set_res__server(...$index__and__value) : void {
-        self::is_init();
-        self::set_res(self::$server,["view","ctrl","inc","upload",],...$index__and__value);
-    }
-    public function get_res__server(string ...$index_chain) {
-        self::is_init();
-        return self::get_res("server", self::$server,...$index_chain);
+        return self::get_res("client", self::$client, $client_index, ...$index_chain);
     }
 
-    # Site Metadata
-    public static function set_site_data(...$index__and__value) : void {
+    public static function set_res__server(
+        #[ExpectedValues(["view","ctrl","inc","upload"])] string $client_index,
+        string ...$chain_and_value
+    ) : void {
+        self::is_init();
+        self::set_res(self::$server, ["view","ctrl","inc","upload"], $client_index, ...$chain_and_value);
+    }
+
+    public function get_res__server(
+        #[ExpectedValues(["root","dir","lay","lay_env","db","inc","ctrl","view","upload"])] string $server_index = "",
+        string ...$index_chain
+    )
+    : mixed {
+        self::is_init();
+        return self::get_res("server", self::$server, $server_index, ...$index_chain);
+    }
+
+    public static function set_site_data(string $data_index, mixed ...$chain_and_value) : void {
         self::is_init();
 
-        self::set_res(self::$site,[],...$index__and__value);
+        self::set_res(self::$site, [], $data_index, ...$chain_and_value);
     }
-    public function get_site_data(string ...$index_chain) {
+
+    public function get_site_data(string $data_index = "", string ...$index_chain) : mixed {
         self::is_init(true);
-        return self::get_res("site_data", self::$site,...$index_chain);
+        return self::get_res("site_data", self::$site, $data_index, ...$index_chain);
     }
 
     public function send_to_client(array $values) : string {

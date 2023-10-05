@@ -10,6 +10,7 @@ class Core {
     private static bool $always_overwrite_project = false;
     private static bool $project_exists = false;
     private static object $composer;
+    public string $project_name;
 
     public function __construct(
         array $arguments,
@@ -22,6 +23,16 @@ class Core {
     
     public function set_current_project(string $project) : void {
         self::$current_project_location = $project;
+    }
+
+    public function set_project_name(string $project) : void {
+        $x = explode("/", trim($project, "/"));
+        $project = end($x);
+        $this->project_name = $project;
+    }
+
+    public function project_name() : string {
+        return self::$project_name ?? "";
     }
 
     public function set_update_lay(bool $switch) : void {
