@@ -25,12 +25,22 @@ final class LayView {
             return $this;
 
         if(self::$in_init) {
+            if(empty($key)) {
+                self::$route_container[self::route_storage_key][self::view_constants][$section] = $value;
+                return $this;
+            }
+
             self::$route_container[self::route_storage_key][self::view_constants][$section][$key] = $value;
             return $this;
         }
 
         if(!isset(self::$route))
             Exception::throw_exception("No valid route found", "NoRouteFound");
+
+        if(empty($key)) {
+            self::$route_container[self::route_storage_key][self::$route][$section] = $value;
+            return $this;
+        }
 
         self::$route_container[self::route_storage_key][self::$route][$section][$key] = $value;
         return $this;
@@ -156,7 +166,7 @@ final class LayView {
     }
 
     public function body_tag(?string $class = null, ?string $attribute = null) : self {
-        return $this->store_page_data(ViewPainter::key_body, "body", ["class" => $class, "attr" => $attribute]);
+        return $this->store_page_data(ViewPainter::key_body, value: ["class" => $class, "attr" => $attribute]);
     }
 
     public function head(string|Closure $file_or_func) : self {

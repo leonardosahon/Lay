@@ -197,8 +197,6 @@ trait Config
     }
 
     public static function set_smtp(): void {
-        self::is_init();
-
         if(isset(self::$SMTP_ARRAY))
             return;
 
@@ -234,8 +232,6 @@ trait Config
     }
 
     public function init_orm(bool $connect_by_default = true): self {
-        self::is_init();
-
         if(isset(self::$CONNECTION_ARRAY)) {
             if($connect_by_default)
                 self::connect(self::$CONNECTION_ARRAY);

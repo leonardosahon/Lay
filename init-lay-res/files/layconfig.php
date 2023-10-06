@@ -44,8 +44,8 @@ $layConfig
             This is an awesome project that is about to unfold you just watch and see 😉.
         ",
     ])
-    ->init_orm(defined('CONNECT_DB_BY_DEFAULT') && CONNECT_DB_BY_DEFAULT)
-    ->init_copyright("&copy; <a href=\"{$layConfig->get_site_data('base')}\">$site_name</a>. " . date("Y") . ". All Rights Reserved");
+    ->init_copyright("&copy; <a href=\"{$layConfig->get_site_data('base')}\">$site_name</a>. " . date("Y") . ". All Rights Reserved")
+    ->init_orm(defined('CONNECT_DB_BY_DEFAULT') && CONNECT_DB_BY_DEFAULT);
 
 // Set a custom location for your static assets from Lays' default to yours.
 // For default locations use:
