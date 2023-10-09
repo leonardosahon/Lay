@@ -124,10 +124,9 @@ trait Resources {
         array_pop($index);
 
         $object_push = function (&$key) use ($value) {
-            $self = self::instance();
             $key = str_replace(
                 [ "@back","@front","@custom" ],
-                [ $self->get_res__client('back','root'), $self->get_res__client('front','root'), $self->get_res__client('custom','root') ],
+                [ self::$client->back->root, self::$client->front->root, self::$client->custom->root],
                 $value
             );
         };
@@ -168,6 +167,11 @@ trait Resources {
         return self::get_res("client", self::$client, $client_index, ...$index_chain);
     }
 
+    public static function res_client() : object
+    {
+        return self::$client;
+    }
+
     public static function set_res__server(
         #[ExpectedValues(["view","ctrl","inc","upload"])] string $client_index,
         string ...$chain_and_value
@@ -185,6 +189,11 @@ trait Resources {
         return self::get_res("server", self::$server, $server_index, ...$index_chain);
     }
 
+    public static function res_server() : object
+    {
+        return self::$server;
+    }
+
     public static function set_site_data(string $data_index, mixed ...$chain_and_value) : void {
         self::is_init();
 
@@ -194,6 +203,11 @@ trait Resources {
     public function get_site_data(string $data_index = "", string ...$index_chain) : mixed {
         self::is_init(true);
         return self::get_res("site_data", self::$site, $data_index, ...$index_chain);
+    }
+
+    public static function site_data() : object
+    {
+        return self::$site;
     }
 
     public function send_to_client(array $values) : string {

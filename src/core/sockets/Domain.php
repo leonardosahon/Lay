@@ -16,33 +16,56 @@ trait Domain {
         "domain_type" => DomainType::LOCAL,
         "pattern" => "*",
     ];
+    private static bool $cache_domains = true;
+    private static bool $cache_domain_set = false;
     private static bool $domain_found = false;
-    private static string $domains_list_key = "__LAY_DOMAINS__";
+    private static string $domain_list_key = "__LAY_DOMAINS__";
+    private static array $domain_ram;
+
+    private static function init_cache_domain() : void {
+        if(self::$cache_domain_set)
+           return;
+
+        self::$cache_domain_set = true;
+        self::$cache_domains = self::$ENV_IS_PROD || self::site_data()->cache_domains;
+    }
+
+    private function cache_domain_ram() : void {
+        if (self::$cache_domains)
+            $_SESSION[self::$domain_list_key] = self::$domain_ram;
+    }
+
+    private function read_cached_domain_ram() : void {
+        if(self::$cache_domains && isset($_SESSION[self::$domain_list_key]))
+            self::$domain_ram = $_SESSION[self::$domain_list_key];
+    }
 
     private function domain_cache_key(DomainCacheKeys $key_type, string|null|int $key = null, mixed $value = null, bool $cache = true) : mixed {
-        $cache = $this->get_site_data("cache_domains") && $cache;
+        $cache = $cache && self::$cache_domains;
+        $this->read_cached_domain_ram();
 
         if($value) {
             if($key) {
-                if($cache && isset($_SESSION[self::$domains_list_key][$key_type->value][$key]))
+                if($cache && isset(self::$domain_ram[$key_type->value][$key]))
                     return null;
 
-                $_SESSION[self::$domains_list_key][$key_type->value][$key] = $value;
+                self::$domain_ram[$key_type->value][$key] = $value;
+                $this->cache_domain_ram();
                 return null;
             }
 
-
-            if($cache && isset($_SESSION[self::$domains_list_key][$key_type->value]))
+            if($cache && isset(self::$domain_ram[$key_type->value]))
                 return null;
 
-            $_SESSION[self::$domains_list_key][$key_type->value] = $value;
+            self::$domain_ram[$key_type->value] = $value;
+            $this->cache_domain_ram();
             return null;
         }
 
         if($key)
-            return $_SESSION[self::$domains_list_key][$key_type->value][$key] ?? null;
+            return self::$domain_ram[$key_type->value][$key] ?? null;
 
-        return $_SESSION[self::$domains_list_key][$key_type->value] ?? null;
+        return self::$domain_ram[$key_type->value] ?? null;
     }
 
     private function cache_domain_details(array $domain) : void {
@@ -109,7 +132,7 @@ trait Domain {
      * @return string
      */
     private function check_route_is_static_file(string $view) : string {
-        $ext_array = ["js","css","map","jpeg","jpg","png","gif","jiff","svg","json","xml","yaml"];
+        $ext_array = ["js","css","map","jpeg","jpg","png","gif","jiff","webp","svg","json","xml","yaml"];
         $x = explode(".",$view);
         $ext = strtolower((string) end($x));
 
@@ -253,6 +276,7 @@ trait Domain {
 
     public function add_domain(string $id, array $patterns, ViewTemplate $handler) : void {
         self::is_init();
+        self::init_cache_domain();
 
         $this->get_current_route();
 
@@ -275,19 +299,4 @@ trait Domain {
 
         return self::$current_route_details[$key];
     }
-
-    /**
-     * @param array $page_data
-     * @see ViewPainter
-     */
-    public function view(array $page_data) : void {
-        self::is_init();
-        ViewPainter::instance()->paint($page_data);
-    }
-
-    public function view_const(array $page_data) : void {
-        self::is_init();
-        ViewPainter::constants($page_data);
-    }
-
 }

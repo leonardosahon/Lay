@@ -53,6 +53,11 @@ trait Config
         return $this->switch("use_objects", false);
     }
 
+    /**
+     * Prevents the data sent through the ViewHandler of a specific domain from being cached.
+     * This only takes effect in development environment, if Lay detects the server is in production, it'll cache by default
+     * @return Config|\Lay\core\LayConfig
+     */
     public function dont_cache_domains() : self {
         return $this->switch("cache_domains", false);
     }

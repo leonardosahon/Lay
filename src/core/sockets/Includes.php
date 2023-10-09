@@ -67,9 +67,10 @@ trait Includes{
         $using_custom_route = false;
         $slash = DIRECTORY_SEPARATOR;
 
-        $inc_root = $this->get_res__server('inc');
-        $ctrl_root = $this->get_res__server('ctrl');
-        $view_root = $this->get_res__server('view');
+        $server = self::res_server();
+        $inc_root = $server->inc;
+        $ctrl_root = $server->ctrl;
+        $view_root = $server->view;
         $type_loc = $inc_root;
 
         $default_routes = fn($side) => [
@@ -130,7 +131,7 @@ trait Includes{
         $local = $var['LOCAL'] ?? [];
         $local_array = $var['LOCAL_ARRAY'] ?? [];
 
-        if(self::$USE_OBJS){
+        if(self::$USE_OBJS) {
             $meta = $obj->to_object($meta);
             $local = $obj->to_object($local);
         }

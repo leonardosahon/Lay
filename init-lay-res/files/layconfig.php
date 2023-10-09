@@ -34,6 +34,7 @@ $layConfig = LayConfig::new();
 $GLOBALS['layConfig'] = $layConfig;
 
 $layConfig
+    ->dont_cache_domains()
     ->dont_use_prod_folder()
     ->init_name($site_name, "$site_name | Slogan Goes Here")
     ->init_color("#082a96", "#0e72e3")
