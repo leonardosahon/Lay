@@ -29,7 +29,7 @@ res_dir=$lay_dir"../"
 ignore=$1
 
 # talk about git on verbose mode
-if [ $1 == '-s' ]; then
+if [ $ignore == '-s' ]; then
   ignore=$2
   commit_message=''
   # Git Push Condition
@@ -42,7 +42,8 @@ else
   fi
 
   case $push_repo in
-    n|N) echo "Ignoring git..." ;;
+    n|N) echo "Ignoring git..."
+    commit_message='' ;;
     *) read -p "Commit message: " commit_message;;
   esac
 fi
