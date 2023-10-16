@@ -1,3 +1,6 @@
+<?php
+global $meta, $layConfig;
+?>
 <style>
     .return{
         color: #fff;
@@ -17,4 +20,4 @@
 </style>
 <h1><?= $meta->page->title ?></h1>
 <p>This is the default error page of Lay Framework</p>
-<a class="return" href="<?= \Lay\core\LayConfig::instance()->get_site_data('base') ?>">Return Home</a>
+<a class="return" href="<?= $layConfig->get_site_data('base') ?>">Return Home</a>

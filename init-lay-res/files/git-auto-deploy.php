@@ -5,7 +5,7 @@ if(!($_SERVER['REQUEST_METHOD'] === 'POST' && $_GET['dep1'] === "a-pull" && $_GE
     die;
 }
 
-print "Autodeploy Responds With: \n";
+print "Auto deploy Responds With: \n";
 
 $post = json_decode($_POST['payload']);
 
@@ -15,7 +15,7 @@ if(isset($post->pull_request)) {
         echo shell_exec('git checkout main 2>&1');
         echo shell_exec('git pull 2>&1');
         echo shell_exec('git reset --hard origin/main 2>&1');
-        echo shell_exec('./Lay/deploy.sh 2>&1');
+        echo shell_exec('export HOME=./ && composer install 2>&1');
     }
 
     else
@@ -24,4 +24,4 @@ if(isset($post->pull_request)) {
     die;
 }
 
-echo $post->action;
+echo $post?->action?->zen;

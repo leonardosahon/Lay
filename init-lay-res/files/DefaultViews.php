@@ -15,7 +15,7 @@ class DefaultViews extends ViewTemplate
 
         $this->view->init_start()
             ->page('type', 'front')
-            ->body_attr("default-home", 'id="new-body"')
+            ->body_tag("default-home", 'id="new-body"')
             ->local("link", fn($link = "") => $layConfig->get_site_data("base") . $link)
             ->local("others", $layConfig->get_site_data('others'))
             ->local("img", $layConfig->get_res__client('front', 'img'))
@@ -46,7 +46,7 @@ class DefaultViews extends ViewTemplate
     {
         $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (LayView $layView){
             $layView->page('title', $this->view->request('route') . " - Page not Found")
-                ->body_attr("defult-home")
+                ->body_tag("defult-home")
                 ->local("current_page", "error")
                 ->local("section", "error")
                 ->body('error');

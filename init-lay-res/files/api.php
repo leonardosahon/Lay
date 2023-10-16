@@ -1,13 +1,13 @@
 <?php
-use Lay\core\LayRequestHandler;
+const CONNECT_DB_BY_DEFAULT = true;
+const SAFE_TO_INIT_LAY = true;
 
-$BOB_D_BUILDER = true;
 include_once "layconfig.php";
 
-$req = LayRequestHandler::fetch();
+$req = \Lay\core\LayRequestHandler::fetch();
 
 $req->prefix("client")
-    ->post("contact")->bind(fn() => EndUsers::new()->contact_us())
+    ->post("contact")->bind(fn() => \res\server\controller\__front\EndUsers::new()->contact_us())
     ->print_as_json();
 
 $req::end();

@@ -4,13 +4,14 @@ namespace res\server\controller\__front;
 
 use Lay\core\LayConfig;
 use Lay\libs\LayMail;
+use Lay\libs\LayObject;
 
 class EndUsers
 {
     use \Lay\core\sockets\IsSingleton;
 
     public function contact_us() : array {
-        $post = self::get_json();
+        $post = LayObject::new()->get_json();
 
         LayConfig::set_smtp();
 

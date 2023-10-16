@@ -5,10 +5,7 @@ namespace Lay\core\sockets;
 
 use Lay\core\Exception;
 use Lay\libs\LayMail;
-use Lay\libs\LayObject;
 use Lay\orm\SQL;
-use Lay\AutoLoader;
-use stdClass;
 
 trait Config
 {
@@ -56,6 +53,11 @@ trait Config
         return $this->switch("use_objects", false);
     }
 
+    /**
+     * Prevents the data sent through the ViewHandler of a specific domain from being cached.
+     * This only takes effect in development environment, if Lay detects the server is in production, it'll cache by default
+     * @return Config|\Lay\core\LayConfig
+     */
     public function dont_cache_domains() : self {
         return $this->switch("cache_domains", false);
     }
@@ -71,6 +73,7 @@ trait Config
     public function init_name(string $short, string $full) : self {
         return $this->metadata("name", [ "short" => $short,  "full" => $full ]);
     }
+
     public function init_color(string $pry, string $sec) : self {
         return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
     }
@@ -199,8 +202,6 @@ trait Config
     }
 
     public static function set_smtp(): void {
-        self::is_init();
-
         if(isset(self::$SMTP_ARRAY))
             return;
 
@@ -236,8 +237,6 @@ trait Config
     }
 
     public function init_orm(bool $connect_by_default = true): self {
-        self::is_init();
-
         if(isset(self::$CONNECTION_ARRAY)) {
             if($connect_by_default)
                 self::connect(self::$CONNECTION_ARRAY);

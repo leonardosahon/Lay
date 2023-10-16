@@ -1,3 +1,6 @@
+<?php
+global $meta, $local;
+?>
 <div style="text-align: center"><img src="<?= $local->logo ?>" alt="Lay Logo"></div>
 <h1><?= $meta->page->title ?></h1>
 <p>This is the default index page of Lay a lite php framework</p>

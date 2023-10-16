@@ -34,25 +34,27 @@ for($i = 0; $i < $argc; $i++){
 // start process
 $project_root = ltrim($ag[1],"/");
 $core->set_current_project($project_root);
+$core->set_project_name($project_root);
 $core->set_update_lay($update_project);
 $core->set_overwrite($overwrite_project);
 
 $lay = rtrim($default_lay_location, $s) . $s;
+$project_name = $core->project_name;
 
 if(!is_dir($default_lay_location))
     $core->use_error("The specified `default_lay_location` '$default_lay_location' does not exist, please change the value to the place where you cloned the `Lay` package into and try again");
 
 
-if(!is_dir($project_root)){
-    print "Fresh Project Creation Initiated\n";
+if(!is_dir($project_root)) {
+    print "-- New Project [$project_name] Creation Initiated\n";
         $core->create_project($lay, $project_root);
-    print "Fresh Project Creation Completed\n";
+    print "   [$project_name] Creation Completed\n";
     return;
 }
 
 $core->project_exists();
 
-print "Existing Project Modification Initiated\n";
+print "-- Starting [$project_name] Modification\n";
 
 $overwrite = !($overwrite_existing_project_by_default === false && $overwrite_project === false);
 $update = !($always_update_lay_package === false && $update_project === false);
@@ -72,4 +74,4 @@ if(!$update)
 
 $core->create_project($lay, $project_root);
 
-print "Exisitng Project $msg Successfully\n";
+print "   [$project_name] $msg Successfully\n";

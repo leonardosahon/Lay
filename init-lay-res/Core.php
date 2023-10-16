@@ -10,6 +10,7 @@ class Core {
     private static bool $always_overwrite_project = false;
     private static bool $project_exists = false;
     private static object $composer;
+    public string $project_name;
 
     public function __construct(
         array $arguments,
@@ -22,6 +23,16 @@ class Core {
     
     public function set_current_project(string $project) : void {
         self::$current_project_location = $project;
+    }
+
+    public function set_project_name(string $project) : void {
+        $x = explode("/", trim($project, "/"));
+        $project = end($x);
+        $this->project_name = $project;
+    }
+
+    public function project_name() : string {
+        return self::$project_name ?? "";
     }
 
     public function set_update_lay(bool $switch) : void {
@@ -189,5 +200,29 @@ class Core {
         $this->copy_routine("", "htaccess", ".htaccess");
         $this->copy_routine("", "gitignore", ".gitignore");
         $this->copy_routine("", "robots.txt");
+
+        // Create a composer.json file on the project root
+        $fh = fopen(self::$current_project_location . $s . "composer.json", "w");
+        fwrite($fh, json_encode (
+            [
+                "require" => self::$composer->require
+            ],
+            JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES
+        ));
+        fclose($fh);
+
+        // Create a package.json file on the project root
+        $fh = fopen(self::$current_project_location . $s . "package.json", "w");
+        fwrite($fh, json_encode (
+            [
+                "name" => $this->project_name,
+                "version" => "1.0.0",
+                "private" => true,
+                "author" => "lay <hello@lay.osaitech.dev> (https://lay.osaitech.dev)",
+                "copyright" => "Lay - a lite PHP Framework ( https://lay.osaitech.dev/ ). All rights reserved.",
+                "dependencies" => self::$composer->extra->{"npm-packages"},
+            ], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES
+        ));
+        fclose($fh);
     }
 }

@@ -1,3 +1,7 @@
+<?php
+global $view;
+?>
+
 <style>
     body{
         display: flex;
@@ -11,4 +15,5 @@
         font-size: 1.2rem;
     }
 </style>
-<?php echo $view->head;
+
+<?= $view->head ?>

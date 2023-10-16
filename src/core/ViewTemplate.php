@@ -46,7 +46,7 @@ abstract class ViewTemplate
         $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (LayView $layView, array $init_values) {
             $layView
                 ->page("title", $layView->request('route') . " - Page not found")
-                ->body_attr("defult-home")
+                ->body_tag("defult-home")
                 ->local("current_page", "error")
                 ->local("section", "error")
                 ->body(function (array $meta) { ?>
