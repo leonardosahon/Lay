@@ -201,10 +201,28 @@ class Core {
         $this->copy_routine("", "gitignore", ".gitignore");
         $this->copy_routine("", "robots.txt");
 
-        // copy composer dependencies to project root
+        // Create a composer.json file on the project root
         $fh = fopen(self::$current_project_location . $s . "composer.json", "w");
-        $composer['require'] = self::$composer->require;
-        fwrite($fh, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+        fwrite($fh, json_encode (
+            [
+                "require" => self::$composer->require
+            ],
+            JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES
+        ));
+        fclose($fh);
+
+        // Create a package.json file on the project root
+        $fh = fopen(self::$current_project_location . $s . "package.json", "w");
+        fwrite($fh, json_encode (
+            [
+                "name" => $this->project_name,
+                "version" => "1.0.0",
+                "private" => true,
+                "author" => "lay <hello@lay.osaitech.dev> (https://lay.osaitech.dev)",
+                "copyright" => "Lay - a lite PHP Framework ( https://lay.osaitech.dev/ ). All rights reserved.",
+                "dependencies" => self::$composer->extra->{"npm-packages"},
+            ], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES
+        ));
         fclose($fh);
     }
 }

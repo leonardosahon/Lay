@@ -2,3 +2,4 @@
 /vendor/
 /res/uploads/
 /.idea/
+package-lock.json

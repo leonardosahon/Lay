@@ -29,7 +29,7 @@ res_dir=$lay_dir"../"
 ignore=$1
 
 # talk about git on verbose mode
-if [ $ignore == '-s' ]; then
+if [[ -n $ignore && $ignore == '-s' ]]; then
   ignore=$2
   commit_message=''
   # Git Push Condition

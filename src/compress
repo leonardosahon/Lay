@@ -9,7 +9,7 @@ $intro = function() {
     print "-- Version:  \t  1.5                                      \n";
     print "-- Author:   \t  Osahenrumwen Aigbogun                    \n";
     print "-- Created:  \t  21/10/2021;                              \n";
-    print "-- Dependencies:\n \tTerser (JS);\n \tclean-css-cli (CSS) \n";
+    print "-- Dependencies:\n \tTerser (JS);\n \tclean-css (CSS)     \n";
     print "----------------------------------------------------------\n";
 
     // check dependencies
@@ -22,7 +22,7 @@ $intro = function() {
         Dependencies that exist: 
         \n[npm: $npm]
         \n[terser: $js]
-        \n[cleancss(clean-css-cli): $css]
+        \n[cleancss(clean-css): $css]
         \n";
         die;
     }
@@ -54,7 +54,7 @@ if($arg = !$out ? array_search("-o",$args) : $out)
 
  $ignore = array_search("--ignore",$args);
  if($arg = !$ignore ? array_search("-i",$args) : $ignore)
-     $ign = explode(",",$args[($arg + 1)]);
+     $ign = explode(",",$args[($arg + 1)] ?? "");
 
 if(!isset($bundle_dir)) {
     print "No output directory was specified, process aborted! use --help for more info\n";
@@ -126,7 +126,7 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
                 $return = exec("terser $file -c -m -o $output 2>&1",$current_error);
 
             if ($is_css($file))
-                $return = exec("cleancss -o $output $file 2>&1", $current_error);
+                $return = exec("cleancss -s -o $output $file 2>&1", $current_error);
 
             if(count($current_error) > 0)
                 $error[] = ["file" => $file, "error" => join("\n", $current_error)];
