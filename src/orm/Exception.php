@@ -62,8 +62,11 @@ class Exception
         $ip = LayConfig::get_ip();
 
         $stack = "<div style='padding-left: 5px; color: #5656f5; margin: 5px 0'><b>Referrer:</b> <span style='color:#00ff80'>$referer</span> <br /> <b>IP:</b> <span style='color:#00ff80'>$ip</span></div><div style='padding-left: 10px'>";
-        $stack_raw = "REFERRER: $referer";
-        $stack_raw .= "IP: $ip";
+        $stack_raw = <<<STACK
+         REFERRER: $referer
+         IP: $ip
+
+        STACK;
 
         foreach ($other['stack'] as $k => $v) {
             if (!isset($v['file']) && !isset($v['line']))

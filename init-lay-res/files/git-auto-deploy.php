@@ -15,7 +15,12 @@ if(isset($post->pull_request)) {
         echo shell_exec('git checkout main 2>&1');
         echo shell_exec('git pull 2>&1');
         echo shell_exec('git reset --hard origin/main 2>&1');
-        echo shell_exec('export HOME=./ && composer install 2>&1');
+
+        # Run composer update
+        if(file_exists("./composer.lock"))
+            echo shell_exec('export HOME=./ && composer update 2>&1');
+        else
+            echo shell_exec('export HOME=./ && composer install 2>&1');
     }
 
     else
