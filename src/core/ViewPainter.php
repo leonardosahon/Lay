@@ -56,7 +56,7 @@ final class ViewPainter {
                 // named __front | __back, for things like: views, includes and controllers
                 "type" =>  $const[self::key_page]['type'] ?? null,
             ],
-            self::key_body => [
+            self::key_body =>  [
                 "class" =>  $const[self::key_body]['class'] ?? null,
                 "attr" =>   $const[self::key_body]['attr'] ?? null,
             ],
@@ -102,6 +102,7 @@ final class ViewPainter {
 
         $layConfig = LayConfig::instance();
         $data = $layConfig->get_site_data();
+
         $const = array_replace_recursive(self::$constant_attributes, $page_data);;
 
         $const[self::key_page]['title_raw'] = $const[self::key_page]['title'];
@@ -132,8 +133,8 @@ final class ViewPainter {
         $meta = self::$meta_data;
 
         $layConfig = LayConfig::instance();
-        $site_data = $layConfig::site_data();
-        $client = $layConfig::res_client();
+        $site_data = $layConfig->get_site_data();
+        $client = $layConfig->get_res__client();
         $page = $meta[self::key_page];
 
         $img = $page['img'] ?? $site_data->img->icon;
@@ -198,7 +199,6 @@ final class ViewPainter {
         STR;
 
         if($layConfig::is_page_compressed())
-//            $page = preg_replace("/>(\s)+</m","><",preg_replace("[<!--(?!<!)[^\[>].*?-->]","",$page));
             $page = preg_replace("/>(\s)+</m","><",preg_replace("/<!--(.|\s)*?-->/","",$page));
 
         echo $page;
@@ -313,7 +313,7 @@ final class ViewPainter {
         $view = $this->view_handler('script');
 
         $this->prepare_assets(
-            fn ($src, $attr) => $this->script_tag_template($src, $attr),
+            fn ($src, $attr = []) => $this->script_tag_template($src, $attr),
             $meta[self::key_assets], $view,
             "js"
         );
@@ -327,14 +327,14 @@ final class ViewPainter {
     private function core_script() : string {
         $meta = self::$meta_data;
         $layConfig = LayConfig::instance();
-        $js_template = fn ($src, $attr) => $this->script_tag_template($src, $attr);
+        $js_template = fn ($src, $attr = []) => $this->script_tag_template($src, $attr);
         $core_script = "";
 
         if($meta[self::key_core]['script']) {
             $s = DIRECTORY_SEPARATOR;
             $env = strtolower($layConfig::get_env());
-            $lay_root = $layConfig::res_server()->dir . $s . "Lay" . $s;
-            $lay_base = $layConfig::res_client()->lay;
+            $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
+            $lay_base = $layConfig->get_res__client()->lay;
             list($omj,$const) = null;
 
             if ($env == "prod") {
@@ -353,7 +353,7 @@ final class ViewPainter {
     }
 
     private function prepare_assets(\Closure $asset_template, array &$assets, string &$view, string $asset_type) : void {
-        $client = LayConfig::instance()::res_client();
+        $client = LayConfig::instance()->get_res__client();
 
         $resolve_asset = function (string|array &$asset, string|int $assets_key, array &$assets_array, bool $using_root_as_array_key = false) use ($asset_type, $asset_template, $client, &$resolve_asset) : string {
             $filter_src = $using_root_as_array_key ?

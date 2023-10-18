@@ -52,7 +52,8 @@ trait Resources {
         $obj = [
             "root"    =>   $dir,
             "dir"     =>   $dir,
-            "lay"    =>    $dir             . "Lay"         . $slash,
+            "temp"    =>   $dir             . ".lay_temp"   . $slash,
+            "lay"     =>   $dir             . "Lay"         . $slash,
             "lay_env" =>   $root_server     . "includes"    . $slash . "__env" . $slash,
             "db"      =>   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash,
             "inc"     =>   $root_server     . "includes"    . $slash,
@@ -90,10 +91,10 @@ trait Resources {
             if($resource === null)
                 Exception::throw_exception("[$v] doesn't exist in the [res_$obj_type] chain", $obj_type);
 
-            if(empty($v))
+            if($v === '' || is_null($v))
                 continue;
 
-            if(is_object($resource)){
+            if(is_object($resource)) {
                 $resource = $resource->{$v};
                 continue;
             }
@@ -191,6 +192,11 @@ trait Resources {
 
     public static function res_server() : object
     {
+        if(!isset(self::$server)){
+            self::set_dir();
+            self::set_internal_res_server(self::$dir);
+        }
+
         return self::$server;
     }
 

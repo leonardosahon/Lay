@@ -31,11 +31,15 @@ trait Init {
             self::first_class_citizens();
     }
 
+    private static function set_dir() : void {
+        self::$dir = AutoLoader::get_root_dir();
+    }
+
     private static function first_class_citizens() : void {
         self::$FIRST_CLASS_CITI_ACTIVE = true;
+        self::set_dir();
 
         $slash          = DIRECTORY_SEPARATOR;
-        self::$dir            = AutoLoader::get_root_dir();
         $base           = explode(str_replace("/", $slash, $_SERVER['DOCUMENT_ROOT']), self::$dir);
         $http_host      = $_SERVER['HTTP_HOST'] ?? "cli";
         $env_host       = $_SERVER['REMOTE_ADDR'] ?? "cli";
