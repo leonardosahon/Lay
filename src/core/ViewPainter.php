@@ -199,7 +199,7 @@ final class ViewPainter {
         STR;
 
         if($layConfig::is_page_compressed())
-            $page = preg_replace("/>(\s)+</m","><",preg_replace("[<!--(?!<!)[^\[>].*?-->]","",$page));
+            $page = preg_replace("/>(\s)+</m","><",preg_replace("/<!--(.|\s)*?-->/","",$page));
 
         echo $page;
     }
@@ -327,7 +327,7 @@ final class ViewPainter {
     private function core_script() : string {
         $meta = self::$meta_data;
         $layConfig = LayConfig::instance();
-        $js_template = fn ($src, $attr) => $this->script_tag_template($src, $attr);
+        $js_template = fn ($src, $attr = []) => $this->script_tag_template($src, $attr);
         $core_script = "";
 
         if($meta[self::key_core]['script']) {
