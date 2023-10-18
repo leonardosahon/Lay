@@ -55,6 +55,8 @@ terser $lay_dir'omj$/index.js' -c -m -o $lay_dir'omj$/index.min.js'
 terser $lay_dir'static/js/constants.js' -c -m -o $lay_dir'static/js/constants.min.js'
 
 echo "== RES FOLDER"
+echo "*** Ignoring $ignore ***"
+
 php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod' -i $ignore
 
 echo "**************** Production Bundling Ends"
