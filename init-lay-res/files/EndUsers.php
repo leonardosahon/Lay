@@ -15,13 +15,13 @@ class EndUsers
 
         LayConfig::set_smtp();
 
-        if(LayMail::queue([
-            "name" => $post->name,
-            "email" => $post->email,
-            "message" => $post->message,
-            "subject" => "New Enquiry On The Website",
-            "server" => true,
-        ]))
+        if(
+            LayMail::new()
+                ->client($post->email, $post->name)
+                ->subject("New Enquiry: " . $post->subject)
+                ->body($post->message)
+            ->to_server()
+        )
             return [
                 "code" => 1,
                 "msg" => "Your enquiry has been sent and a response will be given accordingly, please ensure to check your email for a response"

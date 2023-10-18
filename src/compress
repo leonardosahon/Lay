@@ -1,7 +1,8 @@
 #!/usr/bin/php
 <?php
-require_once "libs/CopyDirectory.php";
+require_once "AutoLoader.php";
 use Lay\libs\CopyDirectory;
+use Lay\libs\LayCache;
 
 $intro = function() {
     print "----------------------------------------------------------\n";
@@ -18,8 +19,8 @@ $intro = function() {
     $css = shell_exec("cleancss --version 2>&1");
 
     if(!$npm || !$js || !$css) {
-        print "Some of the dependencies have not been installed, please install all of them to continue with this script.\n 
-        Dependencies that exist: 
+        print "Some of the dependencies have not been installed, please install all of them to continue with this script.\n
+        Dependencies that exist:
         \n[npm: $npm]
         \n[terser: $js]
         \n[cleancss(clean-css): $css]
@@ -76,19 +77,14 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
     $core_ignore = ["node_modules"];
 
     $last_file = 'No Change Was Made';
-    $log_file = __DIR__ . DIRECTORY_SEPARATOR . ".compress.log";
-    $track_changes = [];
     $changes = 0;
     $duration = time();
+    $cache = LayCache::new()->cache_file("deploy_cache");
 
-    if(file_exists($log_file))
-        $track_changes = json_decode(file_get_contents($log_file),true);
+    $track_changes = $cache->read("*") ?? [];
 
     $is_css = fn($file) => strtolower(substr(trim($file),-4)) === ".css";
     $is_js = fn($file) => strtolower(substr(trim($file),-3)) === ".js";
-    $encrypt = function (string $text, string $key) : string {
-        return openssl_encrypt($text, "AES-256-CTR", $key,0,"h5d4367637673773");
-    };
 
     $GLOBALS['intro']();
     print "### Production Begins [RES]\n";
@@ -96,17 +92,17 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
     new CopyDirectory(
         $parent_dir, $output_dir,
         fn($file) => in_array($file,$core_ignore,true) || in_array($file,$ignore,true) || (function_exists('fnmatch') && fnmatch('.*',$file)),
-        function($file, $src) use ($is_css,$is_js, $encrypt, &$track_changes){
+        function($file, $src) use ($is_css,$is_js, $cache, &$track_changes) {
             try{
-                $file_location = $encrypt($src . DIRECTORY_SEPARATOR . $file, "KEY-FILE");
-                $last_modified = filemtime($src . DIRECTORY_SEPARATOR . $file);
+                $key = $src . DIRECTORY_SEPARATOR . $file;
+                $last_modified = filemtime($key);
 
-                if(@$track_changes[$file_location] === $last_modified)
+                if(@$track_changes[$key] === $last_modified)
                     return "continue";
 
-                $track_changes[$file_location] = $last_modified;
+                $track_changes[$key] = $last_modified;
 
-            }catch (\Exception $e){}
+            } catch (\Exception $e){}
 
             if ($is_css($file) || $is_js($file))
                 return "skip-copy";
@@ -118,7 +114,6 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
             $file = $parent_dir . "/" . $file;
             $return = null;
 
-            $current_error = [];
             $last_file = $file;
             print "\033[2K\r=== Current File: $file";
 
@@ -128,7 +123,12 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
             if ($is_css($file))
                 $return = exec("cleancss -s -o $output $file 2>&1", $current_error);
 
-            if(count($current_error) > 0)
+            if(str_contains($return, "not found")) {
+                $error[] = ["file" => $file, "error" => $return];
+                return "break";
+            }
+
+            if(!empty($current_error))
                 $error[] = ["file" => $file, "error" => join("\n", $current_error)];
 
             $changes++;
@@ -140,12 +140,7 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
         }
     );
 
-    if(file_exists($log_file))
-        unlink($log_file);
-
-    $fh = fopen($log_file,"w");
-    fwrite($fh, json_encode($track_changes));
-    fclose($fh);
+    $cache->dump($track_changes);
 
     $duration = gmdate("s",time() - $duration) . "sec";
     $changes = number_format($changes);
@@ -155,5 +150,13 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
     print "### Errors: $error_count\n";
     print "### Total Changes: $changes\n";
     print "### Duration: $duration\n";
-    if($error_count > 0) print_r($error);
+
+    if($error_count > 0) {
+        foreach ($error as $i => $e){
+            print "\n------------ START ERR $i \t ------------\n";
+            print "*File:* " . $e['file'] . " \n";
+            print "*Err.:* \n" . $e['error'] . "\n";
+            print "------------ END ERR $i \t ------------\n";
+        }
+    }
 }

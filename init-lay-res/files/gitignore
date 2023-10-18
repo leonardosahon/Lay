@@ -1,7 +1,9 @@
 /vendor/
 /res/uploads/
+/.lay_temp/
 
 # Logs
+.logs
 logs
 *.log
 npm-debug.log*

@@ -85,7 +85,7 @@ class Exception
             STACK;
             $stack_raw .= <<<STACK
               -#$k: {$v['function']} {$v['file']}; {$v['line']}
-            
+
             STACK;
         }
 
@@ -102,7 +102,7 @@ class Exception
             DEBUG;
             return $other['act'] ?? "kill";
         } else {
-            $dir = AutoLoader::get_root_dir() . "Lay" . DIRECTORY_SEPARATOR . "error_logs";
+            $dir = LayConfig::res_server()->temp . "logs";
             $file_log = $dir . DIRECTORY_SEPARATOR . "lay_error.log";
 
             if (!is_dir($dir))
