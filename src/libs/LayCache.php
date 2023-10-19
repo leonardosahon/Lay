@@ -15,7 +15,7 @@ class LayCache
 
     public function cache_file(string $path_to_cache = "./", bool $use_lay_temp_dir = true) : self {
         $server = LayConfig::res_server();
-        
+
         $this->cache_store = $use_lay_temp_dir ? $server->temp : $server->root;
         $this->cache_store = $this->cache_store . $path_to_cache;
 
@@ -24,9 +24,10 @@ class LayCache
 
         $dir = rtrim($this->cache_store, $end);
 
-        if (!is_dir($dir))
-            mkdir($dir, 0755);
-        
+        if (!is_dir($dir)) {
+            umask(0);
+            mkdir($dir, 0777, true);
+        }
         return $this;
     }
 
