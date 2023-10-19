@@ -14,6 +14,7 @@ final class LayCron {
     ];
 
     private static string $output_file;
+    private static bool $save_job_output = false;
     private static array $jobs_list;
     private static string $report_email;
     private static string $job_id;
@@ -118,9 +119,13 @@ final class LayCron {
 
         $job_plain = $job;
         $job = $server->root . $job_plain;
-        $job = ' out="$(/usr/bin/php ' . $job . ')";';
-        $job .= ' echo "' . $job_plain . ': $out "';
-        $job .= " >> " . self::$output_file;
+        $job = " /usr/bin/php $job";
+
+        if(self::$save_job_output) {
+            $job = ' out="$(' . $job . ')";';
+            $job .= ' echo "' . $job_plain . ': $out "';
+            $job .= " >> " . self::$output_file;
+        }
 
         return $schedule . $job . PHP_EOL;
     }
@@ -170,6 +175,11 @@ final class LayCron {
 
     public function job_id(string $uid) : self {
         self::$job_id = $uid;
+        return $this;
+    }
+
+    public function log_output() : self {
+        self::$save_job_output = true;
         return $this;
     }
 

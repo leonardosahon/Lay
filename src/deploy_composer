@@ -1,0 +1,13 @@
+#!/usr/bin/php
+<?php
+require_once __DIR__ . DIRECTORY_SEPARATOR . "AutoLoader.php";
+
+$server = \Lay\core\LayConfig::res_server();
+$root = $server->root;
+$temp = $server->temp;
+$command = file_exists($root . "composer.lock") ? "update" : "install";
+
+exec("export HOME=$root && composer $command > {$temp}deploy_composer_output.txt");
+
+// unset cron job after updating composer packages
+\Lay\libs\LayCron::new()->unset("update-composer-pkgs");
