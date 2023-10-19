@@ -14,6 +14,10 @@ final class LayCron {
     ];
 
     private static string $output_file;
+    private static array $exec_output = [
+        "exec" => true,
+        "msg" => "Execution successful"
+    ];
     private static bool $save_job_output = false;
     private static array $jobs_list;
     private static string $report_email;
@@ -100,10 +104,17 @@ final class LayCron {
         $cron_jobs = implode("", self::$jobs_list);
 
         file_put_contents(self::CRON_FILE, $mailto . $cron_jobs);
-        exec("crontab -r", $out);
-        exec("crontab " . self::CRON_FILE, $out);
+        exec("crontab -r 2>&1", $out);
 
-        return true;
+        $install = shell_exec("crontab " . self::CRON_FILE . " 2>&1");
+        $exec = !str_contains($install, "errors in crontab file, can't install");
+
+        self::$exec_output = [
+            "exec" => $exec,
+            "msg" => $install
+        ];
+
+        return $exec;
     }
 
     private static function commit() : bool {
@@ -131,9 +142,9 @@ final class LayCron {
     }
 
     private static function add_job(string $job) : bool {
-        $add = false;
+        $add = str_contains(shell_exec("crontab -l 2>&1"), "no crontab for");
 
-        if(!self::db_job_exists($job)['found']) {
+        if(!$add && !self::db_job_exists($job)['found']) {
             if(isset(self::$job_id))
                 self::$jobs_list[self::$job_id] = $job;
             else
@@ -183,12 +194,14 @@ final class LayCron {
         return $this;
     }
 
-    public function new_job(string $job) : bool {
-        return self::add_job(self::make_job($job));
+    public function new_job(string $job) : array {
+        self::add_job(self::make_job($job));
+        return self::$exec_output;
     }
 
-    public function exec(string $command) : bool {
-        return self::add_job($command . PHP_EOL);
+    public function exec(string $command) : array {
+        self::add_job($command . PHP_EOL);
+        return self::$exec_output;
     }
 
     public function report_email(string $email) : self {
@@ -236,17 +249,17 @@ final class LayCron {
 
     public function daily(int $hour, int $minute, bool $am) : self {
         $am = $am ? "am" : "pm";
-        $date = explode(" ", date("i G", strtotime("$hour:$minute{$am}")));
-        $this->schedule($date[1], $date[0]);
+        $date = explode(" ", date("G i", strtotime("$hour:$minute{$am}")));
+        $this->schedule(minute: $date[1], hour: $date[0]);
         return $this;
     }
 
     // TODO: Make this function flexible, so it can take next 5 minutes, next week, etc
     public function next(string $what) : self {
         $what = "next " . $what;
-        $date = explode(" ", date("i G", strtotime($what)));
+        $date = explode(" ", date("G i", strtotime($what)));
 
-        $this->schedule($date[1], $date[0]);
+        $this->schedule(minute: $date[1], hour: $date[0]);
         return $this;
     }
 
