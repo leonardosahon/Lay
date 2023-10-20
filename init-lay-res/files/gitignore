@@ -18,7 +18,8 @@ dist
 dist-ssr
 coverage
 *.local
-
+*.cache/
+*.config/
 
 # Editor directories and files
 .vscode/*

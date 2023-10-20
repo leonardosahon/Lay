@@ -7,7 +7,9 @@ $root = $server->root;
 $temp = $server->temp;
 $command = file_exists($root . "composer.lock") ? "update" : "install";
 
-exec("export HOME=$root && composer $command > {$temp}deploy_composer_output.txt");
+exec("export HOME=$root && composer $command 2>&1", $out);
+
+file_put_contents($temp . "deploy_composer_output.txt", implode("\n", $out));
 
 // unset cron job after updating composer packages
 \Lay\libs\LayCron::new()->unset("update-composer-pkgs");
