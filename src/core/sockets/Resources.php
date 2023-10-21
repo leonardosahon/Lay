@@ -181,6 +181,12 @@ trait Resources {
         self::set_res(self::$server, ["view","ctrl","inc","upload"], $client_index, ...$chain_and_value);
     }
 
+    /**
+     * @param string $server_index
+     * @param string ...$index_chain
+     * @see set_internal_res_server
+     * @return mixed
+     */
     public function get_res__server(
         #[ExpectedValues(["root","dir","lay","lay_env","db","inc","ctrl","view","upload"])] string $server_index = "",
         string ...$index_chain
@@ -190,6 +196,10 @@ trait Resources {
         return self::get_res("server", self::$server, $server_index, ...$index_chain);
     }
 
+    /**
+     * @see set_internal_res_server
+     * @return object
+     */
     public static function res_server() : object
     {
         if(!isset(self::$server)){
@@ -206,11 +216,21 @@ trait Resources {
         self::set_res(self::$site, [], $data_index, ...$chain_and_value);
     }
 
+    /**
+     * @param string $data_index
+     * @param string ...$index_chain
+     * @see set_internal_site_data
+     * @return mixed
+     */
     public function get_site_data(string $data_index = "", string ...$index_chain) : mixed {
         self::is_init(true);
         return self::get_res("site_data", self::$site, $data_index, ...$index_chain);
     }
 
+    /**
+     * @see set_internal_site_data
+     * @return object
+     */
     public static function site_data() : object
     {
         return self::$site;
