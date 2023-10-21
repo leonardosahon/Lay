@@ -32,5 +32,5 @@ echo shell_exec('git reset --hard origin/main 2>&1');
 // push composer deployment for later execution to avoid 504 (timeout error)
 echo \Lay\libs\LayCron::new()
     ->job_id("update-composer-pkgs")
-    ->next("minute")
+    ->every_minute()
     ->new_job("Lay/deploy_composer")['msg'];

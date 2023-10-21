@@ -104,13 +104,7 @@ class LayMail {
         string $filename,
         string $string_or_name = null,
         string $type = '',
-        #[ExpectedValues([
-            self::ENCODING_7BIT,
-            self::ENCODING_8BIT,
-            self::ENCODING_BASE64,
-            self::ENCODING_BINARY,
-            self::ENCODING_QUOTED_PRINTABLE,
-            ])] string $encoding = self::ENCODING_BASE64,
+        #[ExpectedValues(valuesFromClass: LayMail::class)] string $encoding = self::ENCODING_BASE64,
         string $disposition = "attachment",
         bool $attach_as_string = true
     ) : self {

@@ -2,36 +2,36 @@
 
 namespace Lay\libs;
 
+use JetBrains\PhpStorm\ExpectedValues;
+use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
 
 final class LayCron {
-    use IsSingleton;
     private const CRON_FILE = "/tmp/crontab.txt";
     private const DB_SCHEMA = [
         "mailto" => "",
         "jobs" => [],
     ];
 
-    private static string $output_file;
-    private static array $exec_output = [
+    private string $output_file;
+    private array $exec_output = [
         "exec" => true,
         "msg" => "Execution successful"
     ];
-    private static bool $save_job_output = false;
-    private static array $jobs_list;
-    private static string $report_email;
-    private static string $job_id;
-    private static string $minute = "*"; // (0 - 59)
-    private static string $hour = "*"; // (0 - 23)
-    private static string $day_of_month = "*"; // (1 - 31)
-    private static string $month = "*"; // (1 - 12) OR jan,feb,mar,apr ...
-    private static string $day_of_week = "*"; // (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+    private bool $save_job_output = false;
+    private array $jobs_list;
+    private string $report_email;
+    private string $job_id;
+    private string $minute = "*"; // (0 - 59)
+    private string $hour = "*"; // (0 - 23)
+    private string $day_of_the_month = "*"; // (1 - 31)
+    private string $month = "*"; // (1 - 12)
+    private string $day_of_the_week = "*"; // (0 - 6) (Sunday=0 or 7)
 
-    private static function cron_db() : string {
+    private function cron_db() : string {
         $dir = LayConfig::res_server()->temp;
         $file = $dir . "cron_jobs.json";
-        self::$output_file = $dir . "cron_outputs.txt";
+        $this->output_file = $dir . "cron_outputs.txt";
 
         if(!is_dir($dir)) {
             umask(0);
@@ -41,180 +41,209 @@ final class LayCron {
         if(!file_exists($file))
             file_put_contents($file, json_encode(self::DB_SCHEMA));
 
-        if(!file_exists(self::$output_file))
-            file_put_contents(self::$output_file, '***** LAY CRON JOBS OUTPUT *****' . PHP_EOL);
+        if(!file_exists($this->output_file))
+            file_put_contents($this->output_file, '***** LAY CRON JOBS OUTPUT *****' . PHP_EOL);
 
         return $file;
     }
 
-    private static function db_data_init() : void {
-        if(isset(self::$jobs_list) && isset(self::$report_email))
+    private function db_data_init() : void {
+        if(isset($this->jobs_list) && isset($this->report_email))
             return;
 
-        $data = json_decode(file_get_contents(self::cron_db()), true);
+        $data = json_decode(file_get_contents($this->cron_db()), true);
 
-        self::$jobs_list = self::$jobs_list ?? $data['jobs'] ?? [];
-        self::$report_email = self::$report_email ?? $data['mailto'] ?? "";
+        $this->jobs_list = $this->jobs_list ?? $data['jobs'] ?? [];
+        $this->report_email = $this->report_email ?? $data['mailto'] ?? "";
     }
 
-    private static function db_data_clear_all() : void {
+    private function db_data_clear_all() : void {
         $data = self::DB_SCHEMA;
 
-        self::$jobs_list = $data['jobs'];
-        self::$report_email = $data['mailto'];
+        $this->jobs_list = $data['jobs'];
+        $this->report_email = $data['mailto'];
 
-        self::commit();
+        $this->commit();
     }
 
-    private static function db_job_by_id(string|int $uid) : ?string {
-        self::db_data_init();
-        return self::$jobs_list[$uid] ?? null;
+    private function db_job_by_id(string|int $uid) : ?string {
+        $this->db_data_init();
+        return $this->jobs_list[$uid] ?? null;
     }
 
-    private static function db_job_all() : ?array {
-        self::db_data_init();
-        return self::$jobs_list;
+    private function db_job_all() : ?array {
+        $this->db_data_init();
+        return $this->jobs_list;
     }
 
-    private static function db_job_exists(string $job) : array {
-        return LayArraySearch::run($job, self::db_job_all());
+    private function db_job_exists(string $job) : array {
+        return LayArraySearch::run($job, $this->db_job_all());
     }
 
-    private static function db_email_exists(?string $email = null) : ?string {
-        $email = $email ?? self::$report_email;
-        return $email == self::db_get_email();
+    private function db_email_exists(?string $email = null) : ?string {
+        $email = $email ?? $this->report_email;
+        return $email == $this->db_get_email();
     }
 
-    private static function db_get_email() : ?string {
-        self::db_data_init();
-        return self::$report_email;
+    private function db_get_email() : ?string {
+        $this->db_data_init();
+        return $this->report_email;
     }
 
-    private static function db_data_save() : bool {
+    private function db_data_save() : bool {
         $data = self::DB_SCHEMA;
-        $data['jobs'] = self::$jobs_list;
-        $data['mailto'] = self::$report_email;
+        $data['jobs'] = $this->jobs_list;
+        $data['mailto'] = $this->report_email;
 
-        return (bool) file_put_contents(self::cron_db(), json_encode($data));
+        return (bool) file_put_contents($this->cron_db(), json_encode($data));
     }
 
-    private static function crontab_save() : bool {
-        $mailto = self::$report_email ? 'MAILTO=' . self::$report_email : 'MAILTO=""';
+    private function crontab_save() : bool {
+        $mailto = $this->report_email ? 'MAILTO=' . $this->report_email : 'MAILTO=""';
         $mailto .= PHP_EOL;
-        $cron_jobs = implode("", self::$jobs_list);
+        $cron_jobs = implode("", $this->jobs_list);
 
         file_put_contents(self::CRON_FILE, $mailto . $cron_jobs);
-        exec("crontab -r 2>&1", $out);
 
-        $install = shell_exec("crontab " . self::CRON_FILE . " 2>&1");
+        $install = exec("crontab " . self::CRON_FILE . " 2>&1", $out);
         $exec = !str_contains($install, "errors in crontab file, can't install");
 
-        self::$exec_output = [
+        $this->exec_output = [
             "exec" => $exec,
-            "msg" => $install
+            "msg" => !empty($out) ? implode("\n", $out) : "Cron job added successfully"
         ];
 
         return $exec;
     }
 
-    private static function commit() : bool {
-        return self::crontab_save() && self::db_data_save();
+    private function commit() : bool {
+        return $this->crontab_save() && $this->db_data_save();
     }
 
-    private static function make_job(string $job) : string {
-        self::db_data_init();
+    private function make_job(string $job) : string {
+        $this->db_data_init();
 
         $server = LayConfig::res_server();
 
-        $schedule = self::$minute . " " . self::$hour . " " . self::$day_of_month . " " . self::$month . " " . self::$day_of_week;
+        $schedule = $this->minute . " " . $this->hour . " " . $this->day_of_the_month . " " . $this->month . " " . $this->day_of_the_week;
 
         $job_plain = $job;
         $job = $server->root . $job_plain;
         $job = " /usr/bin/php $job";
 
-        if(self::$save_job_output) {
+        if($this->save_job_output) {
             $job = ' out="$(' . $job . ')";';
             $job .= ' echo "' . $job_plain . ': $out "';
-            $job .= " >> " . self::$output_file;
+            $job .= " >> " . $this->output_file;
         }
 
         return $schedule . $job . PHP_EOL;
     }
 
-    private static function add_job(string $job) : bool {
+    private function add_job(string $job) : void {
         $add = str_contains(shell_exec("crontab -l 2>&1"), "no crontab for");
 
-        if(!$add && !self::db_job_exists($job)['found']) {
-            if(isset(self::$job_id))
-                self::$jobs_list[self::$job_id] = $job;
+        if(!$add && !$this->db_job_exists($job)['found']) {
+            if(isset($this->job_id))
+                $this->jobs_list[$this->job_id] = $job;
             else
-                self::$jobs_list[] = $job;
+                $this->jobs_list[] = $job;
 
             $add = true;
         }
 
-        if(!$add && self::db_email_exists())
-            return true;
+        if(!$add && $this->db_email_exists())
+            return;
 
-        return self::commit();
+        $this->commit();
     }
 
-    private static function delete_job_by_id(string|int $uid) : bool {
-        self::db_data_init();
+    private function delete_job_by_id(string|int $uid) : bool {
+        $this->db_data_init();
 
-        $existed = isset(self::$jobs_list[$uid]);
+        $existed = isset($this->jobs_list[$uid]);
 
         if(!$existed)
             return true;
 
-        unset(self::$jobs_list[$uid]);
-        return self::commit();
+        unset($this->jobs_list[$uid]);
+        return $this->commit();
     }
 
-    private static function delete_job_by_job(string $job) : bool {
-        self::db_data_init();
+    private function delete_job_by_job(string $job) : bool {
+        $this->db_data_init();
 
-        $job = self::make_job($job);
-        $job = self::db_job_exists($job);
+        $job = $this->make_job($job);
+        $job = $this->db_job_exists($job);
 
         if(!$job['found'])
             return true;
 
-        unset(self::$jobs_list[$job['index'][0]]);
-        return self::commit();
+        unset($this->jobs_list[$job['index'][0]]);
+        return $this->commit();
+    }
+
+    private function handle_ranges_and_more(string $input, string $date_format) : string {
+        $output = "";
+
+        foreach (explode(",", $input) as $int) {
+            if(str_contains($int, "-")) {
+                $range = explode("-", $int);
+                $res = date($date_format, strtotime($range[0])) . "-" . date($date_format, strtotime($range[1]));
+            }
+            else
+                $res = date($date_format, strtotime($int));
+
+            $res .= ",";
+
+            if(str_contains($output, $res))
+                continue;
+
+            $output .= $res;
+        }
+
+        return rtrim($output, ",");
+    }
+
+    public static function new () : self {
+        return new self();
     }
 
     public function job_id(string $uid) : self {
-        self::$job_id = $uid;
+        $this->job_id = $uid;
         return $this;
     }
 
     public function log_output() : self {
-        self::$save_job_output = true;
+        $this->save_job_output = true;
         return $this;
     }
 
     public function new_job(string $job) : array {
-        self::add_job(self::make_job($job));
-        return self::$exec_output;
+        $this->add_job($this->make_job($job));
+        return $this->exec_output;
+    }
+
+    public function print_job(string $job) : void {
+        echo $this->make_job($job) . '<br/>';
     }
 
     public function exec(string $command) : array {
-        self::add_job($command . PHP_EOL);
-        return self::$exec_output;
+        $this->add_job($command . PHP_EOL);
+        return $this->exec_output;
     }
 
     public function report_email(string $email) : self {
-        self::$report_email = $email;
+        $this->report_email = $email;
         return $this;
     }
 
     public function list_jobs() : ?array {
-        return self::db_job_all();
+        return $this->db_job_all();
     }
 
     public function get_job(string|int $uid) : ?string {
-        return self::db_job_by_id($uid);
+        return $this->db_job_by_id($uid);
     }
 
     public function get_crontab() : string {
@@ -225,41 +254,113 @@ final class LayCron {
     }
 
     public function unset(string|int $uid_or_job) : bool {
-        return self::delete_job_by_id($uid_or_job) || self::delete_job_by_job($uid_or_job);
+        return $this->delete_job_by_id($uid_or_job) || $this->delete_job_by_job($uid_or_job);
     }
 
     public function unset_report_email() : void {
-        self::$report_email = "";
-        self::commit();
+        $this->report_email = "";
+        $this->commit();
     }
 
     public function clear_all() : void {
-        self::db_data_clear_all();
+        $this->db_data_clear_all();
     }
 
-    public function schedule(string $minute = "*", string $hour = "*", string $day_of_month = "*", string $month = "*", string $day_of_week = "*") : self {
-        self::$minute = $minute;
-        self::$hour = $hour;
-        self::$day_of_month = $day_of_month;
-        self::$month = $month;
-        self::$day_of_week = $day_of_week;
+    public function raw_schedule(?string $minute = null, ?string $hour = null, ?string $day_of_the_month = null, ?string $month = null, ?string $day_of_the_week = null) : self {
+        $this->minute = $minute ?? $this->minute;
+        $this->hour = $hour ?? $this->hour;
+        $this->day_of_the_month = $day_of_the_month ?? $this->day_of_the_month;
+        $this->month = $month ?? $this->month;
+        $this->day_of_the_week = $day_of_the_week == '7' ? '0' : ($day_of_the_week ?? $this->day_of_the_week);
 
         return $this;
     }
 
-    public function daily(int $hour, int $minute, bool $am) : self {
+    /**
+     * Schedules jobs for every number of minutes indicated.
+     * @param int $minute
+     * @example `5` minutes = every `5` minutes. i.e 5, 10, 15...n
+     * @return $this
+     */
+    public function every_minute(int $minute = 1) : self {
+        $this->raw_schedule(minute: "*/$minute",);
+        return $this;
+    }
+
+    /**
+     * Schedules jobs for every number of hours indicated.
+     * @param int $hour
+     * @example `2` hour = every `2` hours. i.e 2, 4, 6, 8...n
+     * @return $this
+     */
+    public function every_hour(int $hour = 1) : self {
+        $this->raw_schedule(hour: "*/$hour");
+        return $this;
+    }
+
+    /**
+     * 12-hours of every day.
+     * Not to be mistaken for `every_hour` `every_minute`.
+     * This method schedules the job for the specified `$hour:$minute am|pm` of every day;
+     * except days are modified by the `weekly` method.
+     * @param int $hour
+     * @param int $minute
+     * @param bool $am
+     * @return $this
+     */
+    public function daily(int $hour = 12, int $minute = 0, bool $am = true) : self {
         $am = $am ? "am" : "pm";
         $date = explode(" ", date("G i", strtotime("$hour:$minute{$am}")));
-        $this->schedule(minute: $date[1], hour: $date[0]);
+        $this->raw_schedule(minute: $date[1], hour: $date[0]);
         return $this;
     }
 
-    // TODO: Make this function flexible, so it can take next 5 minutes, next week, etc
-    public function next(string $what) : self {
-        $what = "next " . $what;
-        $date = explode(" ", date("G i", strtotime($what)));
+    /**
+     * Schedules for all the days specified.
+     * To tweak the time, you need to call the appropriate methods when building your job.
+     * @param string $day_of_the_week accepts: mon, monday, Monday;
+     * it could be a range or comma-separated values.
+     * @return $this
+     * @example `->weekly('mon - fri, sun')`
+     */
+    public function weekly(string $day_of_the_week) : self {
+        $this->raw_schedule(day_of_the_week: $this->handle_ranges_and_more($day_of_the_week, "w"));
+        return $this;
+    }
 
-        $this->schedule(minute: $date[1], hour: $date[0]);
+    /**
+     * Schedules for specified days of every month.
+     * To tweak the day and time, you need to call the appropriate methods when building your job.
+     * @param string|int $days_of_the_month accepts: 1 - 31;
+     * it could be an int, a range or comma-separated values.
+     * @return $this
+     * @throws \Exception
+     */
+    public function monthly(string|int $days_of_the_month = 1) : self {
+        if(!is_int($days_of_the_month)) {
+            $this->raw_schedule(day_of_the_month: $this->handle_ranges_and_more($days_of_the_month, "j"));
+            return $this;
+        }
+
+        if ($days_of_the_month > 31)
+            Exception::throw_exception("Argument #1: Day of the month cannot be greater than 31", "CronBoundExceeded");
+
+        if ($days_of_the_month < 1)
+            Exception::throw_exception("Argument #1: Day of the month cannot be less than 1", "CronBoundExceeded");
+
+        $this->raw_schedule(day_of_the_month: $days_of_the_month);
+        return $this;
+    }
+
+    /**
+     * Schedules for all the months specified.
+     * To tweak the day, month, and time, you need to call the appropriate methods when building your job.
+     * @param string $months accepts: Jan, jan, January
+     * it could be a range or comma-separated values.
+     * @return $this
+     */
+    public function yearly(string $months) : self {
+        $this->raw_schedule(month: $this->handle_ranges_and_more($months, "n"));
         return $this;
     }
 
