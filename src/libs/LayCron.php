@@ -29,14 +29,9 @@ final class LayCron {
     private string $day_of_the_week = "*"; // (0 - 6) (Sunday=0 or 7)
 
     private function cron_db() : string {
-        $dir = LayConfig::res_server()->temp;
+        $dir = LayConfig::mk_tmp_dir();
         $file = $dir . "cron_jobs.json";
         $this->output_file = $dir . "cron_outputs.txt";
-
-        if(!is_dir($dir)) {
-            umask(0);
-            mkdir($dir, 0777, true);
-        }
 
         if(!file_exists($file))
             file_put_contents($file, json_encode(self::DB_SCHEMA));

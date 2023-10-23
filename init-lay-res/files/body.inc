@@ -1,5 +1,4 @@
 <?php
 global $view;
-?>
 
-<?= $view->body ?>
+echo $view->body;

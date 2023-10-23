@@ -5,7 +5,6 @@ require_once "Lay/AutoLoader.php";
 // Ensure to change the $_GET queries and values, these are the default,
 // and they may change with various versions of Lay;
 // So it is RECOMMENDED you change every single one of them.
-
 if(!($_SERVER['REQUEST_METHOD'] === 'POST' && $_GET['dep1'] === "a-pull" && $_GET['dep2'] === "b-pull" && $_GET['dep3'] === "c-pull")) {
     header("location: ./");
     die;

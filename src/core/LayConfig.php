@@ -8,5 +8,15 @@ final class LayConfig{
     use \Lay\core\sockets\Config;
     use \Lay\core\sockets\Resources;
     use \Lay\core\sockets\Includes;
-    use \Lay\core\sockets\Domain;
+
+    public static function mk_tmp_dir () : string {
+        $dir = self::res_server()->temp;
+
+        if(!is_dir($dir)) {
+            umask(0);
+            mkdir($dir, 0755, true);
+        }
+
+        return $dir;
+    }
 }

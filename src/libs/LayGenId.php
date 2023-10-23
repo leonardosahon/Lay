@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 namespace Lay\libs;
+use Lay\core\LayConfig;
 use Lay\core\sockets\IsSingleton;
-use Lay\orm\SQL;
 
 class LayGenId {
     use IsSingleton;
@@ -14,8 +14,8 @@ class LayGenId {
     private static string $confirm_table;
     private static string $confirm_column;
     protected static function count(string $table, string $column, $value) : bool {
-        $value = SQL::instance()->clean($value,16,'strict');
-        return SQL::instance()->count($column,$table,"WHERE $column='$value'") > 0;
+        $value = LayConfig::get_orm()->clean($value,16,'strict');
+        return LayConfig::get_orm()->open($table)->count_row($column,"$column='$value'") > 0;
     }
 
     public function digit(?int $digit_length = 7) : self {
