@@ -33,6 +33,7 @@ class LayObject {
             return $array;
 
         $obj = new \stdClass();
+
         foreach ($array as $k => $v){
             if(is_array($v)) {
                 $obj->{$k} = $this->to_object($v);

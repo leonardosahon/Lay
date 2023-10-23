@@ -1,15 +1,17 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core;
+namespace Lay\core\view;
 
 use Closure;
+use Lay\core\Exception;
+use Lay\core\LayConfig;
 use Lay\core\sockets\IsSingleton;
 use Opis\Closure\SerializableClosure;
 
 /**
  * Page Creator
  */
-final class ViewPainter {
+final class ViewEngine {
     use IsSingleton;
     const key_core = "core";
     const key_page = "page";
@@ -265,17 +267,15 @@ final class ViewPainter {
             if(isset($attributes['rel']))
                 unset($attributes['rel']);
 
-            if(isset($attributes['src']))
-                unset($attributes['src']);
+            if(isset($attributes['href']))
+                unset($attributes['href']);
 
             $attr = "";
             foreach ($attributes as $i => $a){
                 $attr .= "$i=\"$a\" ";
             }
 
-            return <<<LNK
-                <link href="$href" rel="$rel" $attr />
-            LNK;
+            return ViewAsset::new()->attr($attr)->rel($rel)->link($href, false);
         };
         $view = $this->view_handler('head');
 
@@ -287,7 +287,6 @@ final class ViewPainter {
     private function script_tag_template(string $src, array $attributes = []) : string
     {
         $defer = str_replace([1, true], 'true', (string)filter_var($attributes['defer'] ?? true, FILTER_VALIDATE_INT));
-        $defer = $defer == '' ? '' : "defer";
 
         if (isset($attributes['src']))
             unset($attributes['src']);
@@ -300,9 +299,7 @@ final class ViewPainter {
             $attr .= "$i=\"$a\" ";
         }
 
-        return <<<LNK
-                <script src="$src" $defer $attr></script>
-            LNK;
+        return ViewAsset::new()->attr($attr)->defer((bool) $defer)->script($src, false);
     }
     private function skeleton_script() : string {
         $meta = self::$meta_data;
@@ -353,26 +350,23 @@ final class ViewPainter {
     }
 
     private function prepare_assets(\Closure $asset_template, array &$assets, string &$view, string $asset_type) : void {
-        $client = LayConfig::instance()->get_res__client();
+        $client = LayConfig::res_client();
 
-        $resolve_asset = function (string|array &$asset, string|int $assets_key, array &$assets_array, bool $using_root_as_array_key = false) use ($asset_type, $asset_template, $client, &$resolve_asset) : string {
-            $filter_src = $using_root_as_array_key ?
-                fn (string|null|int $key, string $src) : string  =>
-                    match ($key) {
-                        default => "",
-                        "front" => $client->front->root,
-                        "back" => $client->back->root,
-                        "custom" => $client->custom->root,
-                    } . $src
-                : fn (string|null|int $key, string $src) : string  => str_replace(
-                    [ "@front/", "@back/", "@custom/" ],
-                    [ $client->front->root, $client->back->root, $client->custom->root ],
-                    $src
-                );
+        $resolve_asset = function (string|array &$asset, string|int $assets_key, array &$assets_array) use ($asset_type, $asset_template, $client, &$resolve_asset) : string {
+            $filter_src = fn (string|null|int $key, string $src) : string  => str_replace
+            (
+                [ "@front/", "@back/", "@custom/" ],
+                [ $client->front->root, $client->back->root, $client->custom->root ],
+                $src
+            );
 
+            // If the asset item found is not the asset type indicated.
+            // That is: if Painter is looking for `js` file, and it sees css, it should return an empty string.
             if(is_string($asset) && !str_ends_with($asset,".$asset_type"))
                 return "";
 
+            // if the asset item is an array;
+            // ['src' => asset_file, 'defer' => true, 'async' => false, 'type' => 'text/javascript']
             if (is_array($asset)) {
                 if (isset($asset['src'])) {
                     if(!str_ends_with($asset['src'],".$asset_type"))
@@ -390,32 +384,7 @@ final class ViewPainter {
                     return $asset_template($x, $asset);
                 }
 
-                $added_assets = "";
-                // which is "custom" => [,,,], "front" => [,,,]
-                // this block is used by the `legacy` way of including assets,
-                foreach ($asset as $i => $a) {
-                    // cleanup the empty entry
-                    if(empty($a)) {
-                        if(is_int($i))
-                            unset($asset[$i]);
-
-                        continue;
-                    }
-
-                    // this is the reason we are passing `$assets_key` and not `$i`
-                    $x = $resolve_asset($a, $assets_key, $asset, $using_root_as_array_key);
-
-                    if(empty($x))
-                        continue;
-
-                    // cleanup the array entry after adding the asset
-                    if(is_int($i))
-                        unset($asset[$i]);
-
-                    $added_assets .= $x;
-                }
-
-                return $added_assets;
+                Exception::throw_exception("Trying to add assets as an array, but the `src` key was not specified","RequiredKeyIgnored");
             }
 
             $x = $filter_src($assets_key, $asset);
@@ -430,14 +399,8 @@ final class ViewPainter {
             return $asset_template($x);
         };
 
-
         foreach ($assets as $k => $asset) {
-            if(in_array($k, ["custom","front","back"], true)) {
-                $view .= $resolve_asset($asset, $k, $assets, true);
-                continue;
-            }
-
-            $view .= $resolve_asset($asset, $k, $assets, false);
+            $view .= $resolve_asset($asset, $k, $assets);
         }
     }
 }

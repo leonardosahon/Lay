@@ -1,10 +1,10 @@
 <?php
 
-namespace Lay\core;
+namespace Lay\core\view;
 
-abstract class ViewTemplate
+abstract class ViewBuilderStarter
 {
-    public readonly LayView $view;
+    public readonly ViewBuilder $view;
 
     public function init_pages(): void
     {
@@ -17,7 +17,7 @@ abstract class ViewTemplate
     final public function init(): void
     {
         if(!isset($this->view))
-            $this->view = LayView::new();
+            $this->view = ViewBuilder::new();
 
         $this->init_pages();
         $this->default();
@@ -28,7 +28,7 @@ abstract class ViewTemplate
 
     public function pages(): void
     {
-        $this->view->route("index")->bind(function (LayView $layView, array $init_values) {
+        $this->view->route("index")->bind(function (ViewBuilder $layView, array $init_values) {
             $layView->page("title", "Default Lay Page")
                 ->page("desc", "A default description. This goes to the meta tags responsible for the page description")
                 ->local("current_page", "home")
@@ -43,7 +43,7 @@ abstract class ViewTemplate
      */
     public function default(): void
     {
-        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (LayView $layView, array $init_values) {
+        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (ViewBuilder $layView, array $init_values) {
             $layView
                 ->page("title", $layView->request('route') . " - Page not found")
                 ->body_tag("defult-home")

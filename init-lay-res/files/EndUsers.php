@@ -13,8 +13,6 @@ class EndUsers
     public function contact_us() : array {
         $post = LayObject::new()->get_json();
 
-        LayConfig::set_smtp();
-
         if(
             LayMail::new()
                 ->client($post->email, $post->name)

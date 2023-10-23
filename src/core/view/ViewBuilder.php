@@ -1,14 +1,16 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core;
+namespace Lay\core\view;
 
 use Closure;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\enums\DomainType;
+use Lay\core\Exception;
+use Lay\core\LayConfig;
 use Lay\core\sockets\IsSingleton;
 
 // TODO: Find a way to cache views
-final class LayView {
+final class ViewBuilder {
     use IsSingleton;
     const DEFAULT_ROUTE = "*";
     private static bool $in_init = false;
@@ -48,7 +50,7 @@ final class LayView {
 
     public function request(#[ExpectedValues(['route','route_as_array','domain_type','pattern','*'])] string $key) : DomainType|string|array
     {
-        return LayConfig::current_route_data($key);
+        return ViewDomain::current_route_data($key);
     }
 
     public function get_all_routes() : array {
@@ -70,7 +72,7 @@ final class LayView {
     }
 
     private function store_constants() : void {
-        ViewPainter::constants($this->get_route_details(self::view_constants) ?? []);
+        ViewEngine::constants($this->get_route_details(self::view_constants) ?? []);
     }
 
     private function get_constants() : array {
@@ -115,7 +117,7 @@ final class LayView {
         if(self::$view_found)
             return;
 
-        ViewPainter::new()->paint($this->get_route_details("*"));
+        ViewEngine::new()->paint($this->get_route_details("*"));
     }
 
     public function route(string $route, string ...$aliases) : self {
@@ -151,46 +153,46 @@ final class LayView {
             $current_page = $this->get_route_details($route) ?? [];
             self::$view_found = true;
 
-            ViewPainter::new()->paint($current_page);
+            ViewEngine::new()->paint($current_page);
         }
 
         return $this;
     }
 
     public function core(string $key, bool $value) : self {
-        return $this->store_page_data(ViewPainter::key_core, $key, $value);
+        return $this->store_page_data(ViewEngine::key_core, $key, $value);
     }
 
     public function page(string $key, ?string $value) : self {
-        return $this->store_page_data(ViewPainter::key_page, $key, $value);
+        return $this->store_page_data(ViewEngine::key_page, $key, $value);
     }
 
     public function body_tag(?string $class = null, ?string $attribute = null) : self {
-        return $this->store_page_data(ViewPainter::key_body, value: ["class" => $class, "attr" => $attribute]);
+        return $this->store_page_data(ViewEngine::key_body, value: ["class" => $class, "attr" => $attribute]);
     }
 
     public function head(string|Closure $file_or_func) : self {
-        return $this->store_page_data(ViewPainter::key_view, 'head', $file_or_func);
+        return $this->store_page_data(ViewEngine::key_view, 'head', $file_or_func);
     }
 
     public function body(string|Closure $file_or_func) : self {
-        return $this->store_page_data(ViewPainter::key_view, 'body', $file_or_func);
+        return $this->store_page_data(ViewEngine::key_view, 'body', $file_or_func);
     }
 
     public function script(string|Closure $file_or_func) : self {
-        return $this->store_page_data(ViewPainter::key_view, 'script', $file_or_func);
+        return $this->store_page_data(ViewEngine::key_view, 'script', $file_or_func);
     }
 
     public function assets(string|array ...$assets) : self {
-        return $this->store_page_data(ViewPainter::key_assets, value: $assets);
+        return $this->store_page_data(ViewEngine::key_assets, value: $assets);
     }
 
     public function local(string $key, mixed $value) : self {
-        return $this->store_page_data(ViewPainter::key_local, $key, $value);
+        return $this->store_page_data(ViewEngine::key_local, $key, $value);
     }
 
     public function local_array(string $key, mixed $value) : self {
-        return $this->store_page_data(ViewPainter::key_local_array, $key, $value);
+        return $this->store_page_data(ViewEngine::key_local_array, $key, $value);
     }
 
 }

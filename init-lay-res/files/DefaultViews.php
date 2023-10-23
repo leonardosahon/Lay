@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace res\server\view;
 
 use Lay\core\LayConfig;
-use Lay\core\LayView;
-use Lay\core\ViewTemplate;
+use Lay\core\view\ViewBuilder;
+use Lay\core\view\ViewBuilderStarter;
 
-class DefaultViews extends ViewTemplate
+class DefaultViews extends ViewBuilderStarter
 {
     public function init_pages(): void
     {
@@ -27,15 +27,15 @@ class DefaultViews extends ViewTemplate
 
     public function pages(): void
     {
-        $this->view->route("index")->bind(function (LayView $layView) {
-            $layView->connect_db()
+        $this->view->route("index")->bind(function (ViewBuilder $builder) {
+            $builder->connect_db()
                 ->page("title", "Homepage")
                 ->page("desc", "This is the default homepage description")
                 ->body("homepage");
         });
 
-        $this->view->route("another-page")->bind(function (LayView $layView) {
-            $layView->connect_db()
+        $this->view->route("another-page")->bind(function (ViewBuilder $builder) {
+            $builder->connect_db()
                 ->page("title", "Another Page")
                 ->page("desc", "This is another page's description")
                 ->body("another");
@@ -44,8 +44,8 @@ class DefaultViews extends ViewTemplate
 
     public function default(): void
     {
-        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (LayView $layView){
-            $layView->page('title', $this->view->request('route') . " - Page not Found")
+        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (ViewBuilder $builder){
+            $builder->page('title', $this->view->request('route') . " - Page not Found")
                 ->body_tag("defult-home")
                 ->local("current_page", "error")
                 ->local("section", "error")

@@ -1,14 +1,16 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core\sockets;
+namespace Lay\core\view;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\enums\CustomContinueBreak;
 use Lay\core\enums\DomainCacheKeys;
 use Lay\core\enums\DomainType;
-use Lay\core\ViewPainter;
-use Lay\core\ViewTemplate;
+use Lay\core\LayConfig;
+use Lay\core\sockets\IsSingleton;
 
-trait Domain {
+class ViewDomain {
+    use IsSingleton;
+
     private static string $current_route;
     private static array $current_route_details = [
         "route" => "index",
@@ -16,18 +18,33 @@ trait Domain {
         "domain_type" => DomainType::LOCAL,
         "pattern" => "*",
     ];
+
+    private static bool $lay_init = false;
+    private static LayConfig $layConfig;
+    private static object $site_data;
     private static bool $cache_domains = true;
     private static bool $cache_domain_set = false;
     private static bool $domain_found = false;
     private static string $domain_list_key = "__LAY_DOMAINS__";
     private static array $domain_ram;
 
+    private static function init_lay() : void {
+        if(self::$lay_init)
+            return;
+
+        LayConfig::is_init();
+        self::$layConfig = LayConfig::new();
+        self::$site_data = self::$layConfig::site_data();
+
+        self::$lay_init = true;
+    }
+
     private static function init_cache_domain() : void {
         if(self::$cache_domain_set)
-           return;
+            return;
 
         self::$cache_domain_set = true;
-        self::$cache_domains = self::$ENV_IS_PROD || self::site_data()->cache_domains;
+        self::$cache_domains = self::$layConfig::$ENV_IS_PROD || self::$site_data->cache_domains;
     }
 
     private function cache_domain_ram() : void {
@@ -105,7 +122,7 @@ trait Domain {
         return $this->domain_cache_key(DomainCacheKeys::CACHED);
     }
 
-    private function activate_domain(string $id, string $pattern, ViewTemplate $handler, DomainType $domain_type) : CustomContinueBreak {
+    private function activate_domain(string $id, string $pattern, ViewBuilderStarter $builder, DomainType $domain_type) : void {
         $route = $this->get_current_route();
         $route = str_replace($pattern, "", $route);
         $route = ltrim($route, "/");
@@ -119,9 +136,7 @@ trait Domain {
         self::$current_route_details['pattern'] = $pattern;
         self::$current_route_details['domain_type'] = $domain_type;
 
-        $handler->init();
-
-        return CustomContinueBreak::BREAK;
+        $builder->init();
     }
 
     /**
@@ -156,7 +171,7 @@ trait Domain {
      * @return string
      */
     private function get_current_route() : string {
-        self::is_init();
+        self::init_lay();
 
         if(isset(self::$current_route))
             return self::$current_route;
@@ -165,7 +180,7 @@ trait Domain {
         $root = "/";
         $get_name = "brick";
 
-        $root_url = self::get_site_data('base_no_proto');
+        $root_url = self::$site_data->base_no_proto;
         $root_file_system = rtrim(explode("index.php", $_SERVER['SCRIPT_NAME'])[0], "/");
 
         $view = str_replace("/index.php","",$_GET[$get_name] ?? "");
@@ -182,7 +197,7 @@ trait Domain {
     }
 
     private function active_pattern() : array {
-        $base = $this->get_site_data('base_no_proto');
+        $base = self::$site_data->base_no_proto;
         $sub_domain = explode(".", $base, 2);
         $local_dir = explode("/", self::$current_route, 2);
 
@@ -219,7 +234,7 @@ trait Domain {
         // This conditions handles virtual folder.
         // This is a situation were the developer wants to separate various sections of the application into folders.
         // The dev doesn't necessarily have to create folders, hence "virtual folder".
-        // All the dev needs to do is map the pattern to a view handler
+        // All the dev needs to do is map the pattern to a view builder
         //
         // Example:
         //  localhost/example.com/admin/;
@@ -231,8 +246,8 @@ trait Domain {
 
         if($is_subdomain || $is_local_domain) {
 
-            $handler = $this->get_cached_domain_details($id)['handler'];
-            $this->activate_domain($id, $pattern, $handler, $is_subdomain ? DomainType::SUB : DomainType::LOCAL);
+            $builder = $this->get_cached_domain_details($id)['builder'];
+            $this->activate_domain($id, $pattern, $builder, $is_subdomain ? DomainType::SUB : DomainType::LOCAL);
             return CustomContinueBreak::BREAK;
         }
 
@@ -253,9 +268,9 @@ trait Domain {
             if($rtn == CustomContinueBreak::BREAK)
                 return true;
 
-            if($id == "default" || $pattern == "*"){
-                $handler = $this->get_cached_domain_details($id)['handler'];
-                $this->activate_domain($id, $pattern, $handler, DomainType::LOCAL);
+            if($id == "default" || $pattern == "*") {
+                $builder = $this->get_cached_domain_details($id)['builder'];
+                $this->activate_domain($id, $pattern, $builder, DomainType::LOCAL);
             }
         }
 
@@ -274,8 +289,8 @@ trait Domain {
         }
     }
 
-    public function add_domain(string $id, array $patterns, ViewTemplate $handler) : void {
-        self::is_init();
+    public function create(string $id, array $patterns, ViewBuilderStarter $builder) : void {
+        self::init_lay();
         self::init_cache_domain();
 
         $this->get_current_route();
@@ -286,7 +301,7 @@ trait Domain {
         $this->cache_domain_details([
             "id" => $id,
             "patterns" => $patterns,
-            "handler" => $handler
+            "builder" => $builder
         ]);
 
         $this->cache_patterns($id, $patterns);

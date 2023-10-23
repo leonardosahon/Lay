@@ -4,8 +4,8 @@ const SAFE_TO_INIT_LAY = true;
 
 include_once "layconfig.php";
 
-\Lay\core\LayConfig::new()->add_domain(
+\Lay\core\view\ViewDomain::new()->create(
     id: "default",
     patterns: ["*"],
-    handler: new \res\server\view\DefaultViews()
+    builder: new \res\server\view\DefaultViews()
 );

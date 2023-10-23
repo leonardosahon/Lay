@@ -102,11 +102,13 @@ class Exception
             DEBUG;
             return $other['act'] ?? "kill";
         } else {
-            $dir = LayConfig::res_server()->temp . "logs";
-            $file_log = $dir . DIRECTORY_SEPARATOR . "lay_error.log";
+            $dir = LayConfig::res_server()->temp;
+            $file_log = $dir . DIRECTORY_SEPARATOR . "exceptions.log";
 
-            if (!is_dir($dir))
-                mkdir($dir, 0755);
+            if (!is_dir($dir)) {
+                umask(0);
+                mkdir($dir, 0755, true);
+            }
 
             $date = date("Y-m-d H:i:s e");
             $body = strip_tags($body);

@@ -25,7 +25,7 @@ class LayArraySearch
             "found" => false,
         ];
 
-        foreach ($haystack as $i => $d){
+        foreach ($haystack as $i => $d) {
             if(is_array($d)) {
                 $result['index'][] = $i;
                 $search = self::run($needle, $d, $strict, $result['index']);

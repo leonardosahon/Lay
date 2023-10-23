@@ -151,14 +151,8 @@ final class LayImage{
         $operation = function ($imgName, $tmp_name) use ($directory, $post_name, $new_name, $dimension, $copy_tmp_file){
             $lay = LayConfig::instance();
 
-            $tmpFolder = $lay->get_res__server('lay') . "temp" . DIRECTORY_SEPARATOR . "IMG";
+            $tmpFolder = $lay::mk_tmp_dir();
             $file_name = $lay::get_orm()->clean($new_name,6) . ".webp";
-
-            if(!is_dir($tmpFolder)) {
-                umask(0);
-                if(@!mkdir($tmpFolder, 0777, true))
-                    $this->exception("Access denied! Failed to create temporary folder at location [$tmpFolder]");
-            }
 
             $tmpImg = $tmpFolder . DIRECTORY_SEPARATOR . "temp.tmp";
             $directory = $directory . DIRECTORY_SEPARATOR . $file_name;

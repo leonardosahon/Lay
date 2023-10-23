@@ -175,7 +175,9 @@ class Core {
 
         $section = $client . "custom{$s}";
         $this->copy_routine($section . "css");
+        $this->copy_routine($section . "css","style.css");
         $this->copy_routine($section . "js","index.js");
+        $this->copy_routine($section . "js","another.js");
         $this->copy_routine($section . "images");
         $this->copy_routine($section . "plugin");
 
