@@ -163,29 +163,29 @@ class Exception
 
         switch ($type) {
             default:
-                $act = $this->container("SQL Err", "<b style='color: #008dc5'>" . mysqli_error(SQL::instance()->get_link()) . "</b> <div style='margin: 10px 0'>Statement: __RAW_VALUE_TYPE__</div>", ["stack" => $trace, "core" => "error", "raw" => ["__RAW_VALUE_TYPE__" => $query_type], "act" => "kill"]);
+                $act = $this->container("QueryExecErr", "<b style='color: #008dc5'>" . mysqli_error(SQL::new()->get_link()) . "</b> <div style='color: #fff0b3; margin-top: 5px'>$query</div> <div style='margin: 10px 0'>Statement: __RAW_VALUE_TYPE__</div>", ["stack" => $trace, "core" => "error", "raw" => ["__RAW_VALUE_TYPE__" => $query_type], "act" => "kill"]);
                 break;
             case -9:
-                $act = $this->container("SQL Review", "<pre style='color: #dea303 !important'>$query</pre>", ["stack" => $trace, "core" => "view"]);
+                $act = $this->container("QueryReview", "<pre style='color: #dea303 !important'>$query</pre>", ["stack" => $trace, "core" => "view"]);
                 break;
             case -8:
                 $act = $this->container($opt['title'], $opt['body_includes'], ["stack" => $trace, "core" => "error", "act" => @$opt['kill'] ? "kill" : "allow", "raw" => $opt['raw']]);
                 break;
 
             case 0:
-                $act = $this->container("Conn Err", "No connection detected: <h5 style='color: #008dc5'>Connection might be closed:</h5>", ["stack" => $trace, "core" => "error"]);
+                $act = $this->container("ConnErr", "No connection detected: <h5 style='color: #008dc5'>Connection might be closed:</h5>", ["stack" => $trace, "core" => "error"]);
                 break;
             case 1:
                 $db = $opt[0];
                 $usr = $opt[1];
                 $host = $opt[2];
-                $act = $this->container("Conn Test", "<h2>Connection Established!</h2><u>Your connection info states:</u><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; Host: <u>" . $host . "</u></div><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; User: <u>" . $usr . "</u></div><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; Database: <u>" . $db . "</u></div>", ["stack" => $trace, "core" => "success"]);
+                $act = $this->container("ConnTest", "<h2>Connection Established!</h2><u>Your connection info states:</u><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; Host: <u>" . $host . "</u></div><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; User: <u>" . $usr . "</u></div><div style='color: gold; font-weight: bold; margin: 5px 1px;'>&gt; Database: <u>" . $db . "</u></div>", ["stack" => $trace, "core" => "success"]);
                 break;
             case 2:
-                $act = $this->container("Conn Err", "<div style='color: #e00; font-weight: bold; margin: 5px 1px;'>" . mysqli_connect_error() . "</div>", ["stack" => $trace, "core" => "error", "act" => "kill"]);
+                $act = $this->container("ConnErr", "<div style='color: #e00; font-weight: bold; margin: 5px 1px;'>" . mysqli_connect_error() . "</div>", ["stack" => $trace, "core" => "error", "act" => "kill"]);
                 break;
             case 3:
-                $act = $this->container("Conn Err", "<div style='color: #e00; font-weight: bold; margin: 5px 1px;'>Failed to close connection. No pre-existing DB connection</div>", ["stack" => $trace, "core" => "error", "act" => "kill"]);
+                $act = $this->container("ConnErr", "<div style='color: #e00; font-weight: bold; margin: 5px 1px;'>Failed to close connection. No pre-existing DB connection</div>", ["stack" => $trace, "core" => "error", "act" => "kill"]);
                 break;
         }
 

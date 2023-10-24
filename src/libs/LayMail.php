@@ -268,7 +268,7 @@ class LayMail {
     }
 
     public static function email_template(string $message) : string {
-        $data = LayConfig::instance()->get_site_data();
+        $data = LayConfig::site_data();
         $logo = $data->img->logo;
         $company_name = $data->name->short;
         $copyright = $data->copy;
@@ -277,9 +277,9 @@ class LayMail {
 
         return <<<MSG
                 <html lang="en"><body>
-                    <div style="background: $bg_color; color: $text_color; padding: 20px; min-height: 400px">
+                    <div style="background: $bg_color; color: $text_color; padding: 20px; min-height: 400px; max-width: 80%">
                         <div style="text-align: center; background: $bg_color; padding: 10px 5px">
-                            <img src="$logo" alt="$company_name Logo" style="max-width: 85%; padding: 10px; padding-bottom: 0">
+                            <img src="$logo" alt="$company_name Logo" style="max-width: 85%; padding: 10px 10px 0">
                         </div>
                         <div style="
                             margin: 10px auto;
@@ -287,7 +287,7 @@ class LayMail {
                             font-size: 16px;
                             line-height: 1.6;
                         ">$message</div>
-                        <p style="text-align: center; font-size: 8px">$copyright</p>
+                        <p style="text-align: center; font-size: 12px">$copyright</p>
                     </div>
                 </body></html>
             MSG;
