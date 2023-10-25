@@ -104,17 +104,22 @@ trait Config
         if (isset($_SESSION))
             return;
 
-        if (isset($flags['http_only']))
-            ini_set("session.cookie_httponly", ((int)$flags['http_only']) . "");
+        $cookie_opt = [];
 
         if (isset($flags['only_cookies']))
             ini_set("session.use_only_cookies", ((int)$flags['only_cookies']) . "");
 
-        if (self::$ENV_IS_PROD && isset($flags['secure']))
-            ini_set("session.cookie_secure", ((int)$flags['secure']) . "");
+        if (self::$ENV_IS_PROD && isset($flags['http_only']) ?? isset($flags['httponly']))
+            $cookie_opt['httponly'] = filter_var($flags['httponly'] ?? $flags['http_only'], FILTER_VALIDATE_BOOL);
 
-        if (isset($flags['samesite']))
-            session_set_cookie_params(['samesite' => ucfirst($flags['samesite'])]);
+        if (self::$ENV_IS_PROD && isset($flags['secure']))
+            $cookie_opt['secure'] = filter_var($flags['secure'], FILTER_VALIDATE_BOOL);
+
+        if (self::$ENV_IS_PROD && isset($flags['samesite']))
+            $cookie_opt['samesite'] = ucfirst($flags['samesite']);
+
+        if(!empty($cookie_opt))
+            session_set_cookie_params($cookie_opt);
 
         session_start();
     }

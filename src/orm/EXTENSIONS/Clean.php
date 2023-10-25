@@ -6,7 +6,7 @@ use Lay\orm\SQL;
 
 trait Clean {
     protected static array $stock_escape_string = ["%3D","%21","%2B","%40","%23","%24","%25","%5E","%26","%2A","%28","%29","%27",
-        "%22","%3C", "%3E","%3F","%2F","%5C","%7C","%60","%2C","_","-","–","%0A","%E2","%80","%99","%E2%80%98","%E2%80%99"];
+        "%22","%3A","%3B","%3C","%3D","%3E","%3F","%2F","%5C","%7C","%60","%2C","_","-","–","%0A","%E2","%80","%99","%E2%80%98","%E2%80%99"];
     protected static array $escape_string = [];
     /**
      * ## Clean variables for SQL or generally
@@ -146,8 +146,8 @@ trait Clean {
                 $title = "Clean::Err";
                 $body = "No Valid Cleanse Combo or Level passed!<br> <b>COMBO_RANGE = 0 - 6</b> <br><br>
                     <b>DEFAULT_COMBO_VALUES = [10-20]</b> <br>  EXPECTED: <br>
-                    <b>[COMBO MODE]</b> single value from COMBO_RANGE or unique comma (,) separated combination of COMBO_RANGE; <br>  
-                    <b>[LEVEL MODE]</b> DEFAULT_COMBO_VALUES or unique float combination of COMBO_RANGE; <br> 
+                    <b>[COMBO MODE]</b> single value from COMBO_RANGE or unique comma (,) separated combination of COMBO_RANGE; <br>
+                    <b>[LEVEL MODE]</b> DEFAULT_COMBO_VALUES or unique float combination of COMBO_RANGE; <br>
                     Got <b>__RAW_VALUE_TYPE__</b> as Level or Combo";
                 $option = [
                     "__RAW_VALUE_TYPE__" => $args['combo']
