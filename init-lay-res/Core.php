@@ -193,6 +193,7 @@ class Core {
         $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
 
         $this->copy_routine("res{$s}server{$s}controller{$s}__front{$s}", "EndUsers.php");
+        $this->copy_routine("res{$s}server{$s}utils{$s}", "Email.php");
         $this->copy_routine("res{$s}server{$s}view{$s}", "DefaultViews.php");
 
         $this->copy_routine("", "favicon.ico");

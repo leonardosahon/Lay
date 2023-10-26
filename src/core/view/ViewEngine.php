@@ -5,7 +5,7 @@ namespace Lay\core\view;
 use Closure;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 use Opis\Closure\SerializableClosure;
 
 /**

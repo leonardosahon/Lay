@@ -2,7 +2,7 @@
 
 namespace Lay\tests\Unit;
 
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 
 class FakeControllerSingleton
 {

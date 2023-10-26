@@ -3,11 +3,11 @@ declare(strict_types=1);
 namespace Lay\core;
 
 final class LayConfig{
-    use \Lay\core\sockets\IsSingleton;
-    use \Lay\core\sockets\Init;
-    use \Lay\core\sockets\Config;
-    use \Lay\core\sockets\Resources;
-    use \Lay\core\sockets\Includes;
+    use \Lay\core\traits\IsSingleton;
+    use \Lay\core\traits\Init;
+    use \Lay\core\traits\Config;
+    use \Lay\core\traits\Resources;
+    use \Lay\core\traits\Includes;
 
     public static function mk_tmp_dir () : string {
         $dir = self::res_server()->temp;

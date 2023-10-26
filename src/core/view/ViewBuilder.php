@@ -4,10 +4,10 @@ namespace Lay\core\view;
 
 use Closure;
 use JetBrains\PhpStorm\ExpectedValues;
-use Lay\core\enums\DomainType;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
+use Lay\core\view\enums\DomainType;
 
 // TODO: Find a way to cache views
 final class ViewBuilder {

@@ -1,6 +1,6 @@
 <?php
 global $view;
-\Lay\core\view\ViewAsset::new()->rel("stylesheet")->link("@front/css/front/style.css");
+\Lay\core\view\ViewAsset::new()->rel("stylesheet")->link("@custom/css/style.css");
 ?>
 
 <style>
