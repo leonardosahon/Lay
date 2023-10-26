@@ -4,32 +4,32 @@ namespace Lay\core\view;
 
 abstract class ViewBuilderStarter
 {
-    public readonly ViewBuilder $view;
+    public readonly ViewBuilder $builder;
 
     public function init_pages(): void
     {
-        $this->view->init_start()
+        $this->builder->init_start()
             ->page('type', 'front')
             ->page('section', 'app');
-        $this->view->init_end();
+        $this->builder->init_end();
     }
 
     final public function init(): void
     {
-        if(!isset($this->view))
-            $this->view = ViewBuilder::new();
+        if(!isset($this->builder))
+            $this->builder = ViewBuilder::new();
 
         $this->init_pages();
         $this->default();
         $this->pages();
 
-        $this->view->end();
+        $this->builder->end();
     }
 
     public function pages(): void
     {
-        $this->view->route("index")->bind(function (ViewBuilder $layView, array $init_values) {
-            $layView->page("title", "Default Lay Page")
+        $this->builder->route("index")->bind(function (ViewBuilder $builder, array $init_values) {
+            $builder->page("title", "Default Lay Page")
                 ->page("desc", "A default description. This goes to the meta tags responsible for the page description")
                 ->local("current_page", "home")
                 ->body("homepage");
@@ -43,9 +43,9 @@ abstract class ViewBuilderStarter
      */
     public function default(): void
     {
-        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (ViewBuilder $layView, array $init_values) {
-            $layView
-                ->page("title", $layView->request('route') . " - Page not found")
+        $this->builder->route($this->builder::DEFAULT_ROUTE)->bind(function (ViewBuilder $builder, array $init_values) {
+            $builder
+                ->page("title", $builder->request('route') . " - Page not found")
                 ->body_tag("defult-home")
                 ->local("current_page", "error")
                 ->local("section", "error")

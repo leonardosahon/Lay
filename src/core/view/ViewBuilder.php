@@ -82,12 +82,15 @@ final class ViewBuilder {
     private function bind_uri() : string {
         $data = $this->request('*');
 
+        if(empty($data['route_as_array'][0]))
+            $data['route_as_array'][0] = 'index';
+
         foreach ([self::$route, ...self::$route_aliases] as $route) {
             self::$route = $route;
             $uri = explode("/", self::$route);
             $uri_size = count($uri);
 
-            if ($uri_size > 1 && count($data['route_as_array']) == $uri_size) {
+            if (count($data['route_as_array']) == $uri_size) {
                 foreach ($uri as $i => $u) {
                     $current_uri = $data['route_as_array'][$i];
 

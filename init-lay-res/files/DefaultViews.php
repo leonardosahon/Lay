@@ -13,7 +13,7 @@ class DefaultViews extends ViewBuilderStarter
     {
         $layConfig = LayConfig::new();
 
-        $this->view->init_start()
+        $this->builder->init_start()
             ->page('type', 'front')
             ->body_tag("default-home", 'id="new-body"')
             ->local("link", fn($link = "") => $layConfig->get_site_data("base") . $link)
@@ -27,14 +27,14 @@ class DefaultViews extends ViewBuilderStarter
 
     public function pages(): void
     {
-        $this->view->route("index")->bind(function (ViewBuilder $builder) {
+        $this->builder->route("index")->bind(function (ViewBuilder $builder) {
             $builder->connect_db()
                 ->page("title", "Homepage")
                 ->page("desc", "This is the default homepage description")
                 ->body("homepage");
         });
 
-        $this->view->route("another-page")->bind(function (ViewBuilder $builder) {
+        $this->builder->route("another-page")->bind(function (ViewBuilder $builder) {
             $builder->connect_db()
                 ->page("title", "Another Page")
                 ->page("desc", "This is another page's description")
@@ -44,8 +44,8 @@ class DefaultViews extends ViewBuilderStarter
 
     public function default(): void
     {
-        $this->view->route($this->view::DEFAULT_ROUTE)->bind(function (ViewBuilder $builder){
-            $builder->page('title', $this->view->request('route') . " - Page not Found")
+        $this->builder->route($this->builder::DEFAULT_ROUTE)->bind(function (ViewBuilder $builder){
+            $builder->page('title', $this->builder->request('route') . " - Page not Found")
                 ->body_tag("defult-home")
                 ->local("current_page", "error")
                 ->local("section", "error")
