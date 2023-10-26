@@ -5,7 +5,7 @@ namespace Lay\core\view;
 use Closure;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 use Opis\Closure\SerializableClosure;
 
 /**
@@ -225,11 +225,11 @@ final class ViewEngine {
         ob_start();
 
         if($meta_view instanceof Closure)
-            echo $meta_view($meta);
+            echo $meta_view($meta, ViewAsset::new());
 
         elseif($meta_view instanceof SerializableClosure) {
             $meta_view = $meta_view->getClosure();
-            echo $meta_view($meta);
+            echo $meta_view($meta, ViewAsset::new());
         }
 
         elseif($meta_view)

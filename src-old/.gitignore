@@ -1,0 +1,6 @@
+/vendor/
+/error_logs/
+/temp/
+/.idea/
+composer.lock
+.compress.log

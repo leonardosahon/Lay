@@ -16,7 +16,7 @@ trait SelectorOOPCrud
         $d['clause'] = $d['clause'] ?? "";
         $d['columns'] = $d['columns'] ?? $d['values'] ?? "*";
 
-        if(isset($d['table']))
+        if(!isset($d['table']))
             $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
         $column_to_check = $column_to_check ?? $d['table'] . "." . $column_to_check;

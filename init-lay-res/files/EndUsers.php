@@ -3,8 +3,8 @@
 namespace res\server\controller\__front;
 
 use Lay\core\LayConfig;
-use Lay\libs\LayMail;
 use Lay\libs\LayObject;
+use res\server\utils\Email;
 
 class EndUsers
 {
@@ -14,7 +14,7 @@ class EndUsers
         $post = LayObject::new()->get_json();
 
         if(
-            LayMail::new()
+            Email::new()
                 ->client($post->email, $post->name)
                 ->subject("New Enquiry: " . $post->subject)
                 ->body($post->message)

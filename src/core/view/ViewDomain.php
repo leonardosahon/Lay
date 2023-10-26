@@ -3,10 +3,10 @@ declare(strict_types=1);
 namespace Lay\core\view;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\enums\CustomContinueBreak;
-use Lay\core\enums\DomainCacheKeys;
-use Lay\core\enums\DomainType;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
+use Lay\core\view\enums\DomainCacheKeys;
+use Lay\core\view\enums\DomainType;
 
 class ViewDomain {
     use IsSingleton;

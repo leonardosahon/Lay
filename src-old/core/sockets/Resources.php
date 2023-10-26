@@ -233,6 +233,7 @@ trait Resources {
      */
     public static function site_data() : object
     {
+        self::is_init(true);
         return self::$site;
     }
 
