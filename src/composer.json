@@ -35,7 +35,8 @@
     "ext-exif": "*",
     "ext-gd": "*",
     "ext-sodium": "*",
-    "ext-fileinfo": "*"
+    "ext-fileinfo": "*",
+    "ext-dom": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "10.3.2"

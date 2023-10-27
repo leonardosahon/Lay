@@ -124,8 +124,8 @@ class ViewDomain {
 
     private function activate_domain(string $id, string $pattern, ViewBuilderStarter $builder, DomainType $domain_type) : void {
         $route = $this->get_current_route();
-        $route = str_replace($pattern, "", $route);
-        $route = ltrim($route, "/");
+        $route = explode($pattern, $route, 2);
+        $route = ltrim(end($route), "/");
         $route_as_array = explode("/", $route);
 
         self::$domain_found = true;
@@ -313,5 +313,9 @@ class ViewDomain {
             return self::$current_route_details;
 
         return self::$current_route_details[$key];
+    }
+
+    public function get_domain_by_id(string $id) : ?array {
+        return $this->get_cached_domain_details($id);
     }
 }
