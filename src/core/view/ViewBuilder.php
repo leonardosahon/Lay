@@ -138,12 +138,17 @@ final class ViewBuilder {
 
             $req['pattern'] = $domain_id ? $domain_id['patterns'][0] : "*";
 
+            if($req['pattern'] != "*" && LayConfig::$ENV_IS_PROD) {
+                $x = explode(".", $base->base_no_proto, 2);
+                $base_full = $base->proto . "://" . $req['pattern'] . "." . end($x) . "/";
+                $req['pattern'] = "*";
+            }
+
             if($req['domain_type'] == DomainType::SUB) {
                 $x = explode(".", $base->base_no_proto, 2);
                 $base_full = $base->proto . "://" . end($x) . "/";
             }
         }
-
 
         $domain = $req['pattern'] == "*" ? "" : $req['pattern'];
 
