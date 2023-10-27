@@ -52,7 +52,7 @@ final class ViewBuilder {
         return $this;
     }
 
-    public function request(#[ExpectedValues(['route','route_as_array','domain_type','pattern','*'])] string $key) : DomainType|string|array
+    public function request(#[ExpectedValues(['route','route_as_array','domain_type','domain_id','pattern','*'])] string $key) : DomainType|string|array
     {
         if(!isset(self::$current_route_data))
             self::$current_route_data = ViewDomain::current_route_data("*");
@@ -134,6 +134,7 @@ final class ViewBuilder {
         $base_full = $base->base;
 
         if($domain_id) {
+            $same_domain = $domain_id == $this->request('domain_id');
             $domain_id = ViewDomain::new()->get_domain_by_id($domain_id);
 
             $req['pattern'] = $domain_id ? $domain_id['patterns'][0] : "*";
@@ -144,7 +145,7 @@ final class ViewBuilder {
                 $req['pattern'] = "*";
             }
 
-            if($req['domain_type'] == DomainType::SUB) {
+            if(!$same_domain && $req['domain_type'] == DomainType::SUB) {
                 $x = explode(".", $base->base_no_proto, 2);
                 $base_full = $base->proto . "://" . end($x) . "/";
             }

@@ -17,6 +17,7 @@ class ViewDomain {
         "route_as_array" => [],
         "domain_type" => DomainType::LOCAL,
         "pattern" => "*",
+        "domain_id" => "",
     ];
 
     private static bool $lay_init = false;
@@ -135,6 +136,7 @@ class ViewDomain {
         self::$current_route_details['route_as_array'] = $route_as_array;
         self::$current_route_details['pattern'] = $pattern;
         self::$current_route_details['domain_type'] = $domain_type;
+        self::$current_route_details['domain_id'] = $id;
 
         $builder->init();
     }
