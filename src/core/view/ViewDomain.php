@@ -198,13 +198,13 @@ class ViewDomain {
 
     private function active_pattern() : array {
         $base = self::$site_data->base_no_proto;
-        $sub_domain = explode(".", $base, 2);
+        $sub_domain = explode(".", $base, 3);
         $local_dir = explode("/", self::$current_route, 2);
 
         return [
             "sub" => [
                 "value" => $sub_domain[0],
-                "found" => count($sub_domain) > 1,
+                "found" => count($sub_domain) > 2,
             ],
             "local" => [
                 "value" => $local_dir[0],
@@ -216,6 +216,9 @@ class ViewDomain {
     private function test_pattern(string $id, string $pattern) : CustomContinueBreak {
         if(self::$domain_found)
             return CustomContinueBreak::BREAK;
+
+        if(!$this->is_all_domain_cached())
+            return CustomContinueBreak::CONTINUE;
 
         $domain = $this->active_pattern();
 
@@ -229,7 +232,7 @@ class ViewDomain {
         //  https://vendors.example.com;
         //
         // This condition is looking out for "admin" || "clients" || "vendors" in the `patterns` argument.
-        $is_subdomain = $domain['sub']['found'] && $domain['sub']['value'] == $pattern;
+        $is_subdomain = $domain['sub']['found'];
 
         // This conditions handles virtual folder.
         // This is a situation were the developer wants to separate various sections of the application into folders.
@@ -242,12 +245,20 @@ class ViewDomain {
         //  localhost/example.com/vendors;
         //
         // This condition is looking out for "/admin" || "/clients" || "/vendors" in the `patterns` argument.
-        $is_local_domain = $domain['local']['found'] && $domain['local']['value'] == $pattern;
+        $is_local_domain = $domain['local']['found'];
 
-        if($is_subdomain || $is_local_domain) {
+        if($is_subdomain && $is_local_domain)
+            $is_local_domain = false;
 
+        if($is_subdomain && $domain['sub']['value'] == $pattern) {
             $builder = $this->get_cached_domain_details($id)['builder'];
-            $this->activate_domain($id, $pattern, $builder, $is_subdomain ? DomainType::SUB : DomainType::LOCAL);
+            $this->activate_domain($id, $pattern, $builder, DomainType::SUB);
+            return CustomContinueBreak::BREAK;
+        }
+
+        if($is_local_domain && $domain['local']['value'] == $pattern) {
+            $builder = $this->get_cached_domain_details($id)['builder'];
+            $this->activate_domain($id, $pattern, $builder, DomainType::LOCAL);
             return CustomContinueBreak::BREAK;
         }
 

@@ -81,7 +81,7 @@ final class ViewBuilder {
 
         if(!self::$href_set) {
             self::$href_set = true;
-            $this->local("href", fn(string $href = "", ?string $domain_id = null) => $this->href_link($href, $domain_id));
+            $this->local("href", fn(?string $href = "", ?string $domain_id = null) => $this->href_link($href, $domain_id));
         }
 
         return $this;
@@ -127,21 +127,37 @@ final class ViewBuilder {
         return $data['route'];
     }
 
-    private function href_link(string $link = "", ?string $domain_id = null) : string {
+    private function href_link(?string $link = "", ?string $domain_id = null) : string {
         $req = $this->request('*');
+        $link = is_null($link) ? '' : $link;
+        $base = LayConfig::site_data();
+        $base_full = $base->base;
 
         if($domain_id) {
             $domain_id = ViewDomain::new()->get_domain_by_id($domain_id);
 
             $req['pattern'] = $domain_id ? $domain_id['patterns'][0] : "*";
+
+            if($req['pattern'] != "*" && LayConfig::$ENV_IS_PROD) {
+                $x = explode(".", $base->base_no_proto, 2);
+                $base_full = $base->proto . "://" . $req['pattern'] . "." . end($x) . "/";
+                $req['pattern'] = "*";
+            }
+
+            if($req['domain_type'] == DomainType::SUB) {
+                $x = explode(".", $base->base_no_proto, 2);
+                $base_full = $base->proto . "://" . end($x) . "/";
+            }
         }
 
         $domain = $req['pattern'] == "*" ? "" : $req['pattern'];
 
         if($req['domain_type'] == DomainType::LOCAL)
             $domain = $domain ? $domain . "/" : $domain;
+        else
+            $domain = "";
 
-        return LayConfig::site_data()->base . $domain . $link;
+        return $base_full . $domain . $link;
     }
 
     public function init_end() : void {
