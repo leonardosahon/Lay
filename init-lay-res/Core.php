@@ -184,6 +184,7 @@ class Core {
         $this->copy_routine($section . "images","icon.png");
         $this->copy_routine($section . "images","favicon.png");
         $this->copy_routine($section . "images","logo.png");
+        $this->copy_routine($section . "images","meta.png");
 
         // copy default files
         $this->copy_routine("","api.php");

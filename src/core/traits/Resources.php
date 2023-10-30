@@ -73,6 +73,7 @@ trait Resources {
                 "logo" => isset(self::$client) ? self::$client->custom->img . "logo.png" : null,
                 "favicon" => isset(self::$client) ? self::$client->custom->img . "favicon.png" : null,
                 "icon" => isset(self::$client) ? self::$client->custom->img . "icon.png" : null,
+                "meta" => isset(self::$client) ? self::$client->custom->img . "meta.png" : null,
             ],
             "color" => $options['color'] ?? null,
             "mail" => [

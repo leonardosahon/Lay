@@ -134,7 +134,7 @@ final class ViewEngine {
         $client = $layConfig->get_res__client();
         $page = $meta[self::key_page];
 
-        $img = $page['img'] ?? $site_data->img->default ?? $site_data->img->logo;
+        $img = $page['img'] ?? $site_data->img->meta ?? $site_data->img->logo;
         $author = $page['author'] ?? $site_data->author;
         $title = $page['title'];
         $title_raw = $page['title_raw'];
