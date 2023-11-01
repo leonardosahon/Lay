@@ -7,6 +7,9 @@ use Lay\core\Exception;
 use Lay\libs\LayMail;
 use Lay\orm\SQL;
 
+if (!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
+    \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
+
 trait Config
 {
     private static SQL $SQL_INSTANCE;
@@ -15,7 +18,6 @@ trait Config
     private static array $layConfigOptions;
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
-    private static bool $USE_OBJS;
     private static bool $COMPRESS_HTML;
 
     private function switch(string $key, mixed $value): self {
@@ -105,6 +107,13 @@ trait Config
             return;
 
         $cookie_opt = [];
+        $flags['expose_php'] ??= false;
+        $flags['timezone'] ??= 'Africa/Lagos';
+
+        date_default_timezone_set($flags['timezone']);
+
+        if(!$flags['expose_php'])
+            header_remove('X-Powered-By');
 
         if (isset($flags['only_cookies']))
             ini_set("session.use_only_cookies", ((int)$flags['only_cookies']) . "");

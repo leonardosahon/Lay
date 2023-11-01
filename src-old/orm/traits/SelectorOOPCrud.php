@@ -1,6 +1,6 @@
 <?php
 
-namespace Lay\orm\EXTENSIONS;
+namespace Lay\orm\traits;
 
 use Lay\orm\SQL;
 

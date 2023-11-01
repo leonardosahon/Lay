@@ -13,56 +13,60 @@ trait Resources {
     private static string $CLIENT_VALUES = "";
     ///### Assets Resource and Page Metadata
     protected static function set_internal_res_client(string $base, string $env_src) : void {
-        $root_client    = $base . "res/client/";
+        $root_client = $base . "res/client/";
         $custom = $env_src . "/custom/";
         $front = $env_src . "/front/";
         $back = $env_src . "/back/";
 
-        $obj = [
-            "api"    =>     $base . "api/",
-            "lay"    =>     $base . "Lay/",
-            "upload" =>     $base . "res/uploads/",
-            "custom"  => [
-                "root"      =>     $root_client . $custom,
-                "img"       =>     $root_client . $custom . "images/",
-                "css"       =>     $root_client . $custom . "css/",
-                "js"        =>     $root_client . $custom . "js/",
-                "plugin"    =>     $root_client . $custom . "plugin/",
-            ],
-            "front"   =>   [
-                "root"      =>     $root_client . $front,
-                "img"       =>     $root_client . $front . "images/",
-                "css"       =>     $root_client . $front . "css/",
-                "js"        =>     $root_client . $front . "js/",
-            ],
-            "back"   =>   [
-                "root"  =>         $root_client . $back,
-                "img"   =>         $root_client . $back . "images/",
-                "css"   =>         $root_client . $back . "css/",
-                "js"    =>         $root_client . $back . "js/",
-            ],
-        ];
+        $obj = new \stdClass();
 
-        self::$client = LayObject::instance()->to_object($obj);
+        $custom_2d = new \stdClass();
+        $custom_2d->root = $root_client     . $custom;
+        $custom_2d->img = $root_client      . $custom . "images/";
+        $custom_2d->css = $root_client      . $custom . "css/";
+        $custom_2d->js = $root_client       . $custom . "js/";
+        $custom_2d->plugin = $root_client   . $custom . "plugin/";
+
+        $front_2d = new \stdClass();
+        $front_2d->root = $root_client      . $front;
+        $front_2d->img = $root_client       . $front . "images/";
+        $front_2d->css = $root_client       . $front . "css/";
+        $front_2d->js = $root_client        . $front . "js/";
+
+        $back_2d = new \stdClass();
+        $back_2d->root = $root_client       . $back;
+        $back_2d->img = $root_client        . $back . "images/";
+        $back_2d->css = $root_client        . $back . "css/";
+        $back_2d->js = $root_client         . $back . "js/";
+
+        $obj->api = $base . "api/";
+        $obj->lay = $base . "Lay/";
+        $obj->upload = $base . "res/uploads/";
+        $obj->custom = $custom_2d;
+        $obj->front = $front_2d;
+        $obj->back = $back_2d;
+
+        self::$client = $obj;
     }
     protected static function set_internal_res_server(string $dir) : void {
 
         $slash = DIRECTORY_SEPARATOR;
         $root_server    = $dir  . "res" . $slash . "server" . $slash;
-        $obj = [
-            "root"    =>   $dir,
-            "dir"     =>   $dir,
-            "temp"    =>   $dir             . ".lay_temp"   . $slash,
-            "lay"     =>   $dir             . "Lay"         . $slash,
-            "lay_env" =>   $root_server     . "includes"    . $slash . "__env" . $slash,
-            "db"      =>   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash,
-            "inc"     =>   $root_server     . "includes"    . $slash,
-            "ctrl"    =>   $root_server     . "controller"  . $slash,
-            "view"    =>   $root_server     . "view"        . $slash,
-            "upload"  =>   "res" . $slash . "uploads" . $slash,
-        ];
 
-        self::$server = LayObject::instance()->to_object($obj);
+        $obj = new \stdClass();
+
+        $obj->root    =   $dir;
+        $obj->dir     =   $dir;
+        $obj->temp    =   $dir             . ".lay_temp"   . $slash;
+        $obj->lay     =   $dir             . "Lay"         . $slash;
+        $obj->lay_env =   $root_server     . "includes"    . $slash . "__env" . $slash;
+        $obj->db      =   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash;
+        $obj->inc     =   $root_server     . "includes"    . $slash;
+        $obj->ctrl    =   $root_server     . "controller"  . $slash;
+        $obj->view    =   $root_server     . "view"        . $slash;
+        $obj->upload  =   "res" . $slash . "uploads" . $slash;
+
+        self::$server = $obj;
     }
     protected static function set_internal_site_data(array $options) : void {
         $obj = array_merge([
@@ -84,7 +88,7 @@ trait Resources {
         ], $options );
 
 
-        self::$site = LayObject::instance()->to_object($obj);
+        self::$site = LayObject::new()->to_object($obj);
     }
 
     private static function get_res(string $obj_type, $resource, string ...$index_chain) : mixed {
@@ -128,7 +132,7 @@ trait Resources {
         $object_push = function (&$key) use ($value) {
             $key = str_replace(
                 [ "@back","@front","@custom" ],
-                [ self::$client->back->root, self::$client->front->root, self::$client->custom->root],
+                [ rtrim(self::$client->back->root,"/"), rtrim(self::$client->front->root,"/"), rtrim(self::$client->custom->root,"/")],
                 $value
             );
         };

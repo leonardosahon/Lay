@@ -1,5 +1,5 @@
 <?php
-namespace Lay\core\sockets;
+namespace Lay\core\traits;
 /**
  * Singleton Implementation
  */

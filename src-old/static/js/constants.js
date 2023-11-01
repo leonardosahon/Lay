@@ -7,6 +7,7 @@ $lay.page = {
     desc : $attr($id("LAY-PAGE-DESC"),"content"),
     type : $attr($id("LAY-PAGE-TYPE"),"content"),
     url : $attr($id("LAY-PAGE-URL"),"content"),
+    urlFull : $attr($id("LAY-PAGE-FULL-URL"),"content"),
     img : $attr($id("LAY-PAGE-IMG"),"content"),
     site_name : $attr($id("LAY-SITE-NAME-SHORT"),"content"),
     site_name_full : $attr($id("LAY-SITE-NAME"),"content"),

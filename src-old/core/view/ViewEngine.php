@@ -5,7 +5,7 @@ namespace Lay\core\view;
 use Closure;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 use Opis\Closure\SerializableClosure;
 
 /**
@@ -29,12 +29,7 @@ final class ViewEngine {
 
         $data = LayConfig::instance()->get_site_data();
 
-        $ser = $data->base_no_proto . "/";
-        $repl = ltrim($_SERVER['REQUEST_URI'], "/");
-        $url = str_replace($ser,$repl,$data->base);
-
-        if($ser == "/")
-            $url = rtrim($data->base, "/") . $repl;
+        $url = ViewDomain::current_route_data("route");
 
         self::$constant_attributes = [
             self::key_core => [
@@ -139,7 +134,7 @@ final class ViewEngine {
         $client = $layConfig->get_res__client();
         $page = $meta[self::key_page];
 
-        $img = $page['img'] ?? $site_data->img->icon;
+        $img = $page['img'] ?? $site_data->img->meta ?? $site_data->img->logo;
         $author = $page['author'] ?? $site_data->author;
         $title = $page['title'];
         $title_raw = $page['title_raw'];
@@ -147,6 +142,7 @@ final class ViewEngine {
         $charset = $page['charset'];
         $desc = $page['desc'];
         $color = $site_data->color->pry;
+        $url = $base . $page['url'];
         $canonical = <<<LINK
             <link rel="canonical" href="{$page['canonical']}" />
         LINK;
@@ -170,9 +166,10 @@ final class ViewEngine {
             <!-- Framework Tags-->
             <meta property="lay:page_type" id="LAY-PAGE-TYPE" content="{$page['type']}">
             <meta property="lay:site_name_short" id="LAY-SITE-NAME-SHORT" content="{$site_data->name->short}">
+            <meta property="lay:url" id="LAY-PAGE-URL" content="{$page['url']}">
             <!-- // Framework Tags-->
             <meta property="og:title" id="LAY-PAGE-TITLE" content="$title_raw">
-            <meta property="og:url" id="LAY-PAGE-URL" content="{$page['url']}">
+            <meta property="og:url" id="LAY-PAGE-FULL-URL" content="$url">
             <meta property="og:type" content="website">
             <meta property="og:site_name" id="LAY-SITE-NAME" content="{$site_data->name->full}">
             <meta property="og:description" content="{$page['desc']}">
@@ -181,6 +178,7 @@ final class ViewEngine {
             <meta itemprop="description" content="{$page['desc']}">
             <meta itemprop="image" id="LAY-PAGE-IMG" content="{$img}">
             <link rel="icon" type="image/x-icon" href="{$site_data->img->favicon}">
+            <link rel="apple-touch-icon" href="{$site_data->img->favicon}" />
             $canonical
             {$this->skeleton_head()}
         </head>

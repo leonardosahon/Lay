@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core\sockets;
+namespace Lay\core\traits;
 use Lay\core\Exception;
 use Lay\libs\LayObject;
 
@@ -131,10 +131,8 @@ trait Includes{
         $local = $var['LOCAL'] ?? [];
         $local_array = $var['LOCAL_ARRAY'] ?? [];
 
-        if(self::$USE_OBJS) {
-            $meta = $obj->to_object($meta);
-            $local = $obj->to_object($local);
-        }
+        $meta = $obj->to_object($meta);
+        $local = $obj->to_object($local);
 
         if(!file_exists($file) && $strict)
             Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");

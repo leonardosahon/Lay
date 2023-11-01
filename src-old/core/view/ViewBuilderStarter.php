@@ -6,6 +6,11 @@ abstract class ViewBuilderStarter
 {
     public readonly ViewBuilder $builder;
 
+    public function __construct() {
+        if(!isset($this->builder))
+            $this->builder = ViewBuilder::new();
+    }
+
     public function init_pages(): void
     {
         $this->builder->init_start()

@@ -3,10 +3,10 @@ declare(strict_types=1);
 namespace Lay\core\view;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\enums\CustomContinueBreak;
-use Lay\core\enums\DomainCacheKeys;
-use Lay\core\enums\DomainType;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
+use Lay\core\view\enums\DomainCacheKeys;
+use Lay\core\view\enums\DomainType;
 
 class ViewDomain {
     use IsSingleton;
@@ -17,6 +17,7 @@ class ViewDomain {
         "route_as_array" => [],
         "domain_type" => DomainType::LOCAL,
         "pattern" => "*",
+        "domain_id" => "",
     ];
 
     private static bool $lay_init = false;
@@ -124,8 +125,8 @@ class ViewDomain {
 
     private function activate_domain(string $id, string $pattern, ViewBuilderStarter $builder, DomainType $domain_type) : void {
         $route = $this->get_current_route();
-        $route = str_replace($pattern, "", $route);
-        $route = ltrim($route, "/");
+        $route = explode($pattern, $route, 2);
+        $route = ltrim(end($route), "/");
         $route_as_array = explode("/", $route);
 
         self::$domain_found = true;
@@ -135,6 +136,7 @@ class ViewDomain {
         self::$current_route_details['route_as_array'] = $route_as_array;
         self::$current_route_details['pattern'] = $pattern;
         self::$current_route_details['domain_type'] = $domain_type;
+        self::$current_route_details['domain_id'] = $id;
 
         $builder->init();
     }
@@ -198,13 +200,13 @@ class ViewDomain {
 
     private function active_pattern() : array {
         $base = self::$site_data->base_no_proto;
-        $sub_domain = explode(".", $base, 2);
+        $sub_domain = explode(".", $base, 3);
         $local_dir = explode("/", self::$current_route, 2);
 
         return [
             "sub" => [
                 "value" => $sub_domain[0],
-                "found" => count($sub_domain) > 1,
+                "found" => count($sub_domain) > 2,
             ],
             "local" => [
                 "value" => $local_dir[0],
@@ -216,6 +218,9 @@ class ViewDomain {
     private function test_pattern(string $id, string $pattern) : CustomContinueBreak {
         if(self::$domain_found)
             return CustomContinueBreak::BREAK;
+
+        if(!$this->is_all_domain_cached())
+            return CustomContinueBreak::CONTINUE;
 
         $domain = $this->active_pattern();
 
@@ -229,7 +234,7 @@ class ViewDomain {
         //  https://vendors.example.com;
         //
         // This condition is looking out for "admin" || "clients" || "vendors" in the `patterns` argument.
-        $is_subdomain = $domain['sub']['found'] && $domain['sub']['value'] == $pattern;
+        $is_subdomain = $domain['sub']['found'];
 
         // This conditions handles virtual folder.
         // This is a situation were the developer wants to separate various sections of the application into folders.
@@ -242,12 +247,20 @@ class ViewDomain {
         //  localhost/example.com/vendors;
         //
         // This condition is looking out for "/admin" || "/clients" || "/vendors" in the `patterns` argument.
-        $is_local_domain = $domain['local']['found'] && $domain['local']['value'] == $pattern;
+        $is_local_domain = $domain['local']['found'];
 
-        if($is_subdomain || $is_local_domain) {
+        if($is_subdomain && $is_local_domain)
+            $is_local_domain = false;
 
+        if($is_subdomain && $domain['sub']['value'] == $pattern) {
             $builder = $this->get_cached_domain_details($id)['builder'];
-            $this->activate_domain($id, $pattern, $builder, $is_subdomain ? DomainType::SUB : DomainType::LOCAL);
+            $this->activate_domain($id, $pattern, $builder, DomainType::SUB);
+            return CustomContinueBreak::BREAK;
+        }
+
+        if($is_local_domain && $domain['local']['value'] == $pattern) {
+            $builder = $this->get_cached_domain_details($id)['builder'];
+            $this->activate_domain($id, $pattern, $builder, DomainType::LOCAL);
             return CustomContinueBreak::BREAK;
         }
 
@@ -313,5 +326,9 @@ class ViewDomain {
             return self::$current_route_details;
 
         return self::$current_route_details[$key];
+    }
+
+    public function get_domain_by_id(string $id) : ?array {
+        return $this->get_cached_domain_details($id);
     }
 }

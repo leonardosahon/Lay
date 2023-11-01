@@ -4,7 +4,7 @@ namespace Lay\libs;
 
 use Lay\core\Exception;
 use Lay\core\LayConfig;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 
 class LayCache
 {

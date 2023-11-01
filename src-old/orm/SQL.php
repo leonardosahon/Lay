@@ -11,7 +11,7 @@ use mysqli_result;
  **/
 class SQL extends \Lay\orm\Exception {
     use Config;
-    use EXTENSIONS\Controller;
+    use traits\Controller;
 
     public array $query_info;
 

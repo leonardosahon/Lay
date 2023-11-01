@@ -2,7 +2,7 @@
 
 namespace Lay\libs;
 
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 
 class LayCalendarEvent
 {

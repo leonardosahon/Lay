@@ -9,20 +9,25 @@ use Lay\core\view\ViewBuilderStarter;
 
 class DefaultViews extends ViewBuilderStarter
 {
+    private object $site_data;
+    private object $client;
+
     public function init_pages(): void
     {
         $layConfig = LayConfig::new();
+        $this->site_data = $layConfig::site_data();
+        $this->client = $layConfig::res_client();
 
         $this->builder->init_start()
             ->page('type', 'front')
-            ->body_tag("default-home", 'id="new-body"')
-            ->local("link", fn($link = "") => $layConfig->get_site_data("base") . $link)
-            ->local("others", $layConfig->get_site_data('others'))
-            ->local("img", $layConfig->get_res__client('front', 'img'))
-            ->local("img_custom", $layConfig->get_res__client('custom', 'img'))
-            ->local("logo", $layConfig->get_site_data('img', 'logo'))
+            ->body_tag("dark")
+            ->local("others", $this->site_data->others)
+            ->local("img", $this->client->front->img)
+            ->local("img_custom", $this->client->custom->img)
+            ->local("logo", $this->site_data->img->logo)
         ->init_end();
     }
+
 
 
     public function pages(): void

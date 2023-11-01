@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace Lay\libs;
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 use Lay\orm\SQL;
 
 class LayObject {

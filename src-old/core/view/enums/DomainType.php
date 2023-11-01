@@ -1,6 +1,6 @@
 <?php
 
-namespace Lay\core\enums;
+namespace Lay\core\view\enums;
 
 enum DomainType : string
 {

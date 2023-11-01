@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-namespace Lay\orm\EXTENSIONS;
+namespace Lay\orm\traits;
 
-use Lay\core\sockets\IsSingleton;
+use Lay\core\traits\IsSingleton;
 use Lay\orm\SQL;
 
 trait Controller{

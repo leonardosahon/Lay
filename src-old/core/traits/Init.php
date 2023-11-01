@@ -1,16 +1,11 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core\sockets;
+namespace Lay\core\traits;
 use Lay\core\Exception;
 use Lay\libs\LayObject;
 use Lay\orm\SQL;
 use Lay\AutoLoader;
 use stdClass;
-
-if(isset($DONT_EXPOSE_PHP))
-    header_remove('X-Powered-By');
-if(!isset($DISABLE_TIMEZONE))
-    date_default_timezone_set('Africa/Lagos');
 
 trait Init {
     private static string $ENV;
@@ -85,9 +80,6 @@ trait Init {
             # A use case is; when simulating production server, but don't have access to ssl
             "use_https" => $options['switch']['use_https'] ?? true,
             "default_inc_routes" => $options['switch']['default_inc_routes'] ?? true,
-            # This comes in play, when adding files with in-house inclusion function, it determines if files should be
-            # accessible as <array> or <object>
-            "use_objects" => $options['switch']['use_objects'] ?? true,
             # Used by the Domain module to instruct the handler to cache all the listed domains in a session or cookie,
             # depending on the value sent by dev
             "cache_domains" => $options['switch']['cache_domains'] ?? true,
@@ -110,7 +102,6 @@ trait Init {
             "others" => $options['others'] ?? []
         ]);
 
-        self::$USE_OBJS = $options['use_objects'];
         self::$COMPRESS_HTML = $options['compress_html'];
         self::$USE_DEFAULT_ROUTE = $options['default_inc_routes'];
 

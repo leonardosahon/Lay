@@ -2,13 +2,12 @@
 
 namespace res\server\controller\__front;
 
-use Lay\core\LayConfig;
 use Lay\libs\LayObject;
 use res\server\utils\Email;
 
 class EndUsers
 {
-    use \Lay\core\sockets\IsSingleton;
+    use \Lay\core\traits\IsSingleton;
 
     public function contact_us() : array {
         $post = LayObject::new()->get_json();

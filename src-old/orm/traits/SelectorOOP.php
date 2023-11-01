@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Lay\orm\EXTENSIONS;
+namespace Lay\orm\traits;
 
 use Closure;
 use JetBrains\PhpStorm\ExpectedValues;

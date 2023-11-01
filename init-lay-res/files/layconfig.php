@@ -5,9 +5,6 @@ use Lay\core\LayConfig;
 $slash =  DIRECTORY_SEPARATOR;
 require_once "Lay" . $slash . "AutoLoader.php";
 
-if(!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
-    \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
-
 LayConfig::session_start([
     "http_only" => true,
     "only_cookies" => true,

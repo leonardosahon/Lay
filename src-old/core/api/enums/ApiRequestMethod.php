@@ -1,8 +1,8 @@
 <?php
 
-namespace Lay\core\enums;
+namespace Lay\core\api\enums;
 
-enum LayRequestMethod : string
+enum ApiRequestMethod : string
 {
     case POST = "POST";
     case GET = "GET";

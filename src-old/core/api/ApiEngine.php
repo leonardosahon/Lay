@@ -1,12 +1,13 @@
 <?php
 declare(strict_types=1);
-namespace Lay\core;
+namespace Lay\core\api;
 
 use Closure;
-use Lay\core\enums\LayRequestMethod;
+use Lay\core\api\enums\ApiRequestMethod;
+use Lay\core\Exception;
 
 // TODO: Implement Middleware Handler
-final class LayRequestHandler {
+final class ApiEngine {
     public static function new() : self {
         return new self();
     }
@@ -179,27 +180,27 @@ final class LayRequestHandler {
     }
 
     public function post(string $request_uri) : self {
-        self::$request_method = LayRequestMethod::POST->value;
+        self::$request_method = ApiRequestMethod::POST->value;
         return $this->map_request($request_uri);
     }
 
     public function get(string $request_uri) : self {
-        self::$request_method = LayRequestMethod::GET->value;
+        self::$request_method = ApiRequestMethod::GET->value;
         return $this->map_request($request_uri);
     }
 
     public function put(string $request_uri) : self {
-        self::$request_method = LayRequestMethod::PUT->value;
+        self::$request_method = ApiRequestMethod::PUT->value;
         return $this->map_request($request_uri);
     }
 
     public function head(string $request_uri) : self {
-        self::$request_method = LayRequestMethod::HEAD->value;
+        self::$request_method = ApiRequestMethod::HEAD->value;
         return $this->map_request($request_uri);
     }
 
     public function delete(string $request_uri) : self {
-        self::$request_method = LayRequestMethod::DELETE->value;
+        self::$request_method = ApiRequestMethod::DELETE->value;
         return $this->map_request($request_uri);
     }
 
