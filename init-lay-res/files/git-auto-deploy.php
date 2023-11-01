@@ -1,5 +1,5 @@
 <?php
-require_once "Lay/AutoLoader.php";
+require_once __DIR__ . DIRECTORY_SEPARATOR . "Lay" . DIRECTORY_SEPARATOR . "AutoLoader.php";
 
 // Verify webhook from GitHub
 // Ensure to change the $_GET queries and values, these are the default,

@@ -1,12 +1,11 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . "Lay" . DIRECTORY_SEPARATOR . "AutoLoader.php";
+
 use Lay\core\LayConfig;
 
-$slash =  DIRECTORY_SEPARATOR;
-require_once "Lay" . $slash . "AutoLoader.php";
-
-if(!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
-    \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
+LayConfig::validate_lay();
 
 LayConfig::session_start([
     "http_only" => true,

@@ -140,9 +140,12 @@ class Core {
         $s = DIRECTORY_SEPARATOR;
         $lay = $lay . "src" . $s;
 
-        // copy specified Lay version
+        // copy Lay package
         if(!self::$project_exists || (self::$project_exists && self::$always_update_lay_package))
             new CopyDirectory($lay, $project_root . $s . "Lay");
+
+        // Make deploy.sh executable
+        exec("chmod u+x " . $project_root . $s . "Lay" . $s . "deploy.sh");
 
         if(self::$project_exists && !self::$always_overwrite_project)
             return;
@@ -184,6 +187,7 @@ class Core {
         $this->copy_routine($section . "images","icon.png");
         $this->copy_routine($section . "images","favicon.png");
         $this->copy_routine($section . "images","logo.png");
+        $this->copy_routine($section . "images","meta.png");
 
         // copy default files
         $this->copy_routine("","api.php");

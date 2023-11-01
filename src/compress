@@ -1,6 +1,7 @@
 #!/usr/bin/php
 <?php
-require_once "AutoLoader.php";
+require_once __DIR__ . DIRECTORY_SEPARATOR . "AutoLoader.php";
+
 use Lay\libs\CopyDirectory;
 use Lay\libs\LayCache;
 

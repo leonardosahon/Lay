@@ -6,6 +6,8 @@ use Closure;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
 use Lay\core\traits\IsSingleton;
+use Lay\core\view\tags\Link;
+use Lay\core\view\tags\Script;
 use Opis\Closure\SerializableClosure;
 
 /**
@@ -134,7 +136,7 @@ final class ViewEngine {
         $client = $layConfig->get_res__client();
         $page = $meta[self::key_page];
 
-        $img = $page['img'] ?? $site_data->img->default ?? $site_data->img->logo;
+        $img = $page['img'] ?? $site_data->img->meta ?? $site_data->img->logo;
         $author = $page['author'] ?? $site_data->author;
         $title = $page['title'];
         $title_raw = $page['title_raw'];
@@ -223,11 +225,11 @@ final class ViewEngine {
         ob_start();
 
         if($meta_view instanceof Closure)
-            echo $meta_view($meta, ViewAsset::new());
+            echo $meta_view($meta);
 
         elseif($meta_view instanceof SerializableClosure) {
             $meta_view = $meta_view->getClosure();
-            echo $meta_view($meta, ViewAsset::new());
+            echo $meta_view($meta);
         }
 
         elseif($meta_view)
@@ -273,7 +275,7 @@ final class ViewEngine {
                 $attr .= "$i=\"$a\" ";
             }
 
-            return ViewAsset::new()->attr($attr)->rel($rel)->link($href, false);
+            return Link::new()->attr($attr)->rel($rel)->href($href, false);
         };
         $view = $this->view_handler('head');
 
@@ -297,7 +299,7 @@ final class ViewEngine {
             $attr .= "$i=\"$a\" ";
         }
 
-        return ViewAsset::new()->attr($attr)->defer((bool) $defer)->script($src, false);
+        return Script::new()->attr($attr)->defer((bool) $defer)->src($src, false);
     }
     private function skeleton_script() : string {
         $meta = self::$meta_data;
@@ -328,8 +330,8 @@ final class ViewEngine {
         if($meta[self::key_core]['script']) {
             $s = DIRECTORY_SEPARATOR;
             $env = strtolower($layConfig::get_env());
-            $lay_root = $layConfig->get_res__server("dir") . $s . "Lay" . $s;
-            $lay_base = $layConfig->get_res__client()->lay;
+            $lay_root = $layConfig->get_res__server("lay");
+            $lay_base = $layConfig->get_res__client("lay");
             list($omj,$const) = null;
 
             if ($env == "prod") {
@@ -348,16 +350,7 @@ final class ViewEngine {
     }
 
     private function prepare_assets(\Closure $asset_template, array &$assets, string &$view, string $asset_type) : void {
-        $client = LayConfig::res_client();
-
-        $resolve_asset = function (string|array &$asset, string|int $assets_key, array &$assets_array) use ($asset_type, $asset_template, $client, &$resolve_asset) : string {
-            $filter_src = fn (string|null|int $key, string $src) : string  => str_replace
-            (
-                [ "@front/", "@back/", "@custom/" ],
-                [ $client->front->root, $client->back->root, $client->custom->root ],
-                $src
-            );
-
+        $resolve_asset = function (string|array &$asset, string|int $assets_key, array &$assets_array) use ($asset_type, $asset_template, &$resolve_asset) : string {
             // If the asset item found is not the asset type indicated.
             // That is: if Painter is looking for `js` file, and it sees css, it should return an empty string.
             if(is_string($asset) && !str_ends_with($asset,".$asset_type"))
@@ -370,31 +363,27 @@ final class ViewEngine {
                     if(!str_ends_with($asset['src'],".$asset_type"))
                         return "";
 
-                    $x = $filter_src($assets_key, $asset['src']);
-
                     // cleanup the array after adding the asset
                     if(is_int($assets_key))
                         unset($assets_array[$assets_key]);
 
-                    if(empty($x))
+                    if(empty($asset['src']))
                         return "";
 
-                    return $asset_template($x, $asset);
+                    return $asset_template($asset['src'], $asset);
                 }
 
                 Exception::throw_exception("Trying to add assets as an array, but the `src` key was not specified","RequiredKeyIgnored");
             }
 
-            $x = $filter_src($assets_key, $asset);
-
-            if(empty($x))
+            if(empty($asset))
                 return "";
 
             // cleanup the array after adding the asset
             if(is_int($assets_key))
                 unset($assets_array[$assets_key]);
 
-            return $asset_template($x);
+            return $asset_template($asset);
         };
 
         foreach ($assets as $k => $asset) {

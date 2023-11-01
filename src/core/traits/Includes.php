@@ -4,7 +4,7 @@ namespace Lay\core\traits;
 use Lay\core\Exception;
 use Lay\libs\LayObject;
 
-trait Includes{
+trait Includes {
     private static array $INC_VARS = ["META" => null];
     private static array $INC_CUSTOM_ROUTE = [];
 
@@ -13,7 +13,7 @@ trait Includes{
         self::$INC_VARS = array_replace_recursive(self::$INC_VARS, array_replace_recursive(self::$INC_VARS, $vars));
     }
 
-    public static function get_inc_vars() : array{
+    public static function get_inc_vars() : array {
         self::is_init();
         return self::$INC_VARS;
     }
@@ -42,8 +42,8 @@ trait Includes{
      * @param $route_list array
      * <tr><td>key (string)</td> <td>string key to access the route;</td></tr>
      * <tr><td>value (array)</td> <td>[route location, file extension];</td></tr>
-     * <tr><td>Example:</td> <td>'member_ctrl' => ["res/server/controller/__back/members/", ".php"]</td></tr>
-     * <tr><td>Use case</td><td>LayConfig::instance()->inc_file("members_session_controller","member_ctrl")</td></tr>
+     * <tr><td>Example:</td> <td>'member_inc' => ["res/server/includes/__back/members/", ".inc"]</td></tr>
+     * <tr><td>Use case</td><td>LayConfig::instance()->inc_file("members_session_controller","member_inc")</td></tr>
      * @return void
      */
     public function inc_file_add_route(array $route_list) : void {
@@ -69,7 +69,6 @@ trait Includes{
 
         $server = self::res_server();
         $inc_root = $server->inc;
-        $ctrl_root = $server->ctrl;
         $view_root = $server->view;
         $type_loc = $inc_root;
 
@@ -77,10 +76,6 @@ trait Includes{
             "inc_$side" => [
                 'root' => $inc_root . "__$side" . $slash,
                 'ext' => ".inc"
-            ],
-            "ctrl_$side" => [
-                'root' => $ctrl_root . "__$side" . $slash,
-                'ext' => ".php"
             ],
             "view_$side" => [
                 'root' => $view_root . "__$side" . $slash,
@@ -103,7 +98,7 @@ trait Includes{
 
             $using_custom_route = true;
             $type_loc = $v['root'];
-            $type = $v['ext'] ?? ".php";
+            $type = $v['ext'] ?? ".inc";
             break;
         }
 
@@ -112,10 +107,6 @@ trait Includes{
                 default:
                     $type_loc = $inc_root;
                     $type = ".inc";
-                    break;
-                case "ctrl":
-                    $type_loc = $ctrl_root;
-                    $type = ".php";
                     break;
                 case "view":
                     $type_loc = $view_root;
@@ -131,13 +122,11 @@ trait Includes{
         $local = $var['LOCAL'] ?? [];
         $local_array = $var['LOCAL_ARRAY'] ?? [];
 
-        if(self::$USE_OBJS) {
-            $meta = $obj->to_object($meta);
-            $local = $obj->to_object($local);
-        }
+        $meta = $obj->to_object($meta);
+        $local = $obj->to_object($local);
 
         if(!file_exists($file) && $strict)
-            Exception::throw_exception("execution Failed trying to include file ($file)","File-Not-Found");
+            Exception::throw_exception("execution Failed trying to include file ($file)","FileNotFound");
 
         if(isset($vars['INCLUDE_AS_STRING']) && $vars['INCLUDE_AS_STRING'])
             return $this->inc_file_as_string($file, $meta, $local, $local_array);
@@ -148,8 +137,4 @@ trait Includes{
         return null;
     }
 
-    public function inc_controller(string $controller_location, string $controller_side, bool $require = false, array $vars = []) : void {
-        $controller_location = str_replace(".php","",$controller_location);
-        $this->inc_file($controller_location, "ctrl_{$controller_side}", false, $require, $vars);
-    }
 }
