@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . "Lay" . DIRECTORY_SEPARATOR . "AutoLoader.php";
+
 use Lay\core\LayConfig;
 
-$slash =  DIRECTORY_SEPARATOR;
-require_once "Lay" . $slash . "AutoLoader.php";
+LayConfig::validate_lay();
 
 LayConfig::session_start([
     "http_only" => true,

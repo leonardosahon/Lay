@@ -57,7 +57,7 @@ final class Img {
         $height = @$this->height == "auto" ? '' : "height='$this->height'";
 
         return <<<LNK
-            <img src="$src" alt="{$this->alt}" loading="$lazy_load" $width $height />
+            <img src="$src" alt="{$this->alt}" loading="$lazy_load" $width $height {$this->attr} />
         LNK;
     }
 

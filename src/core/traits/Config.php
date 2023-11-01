@@ -7,9 +7,6 @@ use Lay\core\Exception;
 use Lay\libs\LayMail;
 use Lay\orm\SQL;
 
-if (!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
-    \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
-
 trait Config
 {
     private static SQL $SQL_INSTANCE;
@@ -354,10 +351,9 @@ trait Config
         $orm?->close($orm->get_link() ?? $link, true);
     }
 
-    public static function include_sql(bool $include = true, array $connection_param = []): ?SQL
+    public static function validate_lay(): void
     {
-        self::is_init();
-        self::$CONNECTION_ARRAY = $connection_param;
-        return $include ? self::connect($connection_param) : null;
+        if (!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
+            \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
     }
 }
