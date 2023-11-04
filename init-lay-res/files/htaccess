@@ -37,11 +37,6 @@ Options -Indexes
   # Hide PHP X-powered header
   Header unset X-Powered-By
   Header always unset X-Powered-By
-
-  # Cache all static assets for 6 months
-  <FilesMatch "\.(css|js)$">
-      Header set Cache-Control "max-age=15768000, public"
-  </FilesMatch>
 </IfModule>
 
 Options +FollowSymLinks -MultiViews
@@ -104,7 +99,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 # Handle requests to api endpoint from https://api. [OR] /api/
 RewriteCond %{HTTP_HOST} ^.*(api.*) [OR]
 RewriteCond %{REQUEST_URI} ^.*(api/.*)
-RewriteRule ^(.*)$ api.php?bob_api_req=%1 [L]
+RewriteRule ^(.*)$ api/index.php [L]
 
 # Allow any files or directories like [jpg,css,js,etc] that exist to be displayed correctly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
