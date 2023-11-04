@@ -39,7 +39,7 @@ final class ApiEngine {
 
         return false;
     }
-    
+
     /**
      * Accepts `/` separated URI as arguments.
      * @param string $request_uri
@@ -263,6 +263,7 @@ final class ApiEngine {
 
         if($print) {
             print_r($x);
+            header("Content-Type: text/json");
             die;
         }
 
@@ -279,6 +280,10 @@ final class ApiEngine {
 
     public function get_uri() : array {
         return self::$request_uri;
+    }
+
+    public function get_uri_as_str() : string {
+        return self::$request_uri_raw;
     }
 
     public function get_headers() : array {
@@ -300,15 +305,17 @@ final class ApiEngine {
      * @return self
      */
     public static function fetch() : self {
-        if(!isset($_GET['bob_api_req'])) {
+        $endpoint = explode("/api/", $_SERVER['REQUEST_URI'], 2);
+        $endpoint = end($endpoint);
+
+        if(empty($endpoint))
             self::exception("InvalidAPIRequest", "Invalid api request sent. Malformed URI received. You can't access this script like this!");
-        }
 
         self::$request_found = false;
         self::$request_complete = false;
         self::$request_header = getallheaders();
-        self::$request_uri_raw = $_GET['bob_api_req'];
-        self::$request_uri = explode("/", rtrim($_GET['bob_api_req'],"/"));
+        self::$request_uri_raw = $endpoint;
+        self::$request_uri = explode("/", rtrim($endpoint, "/"));
 
         if(self::$request_uri[0] == "api")
             array_shift(self::$request_uri);
