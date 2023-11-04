@@ -190,7 +190,7 @@ class Core {
         $this->copy_routine($section . "images","meta.png");
 
         // copy default files
-        $this->copy_routine("","api.php");
+        $this->copy_routine("api{$s}","api.php", "index.php");
 
         $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "dev.lenv");
         $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "prod.lenv");

@@ -180,6 +180,7 @@ final class ViewEngine {
             <meta itemprop="description" content="{$page['desc']}">
             <meta itemprop="image" id="LAY-PAGE-IMG" content="{$img}">
             <link rel="icon" type="image/x-icon" href="{$site_data->img->favicon}">
+            <link rel="shortcut icon" href="{$base}favicon.ico">
             <link rel="apple-touch-icon" href="{$site_data->img->favicon}" />
             $canonical
             {$this->skeleton_head()}

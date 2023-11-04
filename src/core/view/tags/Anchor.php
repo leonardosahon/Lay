@@ -74,9 +74,10 @@ final class Anchor {
         return $this->attr('target=" ' . $target . '"');
     }
 
-    public function child(string $child) : string {
+    public function children(string ...$children) : string {
+        $children = implode(" ", $children);
         return <<<LNK
-            <a {$this->attr} href="{$this->link}">$child</a>
+            <a {$this->attr} href="{$this->link}">$children</a>
         LNK;
     }
 
