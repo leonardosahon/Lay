@@ -9,12 +9,9 @@ use Lay\core\view\ViewBuilder;
 use Lay\core\view\ViewDomain;
 
 final class Anchor {
-    private string $attr = "";
     private string $link = "";
 
-    public static function new() : self {
-        return new self();
-    }
+    use \Lay\core\view\tags\traits\Standard;
 
     public function href(?string $link = "", ?string $domain_id = null) : self {
         $req = ViewBuilder::new()->request('*');
@@ -61,23 +58,20 @@ final class Anchor {
         return $this->link;
     }
 
-    public function attr(string $attr) : self {
-        $this->attr .= $attr;
-        return $this;
-    }
-
     public function class(string $class_name) : self {
-        return $this->attr('class=" ' . $class_name . '"');
+        return $this->attr('class', $class_name);
     }
 
     public function target(#[ExpectedValues(['_blank','_parent','_top','_self'])] string $target) : self {
-        return $this->attr('target=" ' . $target . '"');
+        return $this->attr('target', $target);
     }
 
     public function children(string ...$children) : string {
+        $attr = $this->get_attr();
         $children = implode(" ", $children);
+        
         return <<<LNK
-            <a {$this->attr} href="{$this->link}">$children</a>
+            <a $attr href="{$this->link}">$children</a>
         LNK;
     }
 

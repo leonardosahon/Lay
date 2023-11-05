@@ -21,6 +21,7 @@ class DefaultViews extends ViewBuilderStarter
         $this->builder->init_start()
             ->page('type', 'front')
             ->body_tag("dark")
+            ->local("section", "app")
             ->local("others", $this->site_data->others)
             ->local("img", $this->client->front->img)
             ->local("img_custom", $this->client->custom->img)

@@ -271,12 +271,13 @@ final class ViewEngine {
             if(isset($attributes['href']))
                 unset($attributes['href']);
 
-            $attr = "";
-            foreach ($attributes as $i => $a){
-                $attr .= "$i=\"$a\" ";
+            $link = Link::new();
+            
+            foreach ($attributes as $i => $a) {
+                $link->attr($i, $a);
             }
 
-            return Link::new()->attr($attr)->rel($rel)->href($href, false);
+            return $link->rel($rel)->href($href, false);
         };
         $view = $this->view_handler('head');
 
@@ -295,12 +296,13 @@ final class ViewEngine {
         if (isset($attributes['defer']))
             unset($attributes['defer']);
 
-        $attr = "";
+        $script = Script::new();
+        
         foreach ($attributes as $i => $a) {
-            $attr .= "$i=\"$a\" ";
+            $script->attr($i, $a);
         }
 
-        return Script::new()->attr($attr)->defer((bool) $defer)->src($src, false);
+        return $script->defer((bool) $defer)->src($src, false);
     }
     private function skeleton_script() : string {
         $meta = self::$meta_data;

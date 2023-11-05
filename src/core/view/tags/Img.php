@@ -2,7 +2,6 @@
 declare(strict_types=1);
 namespace Lay\core\view\tags;
 
-use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\LayConfig;
 use Lay\core\view\enums\DomainType;
 use Lay\core\view\ViewBuilder;
@@ -10,31 +9,22 @@ use Lay\core\view\ViewDomain;
 use Lay\core\view\ViewSrc;
 
 final class Img {
-    private string $attr = "";
-    private string $alt = "Page Image";
-    private int|string $width;
-    private int|string $height;
+    private const ATTRIBUTES = [
+        "alt" => "Page Image"
+    ];
 
-    public static function new() : self {
-        return new self();
-    }
-
-    public function attr(string $attr) : self {
-        $this->attr .= " " . $attr;
-        return $this;
-    }
+    use \Lay\core\view\tags\traits\Standard;
 
     public function class(string $class_name) : self {
-        return $this->attr('class=" ' . $class_name . '"');
+        return $this->attr('class', $class_name);
     }
 
     public function width(int|string $width) : self {
-        $this->width = $width;
-        return $this;
+        return $this->attr('width', $width);
     }
+    
     public function height(int|string $height) : self {
-        $this->height = $height;
-        return $this;
+        return $this->attr('height', $height);
     }
 
     public function ratio(int|string $width, int|string $height) : self {
@@ -44,20 +34,16 @@ final class Img {
     }
 
     public function alt(string $alt_text) : self {
-        $this->alt = $alt_text;
-        return $this;
+        return $this->attr('alt', $alt_text);
     }
 
     public function src(string $src, bool $lazy_load = true) : string {
         $src = ViewSrc::gen($src);
         $lazy_load = $lazy_load ? 'lazy' : 'eager';
-        $this->width = $this->width ?? 'auto';
-        $this->height = $this->height ?? 'auto';
-        $width = @$this->width == "auto" ? '' : "width='$this->width'";
-        $height = @$this->height == "auto" ? '' : "height='$this->height'";
+        $attr = $this->get_attr();
 
         return <<<LNK
-            <img src="$src" alt="{$this->alt}" loading="$lazy_load" $width $height {$this->attr} />
+            <img src="$src" loading="$lazy_load" $attr />
         LNK;
     }
 
