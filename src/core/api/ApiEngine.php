@@ -223,7 +223,7 @@ final class ApiEngine {
             self::$request_complete = true;
         }
         catch (\TypeError $e){
-            self::exception("MethodTypeError", $e->getMessage(), $e->getTrace());
+            self::exception("MethodTypeError", "Check the bind function of your route: [". self::$request_uri_raw ."]; <br>" . $e->getMessage(), $e->getTrace());
         }
         catch (\Error $e){
             self::exception("ErrorEncountered", $e->getMessage(), $e->getTrace());

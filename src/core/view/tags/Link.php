@@ -5,42 +5,43 @@ namespace Lay\core\view\tags;
 use Lay\core\view\ViewSrc;
 
 final class Link {
-
-    private string $rel = "stylesheet";
-    private string $media = "all";
-    private string $attr = "";
-    private string $type = "";
-
-    public static function new() : self {
-        return new self();
+    private bool $rel_set = false;
+    private const ATTRIBUTES = [
+        "rel" => "stylesheet",
+        "media" => "all",
+        "type" => "text/css",
+    ];
+    
+    use \Lay\core\view\tags\traits\Standard;
+    
+    public function rel(string $rel) : self {
+        $this->rel_set = true;
+        return $this->attr('rel', $rel);
     }
 
-    public function rel(string $rel) : self {
-        $this->rel = $rel;
-        return $this;
+    public static function clear() : void {
+        self::$me->rel_set = false;
+        self::$me->attr = self::ATTRIBUTES ?? [];
     }
 
     public function media(string $media) : self {
-        $this->media = $media;
-        return $this;
-    }
-
-    public function attr(string $attr) : self {
-        $this->attr = $attr;
-        return $this;
+        return $this->attr('media', $media);
     }
 
     public function type(string $type) : self {
-        $this->type = $type;
-        return $this;
+        return $this->attr('type', $type);
     }
 
     public function href(string $href, bool $print = true) : string {
         $href = ViewSrc::gen($href);
-        $type = !empty($this->type) ? $this->type : "text/css";
 
+        if(!$this->rel_set)
+            $this->rel("stylesheet");
+
+        $attr = $this->get_attr();
+        
         $link = <<<LNK
-            <link href="$href" rel="$this->rel" $this->attr media="$this->media" type="$type" />
+            <link href="$href" $attr />
         LNK;
 
         if($print)

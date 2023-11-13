@@ -62,7 +62,6 @@ trait Init {
         $options['base_no_proto_no_www'] = self::$base_no_proto_no_www;
         $options['proto'] = self::$proto_plain;
 
-
         self::set_internal_site_data($options);
     }
 
@@ -138,6 +137,7 @@ trait Init {
         self::set_internal_res_client(self::$base, $env_src);
         self::set_internal_site_data($options);
         self::set_internal_res_server(self::$dir);
+        self::load_env();
         self::$INITIALIZED = true;
         return self::$instance;
     }

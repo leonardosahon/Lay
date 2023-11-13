@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace Lay\core\traits;
+use Dotenv\Dotenv;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\Exception;
 use Lay\libs\LayObject;
@@ -9,6 +10,8 @@ trait Resources {
     private static object $client;
     private static object $server;
     private static object $site;
+
+    private static bool $env_loaded = false;
 
     private static string $CLIENT_VALUES = "";
     ///### Assets Resource and Page Metadata
@@ -60,7 +63,6 @@ trait Resources {
         $obj->temp    =   $dir             . ".lay_temp"   . $slash;
         $obj->lay     =   $dir             . "Lay"         . $slash;
         $obj->lay_env =   $root_server     . "includes"    . $slash . "__env" . $slash;
-        $obj->db      =   $root_server     . "includes"    . $slash . "__env" . $slash . "__db" . $slash;
         $obj->inc     =   $root_server     . "includes"    . $slash;
         $obj->ctrl    =   $root_server     . "controller"  . $slash;
         $obj->view    =   $root_server     . "view"        . $slash;
@@ -255,5 +257,23 @@ trait Resources {
     public function get_client_values() : string {
         self::is_init();
         return self::$CLIENT_VALUES;
+    }
+
+    public static function mk_tmp_dir () : string {
+        $dir = self::res_server()->temp;
+
+        if(!is_dir($dir)) {
+            umask(0);
+            mkdir($dir, 0755, true);
+        }
+
+        return $dir;
+    }
+
+    public static function load_env() : void {
+        if(self::$env_loaded)
+            return;
+
+        Dotenv::createImmutable(self::res_server()->lay_env)->load();
     }
 }

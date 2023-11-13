@@ -192,9 +192,8 @@ class Core {
         // copy default files
         $this->copy_routine("api{$s}","api.php", "index.php");
 
-        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "dev.lenv");
-        $this->copy_routine($inc . "__env" . $s . "__db" . $s, "connection.lenv", "prod.lenv");
-        $this->copy_routine($inc . "__env" . $s, "smtp.lenv", "smtp.lenv");
+        $this->copy_routine($inc . "__env" . $s, "env", ".env.example");
+        $this->copy_routine($inc . "__env" . $s, "env", ".env");
 
         $this->copy_routine("res{$s}server{$s}controller{$s}__front{$s}", "EndUsers.php");
         $this->copy_routine("res{$s}server{$s}utils{$s}", "Email.php");
