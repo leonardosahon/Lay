@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Lay\core\traits;
 
 use Lay\core\Exception;
+use Lay\core\LayConfig;
 use Lay\libs\LayMail;
 use Lay\orm\SQL;
 
@@ -221,30 +222,34 @@ trait Config
             return;
         }
 
-        $map = LayMail::get_credentials();
+        $parse = function ($value) : ?string {
+            if(empty($value))
+                return null;
 
-        $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('lay_env') . "smtp.lenv");
+            $code = "@layConfig";
 
-        foreach (explode("\n",$output) as $e){
-            if(empty($e)) continue;
-            $entry = explode("=",$e);
-            $key = strtolower($entry[0]);
-            $value = $entry[1];
-
-            if(!empty($value) && $x = filter_var($value, FILTER_VALIDATE_INT)) {
-                $value = $x;
+            if(str_starts_with($value, $code)) {
+                $value = explode($code, $value);
+                $value = end($value);
+                $value = eval("return \Lay\core\LayConfig{$value};");
             }
 
-            if(!is_int($value) && str_starts_with($value,'$L{')){
-                $value = explode("->",str_replace(['$L{','}'],"", $value));
-                $value = self::instance()->get_site_data(...$value);
-            }
-            $map[$key] = $value;
-        }
+            return $value;
+        };
 
-        self::$SMTP_ARRAY = $map;
+        self::load_env();
 
-        LayMail::set_credentials($map);
+        self::$SMTP_ARRAY = [
+            "host" => $_ENV['SMTP_HOST'],
+            "port" => $_ENV['SMTP_PORT'],
+            "protocol" => $_ENV['SMTP_PROTOCOL'],
+            "username" => $_ENV['SMTP_USERNAME'],
+            "password" => $_ENV['SMTP_PASSWORD'],
+            "default_sender_name" => $parse(@$_ENV['DEFAULT_SENDER_NAME']),
+            "default_sender_email" => $parse(@$_ENV['DEFAULT_SENDER_EMAIL']),
+        ];
+
+        LayMail::set_credentials(self::$SMTP_ARRAY);
     }
 
     public function init_orm(bool $connect_by_default = true): self {
@@ -255,48 +260,31 @@ trait Config
             return $this;
         }
 
-        $file = self::get_env() == "DEV" ? 'dev' : 'prod';
+        $ENV = self::$ENV_IS_DEV ? 'dev' : 'prod';
 
-        if(!file_exists(self::instance()->get_res__server('db') . $file . ".lenv")) {
-            Exception::throw_exception("db file does not exist", "NoDbEnvFile");
-            return $this;
-        }
-
-        $output = self::instance()->inc_file_as_string(self::instance()->get_res__server('db') . $file . ".lenv");
-
-        $map = SQL::instance()->get_db_args();
-
-        foreach (explode("\n",$output) as $e){
-            if(empty($e)) continue;
-            $entry = explode("=",$e);
-            $key = strtolower(str_replace("DB_","",$entry[0]));
-            $value = $entry[1];
-
-            if(!empty($value)) {
-                if (filter_var($value, FILTER_VALIDATE_INT))
-                    $value = filter_var($value, FILTER_VALIDATE_INT);
-
-                if (filter_var($value, FILTER_VALIDATE_BOOL) && !is_int($value))
-                    $value = filter_var($value, FILTER_VALIDATE_BOOL);
-            }
-
-
-            if(str_contains($key,"ssl")){
-                $key = str_replace("ssl_","",$key);
-                $map['ssl'][$key] = $value;
-            }
-            else {
-                if($key == "name")
-                    $key = "db";
-
-                $map[$key] = $value;
-            }
-        }
-
-        self::$CONNECTION_ARRAY = $map;
+        self::load_env();
+        
+        self::$CONNECTION_ARRAY = [
+            "host" => $_ENV['DB_HOST'],
+            "user" => $_ENV['DB_USERNAME'],
+            "password" => $_ENV['DB_PASSWORD'],
+            "db" => $_ENV['DB_NAME'],
+            "env" => $_ENV['DB_ENV'] ?? $ENV,
+            "port" => $_ENV['DB_PORT'] ?? NULL,
+            "socket" => $_ENV['DB_SOCKET'] ?? NULL,
+            "silent" => $_ENV['DB_ALLOW_STARTUP_ERROR'] ?? false,
+            "ssl" => [
+                "key" => $_ENV['DB_SSL_KEY'] ?? null,
+                "certificate" => $_ENV['DB_SSL_CERTIFICATE'] ?? null,
+                "ca_certificate" => $_ENV['DB_SSL_CA_CERTIFICATE'] ?? null,
+                "ca_path" => $_ENV['DB_SSL_CA_PATH'] ?? null,
+                "cipher_algos" => $_ENV['DB_SSL_CIPHER_ALGOS'] ?? null,
+                "flag" => $_ENV['DB_SSL_FLAG'] ?? 0
+            ],
+        ];
 
         if($connect_by_default)
-            self::connect($map);
+            self::connect(self::$CONNECTION_ARRAY);
 
         return $this;
     }

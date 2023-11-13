@@ -20,16 +20,16 @@ final class Img {
     }
 
     public function width(int|string $width) : self {
-        return $this->attr('width', $width);
+        return $this->attr('width',(string)  $width);
     }
     
     public function height(int|string $height) : self {
-        return $this->attr('height', $height);
+        return $this->attr('height', (string) $height);
     }
 
     public function ratio(int|string $width, int|string $height) : self {
-        $this->width($width);
-        $this->height($height);
+        $this->width((string) $width);
+        $this->height((string) $height);
         return $this;
     }
 

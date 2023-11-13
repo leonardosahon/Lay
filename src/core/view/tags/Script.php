@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\view\tags;
 
+use Lay\core\enums\CustomContinueBreak;
 use Lay\core\LayConfig;
 use Lay\core\view\ViewSrc;
 
@@ -27,7 +28,16 @@ final class Script {
 
     public function src(string $src, bool $print = true) : string {
         $src = ViewSrc::gen($src);
-        $attr = $this->get_attr();
+        $attr = $this->get_attr(function (&$value, $key){
+            if($key == "defer") {
+                if(!$value)
+                    return CustomContinueBreak::CONTINUE;
+
+                $value = "true";
+            }
+
+            return CustomContinueBreak::FLOW;
+        });
 
         $link = <<<LNK
             <script src="$src" $attr></script>

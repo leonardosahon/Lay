@@ -44,10 +44,10 @@ $project_name = $core->project_name;
 if(!is_dir($default_lay_location))
     $core->use_error("The specified `default_lay_location` '$default_lay_location' does not exist, please change the value to the place where you cloned the `Lay` package into and try again");
 
-
 if(!is_dir($project_root)) {
     print "-- New Project [$project_name] Creation Initiated\n";
         $core->create_project($lay, $project_root);
+        exec("composer install --working-dir=$project_root");
     print "   [$project_name] Creation Completed\n";
     return;
 }
@@ -73,5 +73,7 @@ if(!$update)
     );
 
 $core->create_project($lay, $project_root);
+
+exec("composer update --working-dir=$project_root");
 
 print "   [$project_name] $msg Successfully\n";

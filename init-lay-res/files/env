@@ -1,0 +1,20 @@
+DB_HOST=
+DB_USERNAME=
+DB_PASSWORD=
+DB_NAME=
+DB_ALLOW_STARTUP_ERROR=false
+DB_SSL_KEY=
+DB_SSL_CERTIFICATE=
+DB_SSL_CA_CERTIFICATE=
+DB_SSL_CA_PATH=
+DB_SSL_CIPHER_ALGOS=
+DB_SSL_FLAG=
+
+# Only SMTP can use the @layConfig feature for dynamic data, others can't
+SMTP_HOST=
+SMTP_PORT=
+SMTP_PROTOCOL=tls
+SMTP_USERNAME=
+SMTP_PASSWORD=
+DEFAULT_SENDER_EMAIL=@layConfig::site_data()->mail->{0}
+DEFAULT_SENDER_NAME=@layConfig::site_data()->name->short
