@@ -47,7 +47,7 @@ if(!is_dir($default_lay_location))
 if(!is_dir($project_root)) {
     print "-- New Project [$project_name] Creation Initiated\n";
         $core->create_project($lay, $project_root);
-        exec("composer install --working-dir=$project_root");
+        exec("composer install --working-dir=$project_root --no-dev");
     print "   [$project_name] Creation Completed\n";
     return;
 }
@@ -74,6 +74,6 @@ if(!$update)
 
 $core->create_project($lay, $project_root);
 
-exec("composer update --working-dir=$project_root");
+exec("composer update --working-dir=$project_root --no-dev");
 
 print "   [$project_name] $msg Successfully\n";
