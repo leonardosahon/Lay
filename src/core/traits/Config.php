@@ -216,12 +216,7 @@ trait Config
     public static function set_smtp(): void {
         if(isset(self::$SMTP_ARRAY))
             return;
-
-        if(!file_exists(self::instance()->get_res__server('lay_env') . "smtp.lenv")) {
-            Exception::throw_exception("smtp file does not exist", "NoSmtpEnvFile");
-            return;
-        }
-
+        
         $parse = function ($value) : ?string {
             if(empty($value))
                 return null;
@@ -263,6 +258,9 @@ trait Config
         $ENV = self::$ENV_IS_DEV ? 'dev' : 'prod';
 
         self::load_env();
+        
+        if(!isset($_ENV['DB_HOST']))
+            return $this;
         
         self::$CONNECTION_ARRAY = [
             "host" => $_ENV['DB_HOST'],
