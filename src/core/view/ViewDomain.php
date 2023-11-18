@@ -45,7 +45,7 @@ class ViewDomain {
             return;
 
         self::$cache_domain_set = true;
-        self::$cache_domains = self::$layConfig::$ENV_IS_PROD || self::$site_data->cache_domains;
+        self::$cache_domains = self::$layConfig::$ENV_IS_PROD && self::$site_data->cache_domains;
     }
 
     private function cache_domain_ram() : void {
