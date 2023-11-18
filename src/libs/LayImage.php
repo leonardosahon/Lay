@@ -20,19 +20,18 @@ final class LayImage{
      * @return LayImage
      */
     private function create(string $tmpImage, string $newImage, int $width, int $height, int $w_orig, int $h_orig, int $quality) : self {
-
         $ext = image_type_to_extension(exif_imagetype($tmpImage),false);
         $img = call_user_func("imagecreatefrom$ext", $tmpImage);
-        $tci = imagecreatetruecolor($width, $height);
-        
-        imagefill($tci, 0, 0, imagecolorallocate($tci, 255, 255, 255));
-        imagealphablending($tci, TRUE);
-        imagecopyresampled($tci, $img, 0, 0, 0, 0, $width, $height, $w_orig, $h_orig);
-        imagewebp($tci,$newImage,$quality);
-        imagedestroy($tci);
+
+        imagealphablending($img, TRUE);
+        imagesavealpha($img, true);
+
+        imagewebp($img, $newImage, $quality);
+        imagedestroy($img);
+
         return $this;
     }
-    
+
     /**
      * Check image width and height size
      * @param $imageFile string file to be checked for size
@@ -40,13 +39,13 @@ final class LayImage{
      */
     public function get_size(string $imageFile) : array {
         list($w_orig,$h_orig) = getimagesize($imageFile);
-        
+
         if(!$w_orig || !$h_orig)
             $this->exception("An invalid image file was sent for upload");
 
-        return [$w_orig,$h_orig,"width" => $w_orig,"height" => $h_orig];
+        return ["width" => $w_orig,"height" => $h_orig];
     }
-    
+
     /**
      * Resize Image
      * @param int $width resample image width
@@ -61,7 +60,7 @@ final class LayImage{
         $quality = max($quality, 0);
 
         $x = $this->get_size($tmpImage);
-        $w_orig = $x['width']; 
+        $w_orig = $x['width'];
         $h_orig = $x['height'];
 
         $scale_ratio = $w_orig/$h_orig;
@@ -73,7 +72,7 @@ final class LayImage{
 
         return $this->create($tmpImage, $newImage, $width, $height, $w_orig, $h_orig, $quality);
     }
-    
+
     /**
      * @param string $tmpImage location to temporary file or file to be handled
      * @param string $newImage location to new image file
@@ -85,44 +84,7 @@ final class LayImage{
         $w_orig = $x['width']; $h_orig = $x['height'];
         return $this->create($tmpImage, $newImage, $w_orig, $h_orig, $w_orig, $h_orig, $quality);
     }
-    
-    /**
-     * Watermark Image (Watermark is always centered)
-     * @param string $watermark_img location to watermark image file
-     * @param string $tmpImage location to temporary file or file to be handled
-     * @param string $newImage location to new image file
-     * @param int $quality image result quality [max value = 100 && min value = 0]
-     * @return LayImage
-     */
-    public function watermark(string $watermark_img, string $tmpImage,string $newImage, int $quality=100) : self {
-        $ext = image_type_to_extension(exif_imagetype($watermark_img),false);
-        $watermark = call_user_func("imagecreatefrom$ext", $watermark_img);
-        
-        imagealphablending($watermark, false);
-        imagesavealpha($watermark, true);
-        
-        $ext = image_type_to_extension(exif_imagetype($tmpImage),false);
-        $img = call_user_func("imagecreatefrom$ext", $tmpImage);
-        
-        $img_w = imagesx($img);
-        $img_y = imagesy($img);
-        
-        $wmark_w = (int)ceil(imagesx($watermark));
-        $wmark_h = (int)ceil(imagesy($watermark));
-        
-        $dst_x = ($img_w/2) - ($wmark_w/2); // for centering watermark on image
-        $dst_y = ($img_y/2) - ($wmark_h/2); // for centering watermark on image
-        
-        $dst_x = (int)ceil($dst_x); // for centering watermark on image
-        $dst_y = (int)ceil($dst_y); // for centering watermark on image
-        
-        imagecopy($img, $watermark, $dst_x, $dst_y, 0, 0, $wmark_w, $wmark_h);
-        imagewebp($img,$newImage,$quality);
-        imagedestroy($img);
-        imagedestroy($watermark);
-        return $this;
-    }
-    
+
     /**
      * ### @$options
      * - **post_name (string):** $_FILES[post_name] *(REQUIRED)*

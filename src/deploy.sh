@@ -5,7 +5,8 @@ push_repo="n"
 commit_message="Default Lay Commit message"
 git_proj_dir=""
 
-lay_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+lay_dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+# lay_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 current_dir=""
 
 IFS='/' read -ra ADDR <<< "$lay_dir"

@@ -200,8 +200,8 @@ final class ViewEngine {
             {$this->skeleton_script()}
         </body></html>
         STR;
-
-        if($layConfig::is_page_compressed())
+        
+        if($layConfig::$ENV_IS_PROD && $layConfig::is_page_compressed())
             $page = preg_replace("/>(\s)+</m","><",preg_replace("/<!--(.|\s)*?-->/","",$page));
 
         echo $page;
