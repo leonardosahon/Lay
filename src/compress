@@ -124,7 +124,7 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
             if ($is_css($file))
                 $return = exec("cleancss -s -o $output $file 2>&1", $current_error);
 
-            if(str_contains($return, "not found")) {
+            if($return && str_contains($return, "not found")) {
                 $error[] = ["file" => $file, "error" => $return];
                 return "break";
             }
