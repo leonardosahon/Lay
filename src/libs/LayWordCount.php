@@ -13,7 +13,7 @@ class LayWordCount
     private int $extra_secs = 0;
 
     public function wpm(int $words_per_minute) : self {
-        $this->$words_per_minute = $words_per_minute;
+        $this->words_per_minute = $words_per_minute;
         return $this;
     }
 

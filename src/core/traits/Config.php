@@ -17,6 +17,7 @@ trait Config
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
     private static bool $COMPRESS_HTML;
+    private static string $PUBLIC_IP;
 
     private function switch(string $key, mixed $value): self {
         self::$layConfigOptions['switch'][$key] = $value;
@@ -180,7 +181,29 @@ trait Config
         return (bool)strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? "cli"), "mobile");
     }
 
+    public function has_internet() : bool|array {
+        return @fsockopen("google.com",443, timeout: 1) !== false;
+    }
+
+    public function geo_data() : bool|object {
+        $data = false;
+        try {
+            $data = @json_decode(file_get_contents('https://ipinfo.io/' . self::get_ip()));
+        } catch (\TypeError){}
+
+        if(!$data)
+            return false;
+
+        return $data;
+    }
+
     public static function get_ip(): string {
+        if(isset(self::$PUBLIC_IP))
+            return self::$PUBLIC_IP;
+
+        if(self::$ENV_IS_DEV && self::new()->has_internet())
+            return file_get_contents("https://api.ipify.io");
+
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
         foreach (
             [
@@ -204,7 +227,7 @@ trait Config
 
         }
 
-        return $ip_address ?? "";
+        return self::$PUBLIC_IP = $ip_address;
     }
 
     public static function get_env(): string

@@ -14,18 +14,21 @@ class LayObject {
      */
     public function get_json(bool $strict = true, bool $return_array = false): object|bool|null|array
     {
-        // TODO: Come up with a solution to work around processing post requests with
-
         $x = file_get_contents("php://input");
         $msg = "No values found in request; check if you actually sent your values as \$_POST";
-        $post = (object) $_POST;
+        $post = $return_array ? $_POST : (object) $_POST;
+
         if(!empty($x) && !str_starts_with($x, "{")) {
             $x = "";
             $msg = "JSON formatted \$_POST needed; but invalid JSON format was found";
         }
-        if($strict && empty($x) && empty($post)) SQL::instance()->use_exception(
-            "ObjectHandler::ERR::get_json",
-            "<div style='color: #eeb300; font-weight: bold; margin: 5px 1px;'>$msg</div>");
+
+        if($strict && empty($x) && empty($post))
+            SQL::instance()->use_exception (
+                "ObjectHandler::ERR::get_json",
+                "<div style='color: #eeb300; font-weight: bold; margin: 5px 1px;'>$msg</div>"
+            );
+
         return json_decode($x, $return_array) ?? $post;
     }
     public function to_object($array) : object {
