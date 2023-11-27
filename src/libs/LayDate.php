@@ -24,7 +24,7 @@ class LayDate {
         return date($format, strtotime($datetime));
     }
 
-    public static function elapsed($current_time): string
+    public static function elapsed(string $current_time, int $depth = 1, string $format = "M d, o"): string
     {
         $now = new DateTime;
         $ago = new DateTime($current_time);
@@ -43,7 +43,7 @@ class LayDate {
         ];
 
         if($week > 1)
-            return self::date($current_time, 3, "d M o [h:ia]");
+            return self::date($current_time, 3, $format);
 
         foreach ($string as $k => &$v) {
             if ($diff->$k) {
@@ -54,7 +54,7 @@ class LayDate {
             unset($string[$k]);            
         }
 
-        $string = array_slice($string, 0, 2);
+        $string = array_slice($string, 0, $depth);
         return $string ? implode(', ', $string) . ' ago' : 'just now';
     }
 }

@@ -275,7 +275,7 @@ abstract class LayMail {
 
         return <<<MSG
                 <html lang="en"><body>
-                    <div style="background: $bg_color; color: $text_color; padding: 20px; min-height: 400px; max-width: 80%">
+                    <div style="background: $bg_color; color: $text_color; padding: 20px; min-height: 400px; max-width: 80%; margin: auto">
                         <div style="text-align: center; background: $bg_color; padding: 10px 5px">
                             <img src="$logo" alt="$company_name Logo" style="max-width: 85%; padding: 10px 10px 0">
                         </div>

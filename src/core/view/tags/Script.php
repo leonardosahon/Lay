@@ -28,6 +28,10 @@ final class Script {
 
     public function src(string $src, bool $print = true) : string {
         $src = ViewSrc::gen($src);
+
+        if(!isset($this->attr['defer']))
+            $this->defer(true);
+
         $attr = $this->get_attr(function (&$value, $key){
             if($key == "defer") {
                 if(!$value)
@@ -38,6 +42,7 @@ final class Script {
 
             return CustomContinueBreak::FLOW;
         });
+
 
         $link = <<<LNK
             <script src="$src" $attr></script>

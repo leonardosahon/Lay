@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Lay\orm;
 
+use JetBrains\PhpStorm\ExpectedValues;
 use mysqli;
 use Closure;
 use mysqli_result;
@@ -34,7 +35,7 @@ class SQL extends \Lay\orm\Exception {
         $arr = $array;
         if(count(array_filter($array,"is_array")) > 0) {
             $arr = [];
-            foreach ($array as $v) {
+            foreach ($array as $i => $v) {
                 if (is_array($v)) {
                     array_walk($v, function ($entry,$key) use (&$arr,&$v) {
                         if (is_array($entry))
@@ -46,7 +47,7 @@ class SQL extends \Lay\orm\Exception {
                     });
                 }
                 else
-                    $arr[] = $v;
+                    $arr[$i] = $v;
             }
         }
         return $arr;
@@ -60,44 +61,27 @@ class SQL extends \Lay\orm\Exception {
     /**
      * Query Engine
      * @param string $query
-     * @param mixed ...$option Tweak function;
-     * args = "assoc||row", "loop","run||result", "!||!null||not_null", "query_type", {int} debug;
-     * if you want to access the mysqli_query directly, pass "exec"
+     * @param array $option Adjust the function to fit your use case;
      * @return int|bool|array|null|mysqli_result
      * @throws \Exception
      */
-    final public function query(string $query, mixed ...$option) : int|bool|array|null|mysqli_result {
+    final public function query(string $query, array $option = []) : int|bool|array|null|mysqli_result {
         if(!isset(self::$link))
             $this->show_exception(0);
 
         $option = $this->array_flatten($option);
         $debug = $option['debug'] ?? 0;
         $catch_error = $option['catch'] ?? 0;
-        $return = "result";
+        $return_as = $option['return_as'] ?? "result"; // exec|result
         $can_be_null = $option['can_be_null'] ?? true;
         $can_be_false = $option['can_be_false'] ?? true;
         $query_type = strtoupper($option['query_type'] ?? "");
-
-        ///RETURN TYPE
-        if(in_array("exec",$option,true))
-            $return = "exec";
-
-        if(in_array("!" ?? "!null" ?? "not_null",$option,true))
-            $can_be_null = false;
-
-        if(in_array("weak",$option,true) || in_array("~",$option,true))
-            $can_be_false = false;
 
         if(empty($query_type)){
             $qr = explode(" ", trim($query),2);
             $query_type = strtoupper(substr($qr[1],0,5));
             $query_type = $query_type == "COUNT" ? $query_type : strtoupper($qr[0]);
         }
-
-        ///LOOP AND FETCH AS
-        if(in_array("loop" ?? "LOOP",$option,true)) $loop = 1;
-        if(in_array("row" ?? "ROW",$option,true)) $as = "row";
-        if(in_array("assoc" ?? "ASSOC",$option,true)) $as = "assoc";
 
         // prepare to show a query for review if the correct parameter is passed
         $option['debug'] = [];
@@ -112,7 +96,7 @@ class SQL extends \Lay\orm\Exception {
         $has_error = false;
         try{
             $exec = mysqli_query(self::$link,$query);
-        } catch (\Exception $e){
+        } catch (\Exception){
             $has_error = true;
             if($exec === false && $catch_error === 0)
                 $this->show_exception(-10,$option['debug']);
@@ -126,13 +110,11 @@ class SQL extends \Lay\orm\Exception {
             "has_error" => $has_error
         ];
 
-        ////// return result of a query
-
         if ($query_type == "COUNT")
             return $this->query_info['data'] = (int)mysqli_fetch_row($exec)[0];
 
         // prevent select queries from returning bool
-        if(in_array($query_type,["SELECT","LAST_INSERT"]))
+        if(in_array($query_type, ["SELECT","LAST_INSERT"]))
             $can_be_false = false;
 
         // Sort out result
@@ -161,13 +143,14 @@ class SQL extends \Lay\orm\Exception {
             return $this->query_info['data'] = !$can_be_null ? [] : null;
         }
 
-        if(($query_type == "SELECT" || $query_type == "LAST_INSERTED") && $return == "result") {
+        if(($query_type == "SELECT" || $query_type == "LAST_INSERTED") && $return_as == "result") {
             $exec = StoreResult::store(
                 $exec,
-                $option['loop'] ?? $loop ?? null,
-                $as ?? null,
+                $option['loop'] ?? null,
+                $option['fetch_as'] ?? null,
                 $option['except'] ?? "",
-                $option['fun'] ?? null
+                $option['fun'] ?? null,
+                $option['result_dimension'] ?? 2
             );
 
             if(!$can_be_null)

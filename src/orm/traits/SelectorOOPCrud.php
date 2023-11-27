@@ -6,6 +6,39 @@ use Lay\orm\SQL;
 
 trait SelectorOOPCrud
 {
+    private mixed $saved_result;
+
+    private function capture_result(array $result_and_opt, string $return_type = 'array') : mixed {
+        $opt = $result_and_opt[1];
+
+        $this->saved_result = $result_and_opt[0];
+
+        if(!call_user_func("is_$return_type", $this->saved_result)) {
+            $type = gettype($this->saved_result);
+
+            if($type == "object")
+                $type = "mysqli_object";
+
+            $return_type = strtoupper($return_type);
+
+            if(!@$opt['catch'])
+                $this->oop_exception("invalid return type received from query. Got [<b>$type</b>] instead of [<b>$return_type</b>]");
+
+            return match($return_type) {
+                default => [],
+                'STRING' => '',
+                'BOOL' => false,
+                'INT' => 0,
+            };
+        }
+
+        return $this->saved_result;
+    }
+
+    final public function get_result() : mixed {
+        return $this->saved_result ?? null;
+    }
+
     final public function uuid() : string {
         return $this->query("SELECT UUID()")[0];
     }
@@ -21,7 +54,9 @@ trait SelectorOOPCrud
 
         $column_to_check = $column_to_check ?? $d['table'] . "." . $column_to_check;
 
-        return $this->query("SELECT {$d['columns']} FROM {$d['table']} {$d['clause']} ORDER BY $column_to_check DESC LIMIT 1", $d);
+        return $this->capture_result(
+            [$this->query("SELECT {$d['columns']} FROM {$d['table']} {$d['clause']} ORDER BY $column_to_check DESC LIMIT 1", $d), $d],
+        );
     }
 
     final public function insert(?array $column_and_values = null) : bool {
@@ -50,7 +85,11 @@ trait SelectorOOPCrud
         }
 
         $d['query_type'] = "INSERT";
-        return $this->query("INSERT INTO `$table` SET $column_and_values",$d) ?? false;
+
+        return $this->capture_result(
+            [$this->query("INSERT INTO `$table` SET $column_and_values",$d) ?? false, $d],
+            'bool',
+        );
     }
 
     final public function insert_raw() : bool {
@@ -75,7 +114,11 @@ trait SelectorOOPCrud
             $values = "VALUES" . rtrim($values, ",");
 
         $d['query_type'] = "INSERT";
-        return $this->query("INSERT INTO `$table` ($columns) $values $clause",$d) ?? false;
+
+        return $this->capture_result(
+            [$this->query("INSERT INTO `$table` ($columns) $values $clause",$d) ?? false, $d],
+            'bool'
+        );
     }
 
     final public function edit() : bool {
@@ -127,7 +170,11 @@ trait SelectorOOPCrud
         }
 
         $d['query_type'] = "update";
-        return $this->query("UPDATE $table SET $values $clause", $d);
+
+        return $this->capture_result(
+            [$this->query("UPDATE $table SET $values $clause", $d), $d],
+            'bool'
+        );
     }
 
     final public function select() : ?array {
@@ -138,6 +185,7 @@ trait SelectorOOPCrud
         $clause = $d['clause'] ?? "";
         $cols = $d['values'] ?? $d['columns'] ?? "*";
         $d['query_type'] = "SELECT";
+        $d['fetch_as'] ??= "assoc";
 
         if(empty($table))
             $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
@@ -166,7 +214,9 @@ trait SelectorOOPCrud
         }
 
         if(!isset($d['join']))
-            return $this->query("SELECT $cols FROM $table $clause", $d);
+            return $this->capture_result(
+                [$this->query("SELECT $cols FROM $table $clause", $d), $d]
+            );
 
         $join_query = "";
 
@@ -186,7 +236,9 @@ trait SelectorOOPCrud
 
         $clause = $join_query . $clause;
 
-        return $this->query("SELECT $cols FROM $table $clause", $d);
+        return $this->capture_result(
+            [$this->query("SELECT $cols FROM $table $clause", $d), $d]
+        );
     }
 
     final public function count_row(?string $column = null, ?string $WHERE = null) : int {
@@ -202,7 +254,11 @@ trait SelectorOOPCrud
             $this->oop_exception("No column to count");
 
         $d['query_type'] = "COUNT";
-        return $this->query("SELECT COUNT($col) FROM $table $WHERE", $d);
+
+        return $this->capture_result(
+            [$this->query("SELECT COUNT($col) FROM $table $WHERE", $d), $d],
+            'int'
+        );
     }
 
     final public function delete(?string $WHERE = null) : bool {
@@ -214,7 +270,11 @@ trait SelectorOOPCrud
         if(empty($table))
             $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
 
-        return $this->query("DELETE FROM $table {$d['clause']}", $d);
+        return $this->capture_result(
+            [$this->query("DELETE FROM $table {$d['clause']}", $d), $d],
+            'bool'
+        );
     }
+
 
 }
