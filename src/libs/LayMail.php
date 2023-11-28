@@ -270,8 +270,8 @@ abstract class LayMail {
         $logo = $data->img->logo;
         $company_name = $data->name->short;
         $copyright = $data->copy;
-        $text_color = $data->color->pry;
-        $bg_color = $data->color->sec;
+        $text_color = "#000000";
+        $bg_color = "transparent";
 
         return <<<MSG
                 <html lang="en"><body>
