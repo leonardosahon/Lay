@@ -351,6 +351,16 @@ const $media = ({srcElement: srcElement, previewElement: previewElement, then: t
     $loop(srcElement, (src => $on(src, on, (() => previewMedia(src)), "on")));
 };
 
+const $exceeds = (element, size) => {
+    if(element.type !== "file")
+        return false;
+	
+	if(element.files.length === 0)
+        return false;
+
+    return element.files[0].size > size;
+};
+
 const $mediaPreview = (elementToWatch, placeToPreview, other = {}) => {
     let placeholder = other.default ?? null;
     let type = other.type ?? 0;
