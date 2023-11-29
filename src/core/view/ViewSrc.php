@@ -11,12 +11,14 @@ final class ViewSrc {
         
         $src = str_replace(
             [
-                "@front/", "@back/", "@custom/",
-                "@front_js/", "@back_js/", "@custom_js/",
-                "@front_img/", "@back_img/", "@custom_img/",
-                "@front_css/", "@back_css/", "@custom_css/",
+                "@#/",
+                "@front/",          "@back/",       "@custom/",
+                "@front_js/",       "@back_js/",    "@custom_js/",
+                "@front_img/",      "@back_img/",   "@custom_img/",
+                "@front_css/",      "@back_css/",   "@custom_css/",
             ],
             [
+                $client->root,
                 $client->front->root, $client->back->root, $client->custom->root,
                 $client->front->js, $client->back->js, $client->custom->js,
                 $client->front->img, $client->back->img, $client->custom->img,

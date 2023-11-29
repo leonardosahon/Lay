@@ -45,6 +45,7 @@ trait Resources {
         $obj->api = $base . "api/";
         $obj->lay = $base . "Lay/";
         $obj->upload = $base . "res/uploads/";
+        $obj->root = $root_client . $env_src;
         $obj->custom = $custom_2d;
         $obj->front = $front_2d;
         $obj->back = $back_2d;
