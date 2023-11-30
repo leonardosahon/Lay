@@ -25,6 +25,7 @@ final class ApiEngine {
     private static string $request_method;
 
     private static function exception(string $title, string $message, array $stack_trace = []) : void {
+        http_response_code(500);
         Exception::throw_exception($message, $title, true, self::$use_lay_exception, $stack_trace);
     }
 
@@ -263,7 +264,7 @@ final class ApiEngine {
 
         if($print) {
             print_r($x);
-            header("Content-Type: text/json");
+            header("Content-Type: application/json");
             die;
         }
 

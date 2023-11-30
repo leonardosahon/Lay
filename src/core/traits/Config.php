@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Lay\core\traits;
 
 use Lay\core\Exception;
-use Lay\core\LayConfig;
 use Lay\libs\LayMail;
 use Lay\orm\SQL;
 
@@ -117,7 +116,7 @@ trait Config
         if (isset($flags['only_cookies']))
             ini_set("session.use_only_cookies", ((int)$flags['only_cookies']) . "");
 
-        if (self::$ENV_IS_PROD && isset($flags['http_only']) ?? isset($flags['httponly']))
+        if (self::$ENV_IS_PROD && (isset($flags['http_only']) || isset($flags['httponly'])))
             $cookie_opt['httponly'] = filter_var($flags['httponly'] ?? $flags['http_only'], FILTER_VALIDATE_BOOL);
 
         if (self::$ENV_IS_PROD && isset($flags['secure']))
@@ -125,6 +124,15 @@ trait Config
 
         if (self::$ENV_IS_PROD && isset($flags['samesite']))
             $cookie_opt['samesite'] = ucfirst($flags['samesite']);
+
+        if (isset($flags['domain']))
+            $cookie_opt['domain'] = "." . $flags['domain'];
+
+        if (isset($flags['path']))
+            $cookie_opt['path'] = $flags['path'];
+
+        if (isset($flags['lifetime']))
+            $cookie_opt['lifetime'] = $flags['lifetime'];
 
         if(!empty($cookie_opt))
             session_set_cookie_params($cookie_opt);

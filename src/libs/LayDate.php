@@ -8,15 +8,26 @@ use Lay\core\traits\IsSingleton;
 class LayDate {
     use IsSingleton;
 
-    public static function date(?string $datetime = null, int $level = 10, string $format = "Y-m-d H:i:s", bool $figure = false) : string|int {
-        $datetime = $datetime ?: date("Y-m-d H:i:s");
+    /**
+     * @param string|int|null $datetime values accepted by `strtotime` or integer equivalent of a datetime
+     * @param string $format a valid `datetime` format
+     * @param int $format_index 0 = date; 1 = time; 2 = appearance: [Ddd dd, Mmm YYYY | hh:mm a] - format: [D d, M Y | h:i a]
+     * @param bool $figure to return the integer equivalent of the give datetime
+     * @return string|int
+     */
+    public static function date(string|int|null $datetime = null, string $format = "Y-m-d H:i:s", int $format_index = 3, bool $figure = false) : string|int {
 
-        switch ($level){
-            case 0: $format = "H:i:s"; break;
-            case 1: $format = "Y-m-d"; break;
-            case 2: $format = "D d, M Y | h:i a"; break;
-            default: break;
-        }
+        $format = match ($format_index) {
+            0 => "Y-m-d",
+            1 => "H:i:s",
+            2 => "D d, M Y | h:i a",
+            default => $format,
+        };
+
+        if(is_int($datetime))
+            return date($format, $datetime);
+
+        $datetime = $datetime ?: date($format);
 
         if($figure)
             return strtotime($datetime);
