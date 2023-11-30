@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 namespace Lay\core\traits;
 
+use Closure;
 use Lay\core\Exception;
+use Lay\core\LayConfig;
 use Lay\libs\LayMail;
 use Lay\orm\SQL;
+use mysqli;
+use TypeError;
 
 trait Config
 {
@@ -16,101 +20,17 @@ trait Config
     private static bool $DEFAULT_ROUTE_SET = false;
     private static bool $USE_DEFAULT_ROUTE = true;
     private static bool $COMPRESS_HTML;
-    private static string $PUBLIC_IP;
+    private static string $SESSION_KEY = "__LAY_VARS__";
 
-    private function switch(string $key, mixed $value): self {
-        self::$layConfigOptions['switch'][$key] = $value;
-        return self::$instance;
-    }
-
-    private function metadata(string $key, mixed $value) : self {
-        self::$layConfigOptions['meta'][$key] = $value;
-        return self::$instance;
-    }
-
-    private function header_data(string $key, mixed $value) : self {
-        self::$layConfigOptions['header'][$key] = $value;
-        return self::$instance;
-    }
-
-    public function dont_compress_html() : self {
-        return $this->switch("compress_html", false);
-    }
-
-    public function dont_use_prod_folder() : self {
-        return $this->switch("use_prod", false);
-    }
-
-    public function dont_use_https() : self {
-        return $this->switch("use_https", false);
-    }
-
-    public function dont_use_default_inc_routes() : self {
-        return $this->switch("default_inc_routes", false);
-    }
-
-    public function dont_use_objects() : self {
-        return $this->switch("use_objects", false);
-    }
-
-    /**
-     * Prevents the data sent through the ViewHandler of a specific domain from being cached.
-     * This only takes effect in development environment, if Lay detects the server is in production, it'll cache by default
-     * @return Config|\Lay\core\LayConfig
-     */
-    public function dont_cache_domains() : self {
-        return $this->switch("cache_domains", false);
-    }
-
-    public function dont_cache_views() : self {
-        return $this->switch("cache_views", false);
-    }
-
-    public function set_env(string $env = "dev"): self {
-        return $this->header_data("env", $env);
-    }
-
-    public function init_name(string $short, string $full) : self {
-        return $this->metadata("name", [ "short" => $short,  "full" => $full ]);
-    }
-
-    public function init_color(string $pry, string $sec) : self {
-        return $this->metadata("color", [ "pry" => $pry,  "sec" => $sec ]);
-    }
-    public function init_mail(string ...$emails) : self {
-        return $this->metadata("mail", $emails);
-    }
-    public function init_tel(string ...$tel) : self {
-        return $this->metadata("tel", $tel);
-    }
-    public function init_author(string $author) : self {
-        return $this->metadata("author", $author);
-    }
-    public function init_copyright(string $copyright) : self {
-        return $this->metadata("copy", $copyright);
-    }
-
-    public function init_end() : void {
-        self::initialize();
-    }
-
-    public function init_others(array $other_data): self
+    public static function session_start(array $flags = []): void
     {
-        self::$layConfigOptions['others'] = $other_data;
-        return self::$instance;
-    }
-
-    public static function session_start(array $flags = []): void {
-        if (isset($_SESSION))
-            return;
-
         $cookie_opt = [];
         $flags['expose_php'] ??= false;
         $flags['timezone'] ??= 'Africa/Lagos';
 
         date_default_timezone_set($flags['timezone']);
 
-        if(!$flags['expose_php'])
+        if (!$flags['expose_php'])
             header_remove('X-Powered-By');
 
         if (isset($flags['only_cookies']))
@@ -134,19 +54,23 @@ trait Config
         if (isset($flags['lifetime']))
             $cookie_opt['lifetime'] = $flags['lifetime'];
 
-        if(!empty($cookie_opt))
+        if (!empty($cookie_opt))
             session_set_cookie_params($cookie_opt);
 
+        if (isset($_SESSION))
+            return;
+
         session_start();
+        $_SESSION[self::$SESSION_KEY] ??= [];
     }
 
     /**
      * @param array $allowed_origins String[] of allowed origins like "http://example.com"
      * @param bool $allow_all
-     * @param \Closure|null $other_headers example function(){ header("Access-Control-Allow-Origin: Origin, X-Requested-With, Content-Type, Accept"); }
+     * @param Closure|null $other_headers example function(){ header("Access-Control-Allow-Origin: Origin, X-Requested-With, Content-Type, Accept"); }
      * @return bool
      */
-    public static function set_cors(array $allowed_origins, bool $allow_all = false, ?\Closure $other_headers = null): bool
+    public static function set_cors(array $allowed_origins, bool $allow_all = false, ?Closure $other_headers = null): bool
     {
         $http_origin = rtrim($_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? "", "/");
 
@@ -184,33 +108,219 @@ trait Config
 
     }
 
+    public static function get_env(): string
+    {
+        self::is_init();
+        return strtoupper(self::$ENV);
+    }
+
+    public static function set_smtp(): void
+    {
+        if (isset(self::$SMTP_ARRAY))
+            return;
+
+        $parse = function ($value): ?string {
+            if (empty($value))
+                return null;
+
+            $code = "@layConfig";
+
+            if (str_starts_with($value, $code)) {
+                $value = explode($code, $value);
+                $value = end($value);
+                $value = eval("return \Lay\core\LayConfig{$value};");
+            }
+
+            return $value;
+        };
+
+        self::load_env();
+
+        self::$SMTP_ARRAY = [
+            "host" => $_ENV['SMTP_HOST'],
+            "port" => $_ENV['SMTP_PORT'],
+            "protocol" => $_ENV['SMTP_PROTOCOL'],
+            "username" => $_ENV['SMTP_USERNAME'],
+            "password" => $_ENV['SMTP_PASSWORD'],
+            "default_sender_name" => $parse(@$_ENV['DEFAULT_SENDER_NAME']),
+            "default_sender_email" => $parse(@$_ENV['DEFAULT_SENDER_EMAIL']),
+        ];
+
+        LayMail::set_credentials(self::$SMTP_ARRAY);
+    }
+
+    public static function get_orm(): SQL
+    {
+        self::is_init();
+        return self::$SQL_INSTANCE;
+    }
+
+    public static function is_page_compressed(): bool
+    {
+        self::is_init();
+        return self::$COMPRESS_HTML;
+    }
+
+    public static function close_sql(?mysqli $link = null): void
+    {
+        self::is_init();
+        if (!isset(self::$SQL_INSTANCE))
+            return;
+
+        $orm = self::$SQL_INSTANCE;
+
+        if (!isset($orm->query_info))
+            return;
+
+        $orm?->close($orm->get_link() ?? $link, true);
+    }
+
+    public static function validate_lay(): void
+    {
+        if (!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
+            Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
+    }
+
+    public function dont_compress_html(): self
+    {
+        return $this->switch("compress_html", false);
+    }
+
+    private function switch(string $key, mixed $value): self
+    {
+        self::$layConfigOptions['switch'][$key] = $value;
+        return self::$instance;
+    }
+
+    public function dont_use_prod_folder(): self
+    {
+        return $this->switch("use_prod", false);
+    }
+
+    public function dont_use_https(): self
+    {
+        return $this->switch("use_https", false);
+    }
+
+    public function dont_use_default_inc_routes(): self
+    {
+        return $this->switch("default_inc_routes", false);
+    }
+
+    public function dont_use_objects(): self
+    {
+        return $this->switch("use_objects", false);
+    }
+
+    /**
+     * Prevents the data sent through the ViewHandler of a specific domain from being cached.
+     * This only takes effect in development environment, if Lay detects the server is in production, it'll cache by default
+     * @return Config|LayConfig
+     */
+    public function dont_cache_domains(): self
+    {
+        return $this->switch("cache_domains", false);
+    }
+
+    public function dont_cache_views(): self
+    {
+        return $this->switch("cache_views", false);
+    }
+
+    public function set_env(string $env = "dev"): self
+    {
+        return $this->header_data("env", $env);
+    }
+
+    private function header_data(string $key, mixed $value): self
+    {
+        self::$layConfigOptions['header'][$key] = $value;
+        return self::$instance;
+    }
+
+    public function init_name(string $short, string $full): self
+    {
+        return $this->metadata("name", ["short" => $short, "full" => $full]);
+    }
+
+    private function metadata(string $key, mixed $value): self
+    {
+        self::$layConfigOptions['meta'][$key] = $value;
+        return self::$instance;
+    }
+
+    public function init_color(string $pry, string $sec): self
+    {
+        return $this->metadata("color", ["pry" => $pry, "sec" => $sec]);
+    }
+
+    public function init_mail(string ...$emails): self
+    {
+        return $this->metadata("mail", $emails);
+    }
+
+    public function init_tel(string ...$tel): self
+    {
+        return $this->metadata("tel", $tel);
+    }
+
+    public function init_author(string $author): self
+    {
+        return $this->metadata("author", $author);
+    }
+
+    public function init_copyright(string $copyright): self
+    {
+        return $this->metadata("copy", $copyright);
+    }
+
+    public function init_end(): void
+    {
+        self::initialize();
+    }
+
+    public function init_others(array $other_data): self
+    {
+        self::$layConfigOptions['others'] = $other_data;
+        return self::$instance;
+    }
+
     public function is_mobile(): bool
     {
         return (bool)strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? "cli"), "mobile");
     }
 
-    public function has_internet() : bool|array {
-        return @fsockopen("google.com",443, timeout: 1) !== false;
-    }
-
-    public function geo_data() : bool|object {
+    public function geo_data(): bool|object
+    {
         $data = false;
         try {
             $data = @json_decode(file_get_contents('https://ipinfo.io/' . self::get_ip()));
-        } catch (\TypeError){}
+        } catch (TypeError) {
+        }
 
-        if(!$data)
+        if (!$data)
             return false;
 
         return $data;
     }
 
-    public static function get_ip(): string {
-        if(isset(self::$PUBLIC_IP))
-            return self::$PUBLIC_IP;
+    public static function get_ip(): string
+    {
+        $IP_KEY = "PUBLIC_IP";
+        $public_ip = $_SESSION[self::$SESSION_KEY][$IP_KEY] ?? null;
+        $now = strtotime("now");
 
-        if(self::$ENV_IS_DEV && self::new()->has_internet())
-            return file_get_contents("https://api.ipify.io");
+        if ($public_ip && $now < $public_ip['exp'])
+            return $public_ip['ip'];
+
+        if (self::$ENV_IS_DEV && self::new()->has_internet()) {
+            $_SESSION[self::$SESSION_KEY][$IP_KEY] = [
+                "ip" => $_SESSION[self::$SESSION_KEY][$IP_KEY] = file_get_contents("https://api.ipify.io"),
+                "exp" => strtotime('1 hour')
+            ];
+
+            return $_SESSION[self::$SESSION_KEY][$IP_KEY]['ip'];
+        }
 
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
         foreach (
@@ -235,52 +345,23 @@ trait Config
 
         }
 
-        return self::$PUBLIC_IP = $ip_address;
-    }
-
-    public static function get_env(): string
-    {
-        self::is_init();
-        return strtoupper(self::$ENV);
-    }
-
-    public static function set_smtp(): void {
-        if(isset(self::$SMTP_ARRAY))
-            return;
-        
-        $parse = function ($value) : ?string {
-            if(empty($value))
-                return null;
-
-            $code = "@layConfig";
-
-            if(str_starts_with($value, $code)) {
-                $value = explode($code, $value);
-                $value = end($value);
-                $value = eval("return \Lay\core\LayConfig{$value};");
-            }
-
-            return $value;
-        };
-
-        self::load_env();
-
-        self::$SMTP_ARRAY = [
-            "host" => $_ENV['SMTP_HOST'],
-            "port" => $_ENV['SMTP_PORT'],
-            "protocol" => $_ENV['SMTP_PROTOCOL'],
-            "username" => $_ENV['SMTP_USERNAME'],
-            "password" => $_ENV['SMTP_PASSWORD'],
-            "default_sender_name" => $parse(@$_ENV['DEFAULT_SENDER_NAME']),
-            "default_sender_email" => $parse(@$_ENV['DEFAULT_SENDER_EMAIL']),
+        $_SESSION[self::$SESSION_KEY][$IP_KEY] = [
+            "ip" => $ip_address,
+            "exp" => strtotime('1 hour')
         ];
 
-        LayMail::set_credentials(self::$SMTP_ARRAY);
+        return $_SESSION[self::$SESSION_KEY][$IP_KEY]['ip'];
     }
 
-    public function init_orm(bool $connect_by_default = true): self {
-        if(isset(self::$CONNECTION_ARRAY)) {
-            if($connect_by_default)
+    public function has_internet(): bool|array
+    {
+        return @fsockopen("google.com", 443, timeout: 1) !== false;
+    }
+
+    public function init_orm(bool $connect_by_default = true): self
+    {
+        if (isset(self::$CONNECTION_ARRAY)) {
+            if ($connect_by_default)
                 self::connect(self::$CONNECTION_ARRAY);
 
             return $this;
@@ -289,10 +370,10 @@ trait Config
         $ENV = self::$ENV_IS_DEV ? 'dev' : 'prod';
 
         self::load_env();
-        
-        if(!isset($_ENV['DB_HOST']))
+
+        if (!isset($_ENV['DB_HOST']))
             return $this;
-        
+
         self::$CONNECTION_ARRAY = [
             "host" => $_ENV['DB_HOST'],
             "user" => $_ENV['DB_USERNAME'],
@@ -312,22 +393,10 @@ trait Config
             ],
         ];
 
-        if($connect_by_default)
+        if ($connect_by_default)
             self::connect(self::$CONNECTION_ARRAY);
 
         return $this;
-    }
-
-    public static function get_orm(): SQL
-    {
-        self::is_init();
-        return self::$SQL_INSTANCE;
-    }
-
-    public static function is_page_compressed(): bool
-    {
-        self::is_init();
-        return self::$COMPRESS_HTML;
     }
 
     public static function connect(?array $connection_params = null): SQL
@@ -352,25 +421,5 @@ trait Config
 
         self::$SQL_INSTANCE = SQL::init($opt);
         return self::$SQL_INSTANCE;
-    }
-
-    public static function close_sql(?\mysqli $link = null): void
-    {
-        self::is_init();
-        if (!isset(self::$SQL_INSTANCE))
-            return;
-
-        $orm = self::$SQL_INSTANCE;
-
-        if(!isset($orm->query_info))
-            return;
-
-        $orm?->close($orm->get_link() ?? $link, true);
-    }
-
-    public static function validate_lay(): void
-    {
-        if (!defined("SAFE_TO_INIT_LAY") || !SAFE_TO_INIT_LAY)
-            \Lay\core\Exception::throw_exception("This script cannot be accessed this way, please return home", "BadRequest");
     }
 }
