@@ -205,7 +205,7 @@ trait SelectorOOPCrud
             $result_per_queue = $limit['max_result'];
 
             // cut off request if we've gotten to the last record set
-            if($current_queue > ceil($this->open($table)->clause($clause)->count_row("$table.id") / $result_per_queue))
+            if($current_queue > ceil($this->open($table)->clause($clause)->count_row("*") / $result_per_queue))
                 return @$d['can_be_null'] ? null : [];
 
             $current_result = (max($current_queue, 1) - 1) * $result_per_queue;
@@ -243,16 +243,13 @@ trait SelectorOOPCrud
 
     final public function count_row(?string $column = null, ?string $WHERE = null) : int {
         $d = $this->get_vars();
-        $col = $column ?? $d['values'] ?? $d['columns'] ?? "NOTHING";
+        $col = $column ?? $d['values'] ?? $d['columns'] ?? "*";
         $WHERE = $WHERE ? "WHERE $WHERE" : ($d['clause'] ?? null);
         $table = $d['table'] ?? null;
 
         if(empty($table))
             $this->oop_exception("You did not initialize the `table`. Use the `->table(String)` method like this: `->value('your_table_name')`");
-
-        if($col === "NOTHING")
-            $this->oop_exception("No column to count");
-
+        
         $d['query_type'] = "COUNT";
 
         return $this->capture_result(
