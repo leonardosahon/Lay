@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Lay\core\view;
 
 use Closure;
+use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\ExpectedValues;
+use JetBrains\PhpStorm\NoReturn;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
 use Lay\core\traits\IsSingleton;
@@ -107,7 +109,7 @@ final class ViewBuilder
         if (self::$view_found)
             return;
 
-        ViewEngine::new()->paint($this->get_route_details("*"));
+        ViewEngine::new()->paint($this->get_route_details(self::DEFAULT_ROUTE));
     }
 
     public function route(string $route, string ...$aliases): self
@@ -135,13 +137,10 @@ final class ViewBuilder
 
         $route = null;
 
-        if (self::$invoking) {
+        if ($this->is_invoked()) {
             $route = "__INVOKED_URI__" . self::$route;
             self::$route = $route;
         }
-
-        if (self::$redirecting)
-            $route = self::$redirect_url;
 
         $route ??= $this->bind_uri();
 
@@ -199,6 +198,17 @@ final class ViewBuilder
         return $data['route'];
     }
 
+    private function rebuild_route() : void
+    {
+        $details = $this->request("*");
+
+        self::$current_route_data = array_merge($details, [
+            "route" => self::$route,
+            "route_as_array" => explode("/", self::$route),
+        ]);
+    }
+
+    #[ArrayShape(['route' => 'string', 'route_as_array' => 'array', 'domain_type' => DomainType::class, 'domain_id' => 'string', 'pattern' => 'string', 0, 1, 2, 3, 4, 5, 6, 7, 8])]
     public function request(#[ExpectedValues(['route', 'route_as_array', 'domain_type', 'domain_id', 'pattern', '*'])] string $key): DomainType|string|array
     {
         if (!isset(self::$current_route_data))
@@ -210,7 +220,7 @@ final class ViewBuilder
         return self::$current_route_data[$key];
     }
 
-    public function redirect(string $route, ?Closure $action = null, bool $kill_on_done = true): void
+    #[NoReturn] public function redirect(string $route, ViewBuilderStarter $builderStarter): void
     {
         if (self::$view_found)
             Exception::throw_exception(
@@ -218,22 +228,21 @@ final class ViewBuilder
                 "ViewSentAlready"
             );
 
+        if($route == self::DEFAULT_ROUTE)
+            $this->invoke(fn() => $builderStarter->default());
+
         self::$redirecting = true;
-        self::$redirect_url = $route;
+        self::$route = $route;
 
-        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['class'];
+        $this->rebuild_route();
+        $builderStarter->pages();
 
-        if (!is_null($action)) {
-            $action();
+        die;
+    }
 
-            if ($kill_on_done)
-                die;
-        }
-
-        (new $caller)->init();
-
-        if ($kill_on_done)
-            die;
+    public function is_redirected() : bool
+    {
+        return self::$redirecting;
     }
 
     public function invoke(Closure $handler, bool $kill_on_done = true): void
@@ -244,6 +253,11 @@ final class ViewBuilder
 
         if ($kill_on_done)
             die;
+    }
+
+    public function is_invoked() : bool
+    {
+        return self::$invoking;
     }
 
     public function core(string $key, bool $value): self

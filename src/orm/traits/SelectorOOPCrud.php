@@ -73,7 +73,7 @@ trait SelectorOOPCrud
                 foreach ($column_and_values as $k => $c){
                     $c = SQL::instance()->clean($c, 11, 'PREVENT_SQL_INJECTION');
 
-                    if(!str_ends_with($c . "",")"))
+                    if(!str_ends_with($c . "",")") && $c !== null)
                         $c = "'$c'";
 
                     $cols .= $c == null ? "`$k`=NULL," : "`$k`=$c,";

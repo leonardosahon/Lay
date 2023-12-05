@@ -189,7 +189,9 @@ class Exception
                 break;
         }
 
+        http_response_code(500);
         if ($act == "kill")
             die;
     }
 }
+
