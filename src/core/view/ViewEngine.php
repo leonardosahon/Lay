@@ -29,9 +29,8 @@ final class ViewEngine {
     public static function constants(array $meta) : void {
         $const = array_replace_recursive(self::$constant_attributes, $meta);
 
-        $data = LayConfig::instance()->get_site_data();
-
-        $url = ViewDomain::current_route_data("route");
+        $route = ViewDomain::current_route_data("route");
+        $url = LayConfig::new()->get_site_data()->base . $route;
 
         self::$constant_attributes = [
             self::key_core => [
@@ -44,6 +43,7 @@ final class ViewEngine {
             self::key_page => [
                 "charset" =>  $const[self::key_page]['charset'] ?? "UTF-8",
                 "base" =>  $const[self::key_page]['base'] ?? null,
+                "route" => $const[self::key_page]['route'] ?? $route,
                 "url" => $const[self::key_page]['url'] ?? $url,
                 "canonical" => $const[self::key_page]['canonical'] ?? $url,
                 "title" => $const[self::key_page]['title'] ?? "Untitled Page",
@@ -136,7 +136,8 @@ final class ViewEngine {
         $client = $layConfig->get_res__client();
         $page = $meta[self::key_page];
 
-        $img = $page['img'] ?? $site_data->img->meta ?? $site_data->img->logo;
+        $img = ViewSrc::gen($page['img'] ?? $site_data->img->meta ?? $site_data->img->logo);
+        $favicon = ViewSrc::gen($site_data->img->favicon);
         $author = $page['author'] ?? $site_data->author;
         $title = $page['title'];
         $title_raw = $page['title_raw'];
@@ -144,7 +145,6 @@ final class ViewEngine {
         $charset = $page['charset'];
         $desc = $page['desc'];
         $color = $site_data->color->pry;
-        $url = $base . $page['url'];
         $canonical = <<<LINK
             <link rel="canonical" href="{$page['canonical']}" />
         LINK;
@@ -168,10 +168,10 @@ final class ViewEngine {
             <!-- Framework Tags-->
             <meta property="lay:page_type" id="LAY-PAGE-TYPE" content="{$page['type']}">
             <meta property="lay:site_name_short" id="LAY-SITE-NAME-SHORT" content="{$site_data->name->short}">
-            <meta property="lay:url" id="LAY-PAGE-URL" content="{$page['url']}">
+            <meta property="lay:url" id="LAY-PAGE-URL" content="{$page['route']}">
             <!-- // Framework Tags-->
             <meta property="og:title" id="LAY-PAGE-TITLE" content="$title_raw">
-            <meta property="og:url" id="LAY-PAGE-FULL-URL" content="$url">
+            <meta property="og:url" id="LAY-PAGE-FULL-URL" content="{$page['url']}">
             <meta property="og:type" content="website">
             <meta property="og:site_name" id="LAY-SITE-NAME" content="{$site_data->name->full}">
             <meta property="og:description" content="{$page['desc']}">
@@ -179,9 +179,9 @@ final class ViewEngine {
             <meta itemprop="name" content="$title">
             <meta itemprop="description" content="{$page['desc']}">
             <meta itemprop="image" id="LAY-PAGE-IMG" content="{$img}">
-            <link rel="icon" type="image/x-icon" href="{$site_data->img->favicon}">
+            <link rel="icon" type="image/x-icon" href="$favicon">
             <link rel="shortcut icon" href="{$base}favicon.ico">
-            <link rel="apple-touch-icon" href="{$site_data->img->favicon}" />
+            <link rel="apple-touch-icon" href="$favicon" />
             $canonical
             {$this->skeleton_head()}
         </head>

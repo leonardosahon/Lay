@@ -30,13 +30,21 @@ Options -Indexes
 
 <IfModule mod_headers.c>
   # Font Packages CORS Issues resolution
-  <FilesMatch "\.(ttf|ttc|otf|eot|woff|font.css|css)$">
+  <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css)$">
     Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+
+  # Cache static assets for 1 year
+  <FilesMatch "\.(js|css|jpg|png|webp|jpeg|)$">
+    Header set Cache-Control "max-age=31536000, public"
   </FilesMatch>
 
   # Hide PHP X-powered header
   Header unset X-Powered-By
   Header always unset X-Powered-By
+  Header unset Server
+  Header always unset Server
 </IfModule>
 
 Options +FollowSymLinks -MultiViews
