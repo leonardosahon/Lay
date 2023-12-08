@@ -92,6 +92,7 @@ final class LayImage{
      * - **new_name (string):** The name you wish to call this newly uploaded file (REQUIRED)*
      * - **directory (string):** The directory where the file should be uploaded to (REQUIRED)*
      * - **permission (int):** The permission to apply to the directory and file *(default: 0755)*
+     * - **quality (int):** The result quality, on a scale if 1 - 100; *(default: 80)*
      * - **dimension (array[int,int]):** [Max Width, Max Height] *(default: [800,800])*
      * - **copy_tmp_file (bool):** On true, function copies the upload temp file instead of moving it in case the developer wants to further process it *(default: false)*
      *
@@ -106,6 +107,7 @@ final class LayImage{
             'new_name' => 'string',
             'directory' => 'string',
             'permission' => 'int',
+            'quality' => 'int',
             'dimension' => 'array',
             'copy_tmp_file' => 'bool',
         ])]
@@ -116,13 +118,14 @@ final class LayImage{
         $copy_tmp_file = $copy_tmp_file ?? false;
         $permission = $permission ?? 0755;
         $dimension = $dimension ?? null;
+        $quality = $quality ?? 80;
 
         if(!isset($_FILES[$post_name]))
             return false;
 
         $directory = rtrim($directory,DIRECTORY_SEPARATOR);
 
-        $operation = function ($imgName, $tmp_name) use ($directory, $post_name, $new_name, $dimension, $copy_tmp_file){
+        $operation = function ($imgName, $tmp_name) use ($directory, $post_name, $new_name, $dimension, $copy_tmp_file, $quality){
             $lay = LayConfig::instance();
 
             $tmpFolder = $lay::mk_tmp_dir();
@@ -143,7 +146,7 @@ final class LayImage{
             $this->convert($tmpImg, $directory);
 
             if($dimension)
-                $this->resize($dimension[0], $dimension[1], $tmpImg, $directory);
+                $this->resize($dimension[0], $dimension[1], $tmpImg, $directory, $quality);
 
             unlink($tmpImg);
             return $file_name;
