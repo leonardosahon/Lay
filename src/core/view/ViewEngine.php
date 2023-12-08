@@ -264,6 +264,7 @@ final class ViewEngine {
 
         $css_template = function(string $href, array $attributes = []) : string {
             $rel = $attributes['rel'] ?? "stylesheet";
+            $lazy_load = $attributes['lazy'] ?? false;
 
             if(isset($attributes['rel']))
                 unset($attributes['rel']);
@@ -271,14 +272,18 @@ final class ViewEngine {
             if(isset($attributes['href']))
                 unset($attributes['href']);
 
+            if($lazy_load)
+                unset($attributes['lazy']);
+
             $link = Link::new();
             
             foreach ($attributes as $i => $a) {
                 $link->attr($i, $a);
             }
 
-            return $link->rel($rel)->href($href, false);
+            return $link->rel($rel)->href($href, false, $lazy_load);
         };
+
         $view = $this->view_handler('head');
 
         $this->prepare_assets($css_template, $meta[self::key_assets], $view, "css");

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Lay\libs;
 
+use JetBrains\PhpStorm\ArrayShape;
 use Lay\core\Exception;
 use Lay\core\LayConfig;
 use Lay\core\traits\IsSingleton;
@@ -99,7 +100,18 @@ final class LayImage{
      * @param array $options
      * @return string|bool filename and extension on success or false on fail
      */
-    public function move(array $options): bool|string {
+    public function move(
+        #[ArrayShape([
+            'post_name' => 'string',
+            'new_name' => 'string',
+            'directory' => 'string',
+            'permission' => 'int',
+            'dimension' => 'array',
+            'copy_tmp_file' => 'bool',
+        ])]
+        array $options
+    ): bool|string
+    {
         extract($options);
         $copy_tmp_file = $copy_tmp_file ?? false;
         $permission = $permission ?? 0755;

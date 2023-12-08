@@ -32,17 +32,26 @@ final class Link {
         return $this->attr('type', $type);
     }
 
-    public function href(string $href, bool $print = true) : string {
+    public function href(string $href, bool $print = true, bool $lazy = false) : string {
         $href = ViewSrc::gen($href);
 
         if(!$this->rel_set)
             $this->rel("stylesheet");
 
+        $media = $this->attr['media'] ?? "all";
+        $rel = $this->attr['rel'] ?? "stylesheet";
+        $type = $this->attr['type'] ?? "text/css";
         $attr = $this->get_attr();
-        
-        $link = <<<LNK
-            <link href="$href" $attr />
-        LNK;
+
+        $link = "<link href=\"$href\" $attr />";
+
+        if($lazy) {
+            $attr = <<<ATTR
+            media="print" onload="this.media='$media'" rel="$rel" href="$href" type="$type" $attr 
+            ATTR;
+
+            $link = "<link $attr />";
+        }
 
         if($print)
             echo $link;

@@ -152,7 +152,11 @@ trait Config
     public static function get_orm(): SQL
     {
         self::is_init();
-        return self::$SQL_INSTANCE;
+        try {
+            return self::$SQL_INSTANCE;
+        } catch (\Error $e){
+            Exception::throw_exception("Trying to access the database without connecting; call `LayConfig::connect()` or if you are in a View Handler, call `\$this->builder->connect_db()`.","ORMErr");
+        }
     }
 
     public static function is_page_compressed(): bool
