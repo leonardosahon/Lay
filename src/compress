@@ -4,6 +4,7 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . "AutoLoader.php";
 
 use Lay\libs\CopyDirectory;
 use Lay\libs\LayCache;
+use Lay\libs\LayDate;
 
 $intro = function() {
     print "----------------------------------------------------------\n";
@@ -43,44 +44,56 @@ if(in_array(("--help"),$args,true) || in_array(("-h"),$args,true)){
     die;
 }
 
-if($argc == 1){
+if($argc == 1) {
     $intro();
     die;
 }
 
-$raw_dir = $args[1];
+$opts = [];
+$get_arg = function (string $arg,  int $index, &$pipe, string ...$cmd_key) use ($args) : void
+{
+    if(!in_array($arg, $cmd_key, true))
+        return;
 
-$out = array_search("--output",$args);
-if($arg = !$out ? array_search("-o",$args) : $out)
-    $bundle_dir = $args[($arg + 1)];
+    if($index == 0) {
+        $pipe = true;
+        return;
+    }
 
- $ignore = array_search("--ignore",$args);
- if($arg = !$ignore ? array_search("-i",$args) : $ignore)
-     $ign = explode(",",$args[($arg + 1)] ?? "");
+    $pipe = $args[($index + 1)] ?? null;
+};
 
-if(!isset($bundle_dir)) {
+foreach ($args as $k => $a) {
+    $get_arg($a, $k, $opts['output_dir'], '-o', "--output");
+    $get_arg($a, $k, $opts['ignore'], '-i', "--ignore");
+    $get_arg($a, 0, $opts['no_cache'], '-nc', "--no-cache");
+}
+
+$src_dir = $args[1];
+
+if(empty($opts['output_dir'])) {
     print "No output directory was specified, process aborted! use --help for more info\n";
     die;
 }
 
-minify_dir($raw_dir,$bundle_dir);
+$opts['ignore'] = $opts['ignore'] ? explode(",", $opts['ignore']) : [];
 
-function minify_dir(string $parent_dir, string $output_dir, array &$error = []): void
+minify_dir($src_dir, $opts['output_dir'], $opts);
+
+function minify_dir(string $src_dir, string $output_dir, array $opts, array &$error = []): void
 {
-    if(!is_dir($parent_dir)){
+    if(!is_dir($src_dir)){
         print "Argument[0] is not a directory; Argument[0] & Argument[1] should be directories\n";
         die;
     }
 
-    global $ign;
-
-    $ignore = $ign ?? [];
+    $ignore = $opts['ignore'];
     $core_ignore = ["node_modules"];
 
     $last_file = 'No Change Was Made';
     $changes = 0;
-    $duration = time();
-    $cache = LayCache::new()->cache_file("deploy_cache");
+    $duration = LayDate::date();
+    $cache = LayCache::new()->cache_file("deploy_cache", invalidate: $opts['no_cache'] ?? false);
 
     $track_changes = $cache->read("*") ?? [];
 
@@ -91,7 +104,7 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
     print "### Production Begins [RES]\n";
 
     new CopyDirectory(
-        $parent_dir, $output_dir,
+        $src_dir, $output_dir,
         fn($file) => in_array($file,$core_ignore,true) || in_array($file,$ignore,true) || (function_exists('fnmatch') && fnmatch('.*',$file)),
         function($file, $src) use ($is_css,$is_js, $cache, &$track_changes) {
             try{
@@ -143,7 +156,7 @@ function minify_dir(string $parent_dir, string $output_dir, array &$error = []):
 
     $cache->dump($track_changes);
 
-    $duration = gmdate("s",time() - $duration) . "sec";
+    $duration = LayDate::elapsed($duration, append_ago: false);
     $changes = number_format($changes);
     $error_count = count($error);
     print "\033[2K\r=== Last File: $last_file";

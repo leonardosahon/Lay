@@ -66,12 +66,15 @@ class LayCache
         return $data[$key] ?? null;
     }
 
-    public function cache_file(string $path_to_cache = "./", bool $use_lay_temp_dir = true): self
+    public function cache_file(string $path_to_cache = "./", bool $use_lay_temp_dir = true, bool $invalidate = false): self
     {
         $server = LayConfig::res_server();
 
         $this->cache_store = $use_lay_temp_dir ? LayConfig::mk_tmp_dir() : $server->root;
         $this->cache_store = $this->cache_store . $path_to_cache;
+
+        if($invalidate)
+            file_put_contents($this->cache_store, "");
 
         return $this;
     }

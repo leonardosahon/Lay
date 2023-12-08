@@ -28,13 +28,16 @@ fi
 
 res_dir=$lay_dir"../"
 ignore=$1
+invalidate=$2
 
 # talk about git on verbose mode
 if [[ -n $ignore && $ignore == '-s' ]]; then
   ignore=$2
+  invalidate=$3
   commit_message=''
   # Git Push Condition
 else
+
   if [ -n "${git_origin}" ]; then
     echo "You have git on your project with remote origin: $git_origin"
     read -n1 -p "Do you want to also push? [Y/n]: " push_repo
@@ -49,6 +52,7 @@ else
   esac
 fi
 
+
 echo "**************** Production Bundling Begins"
 
 echo "== Lay JS FILES"
@@ -58,7 +62,7 @@ terser $lay_dir'static/js/constants.js' -c -m -o $lay_dir'static/js/constants.mi
 echo "== RES FOLDER"
 echo "*** Ignoring $ignore ***"
 
-php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod' -i $ignore
+php "${lay_dir}"compress $res_dir'res/client/dev' -o $res_dir'res/client/prod' -i $ignore $invalidate
 
 echo "**************** Production Bundling Ends"
 

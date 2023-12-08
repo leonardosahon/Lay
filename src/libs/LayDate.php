@@ -117,7 +117,7 @@ class LayDate {
         return date($format, strtotime($datetime));
     }
 
-    public static function elapsed(string $current_time, int $depth = 1, string $format = "M d, o"): string
+    public static function elapsed(string $current_time, int $depth = 1, string $format = "M d, o", bool $append_ago = true): string
     {
         $now = new DateTime;
         $ago = new DateTime($current_time);
@@ -148,6 +148,6 @@ class LayDate {
         }
 
         $string = array_slice($string, 0, $depth);
-        return $string ? implode(', ', $string) . ' ago' : 'just now';
+        return $string ? implode(', ', $string) . ($append_ago ? ' ago' : '') : 'just now';
     }
 }
