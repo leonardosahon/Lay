@@ -217,7 +217,7 @@ final class ViewBuilder
         if ($key == "*")
             return self::$current_route_data;
 
-        return self::$current_route_data[$key];
+        return self::$current_route_data[$key] ?? '';
     }
 
     #[NoReturn] public function redirect(string $route, ViewBuilderStarter $builderStarter): void

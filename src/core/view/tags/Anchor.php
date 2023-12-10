@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Lay\core\view\tags;
 
+use Couchbase\View;
 use JetBrains\PhpStorm\ExpectedValues;
 use Lay\core\LayConfig;
 use Lay\core\view\enums\DomainType;
@@ -48,6 +49,9 @@ final class Anchor {
             $domain = $domain ? $domain . "/" : $domain;
         else
             $domain = "";
+
+        if(str_starts_with($link, "#"))
+            $link = ViewBuilder::new()->request("route") . $link;
 
         $this->link = $base_full . $domain . $link;
 
